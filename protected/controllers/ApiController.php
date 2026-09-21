@@ -194,7 +194,7 @@ class ApiController extends Controller
 						$result['agent']['parent'] = $am->agent->agentParent->attributes;
 						$result['agent']['detail'] = $am->agent->attributes;	
 						$schedule = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(
-							':type'=>strtolower($plot->plot_type),
+							':type'=>strtolower($plot->block_number),
 							':id'=>strtolower($am->payment_schedule_id)
 						));
 						if($schedule){

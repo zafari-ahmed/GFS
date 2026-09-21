@@ -15,7 +15,7 @@
 </style>
 
 <?php
-$modes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->plot_type)));
+$modes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->block_number)));
 //$plotttt = json_decode($plotInfo);
 ?>
 <div class="col-lg-12 infoBox hide">
@@ -589,7 +589,7 @@ $modes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :i
                 </tr>
             </thead>
             <tbody>
-                <?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));?>
+                <?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));?>
                     <?php $allocationTotal = 0;$allocationSum = 0;$total = 0; $balance = 0; $received = 0;foreach($paymentmodes as $modes): $rowBalance = 0;
                     $cpt = CustomerPlotTransactions::model()->findAll('plot_id = :id AND plot_payment_mode_id = :modeid',array(':id'=>$booking->id,':modeid'=>$modes->id)); 
                     ?>

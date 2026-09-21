@@ -23,7 +23,7 @@
     }
 </style>
 <?php
-$modes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->plot_type)));
+$modes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->block_number)));
 
 if($booking->customerpaymentSchedule){
     $modes = CustomPaymentSchedulePaymentModes::model()->findAll('booking_id = :id',array(':id'=>$booking->id));    
@@ -606,7 +606,7 @@ echo '<pre>';print_r($bookingDues);
                 </tr>
             </thead>
             <tbody>
-<?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+<?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 if($booking->customerpaymentSchedule){
     $modesCustom = CustomPaymentSchedulePaymentModes::model()->findAll('booking_id = :id',array(':id'=>$booking->id)); 
     $modesC = [];

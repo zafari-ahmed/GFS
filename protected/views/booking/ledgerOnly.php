@@ -13,7 +13,7 @@
                 </tr> -->
             </thead>
             <tbody>
-<?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+<?php $paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 if($booking->customerpaymentSchedule){
     $modesCustom = CustomPaymentSchedulePaymentModes::model()->findAll($booking->id); 
     $modesC = [];

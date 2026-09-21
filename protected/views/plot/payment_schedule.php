@@ -134,7 +134,7 @@
             <br><br>
             
             <?php 
-            $modes = $oldModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->plot_type)));
+            $modes = $oldModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->block_number)));
             $oldModesData = [];
             if($booking->customerpaymentSchedule){
                 foreach($oldModes as $pmodes){
@@ -401,7 +401,7 @@
             <br><br>
             
             <?php 
-            $modes = $oldModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->plot_type)));
+            $modes = $oldModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->is_special,':type'=>strtolower($booking->plot->block_number)));
             $oldModesData = [];
             if($booking->customerpaymentSchedule){
                 foreach($oldModes as $pmodes){

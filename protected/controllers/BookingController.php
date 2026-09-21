@@ -93,7 +93,7 @@ class BookingController extends Controller
 			//update plot
 			$plot = Plots::model()->findByPk($_POST['plot_id']);
 			if($_POST['is_special']){
-				$plot->total = $this->getPaymentScheduleTotal($_POST['plot_type'],$_POST['is_special']);
+				$plot->total = $this->getPaymentScheduleTotal($_POST['block_number'],$_POST['is_special']);
 			}
 			if($_POST['discount']){
 				$plot->discount = $_POST['discount'];
@@ -154,7 +154,7 @@ class BookingController extends Controller
 					//update plot
 					$plot = Plots::model()->findByPk($_POST['plot_id']);
 					if($_POST['is_special']){
-						$plot->total = $this->getPaymentScheduleTotal($_POST['plot_type'],$_POST['is_special']);
+						$plot->total = $this->getPaymentScheduleTotal($_POST['block_number'],$_POST['is_special']);
 					}
 					if($_POST['discount']){
 						$plot->discount = $_POST['discount'];
@@ -221,7 +221,7 @@ class BookingController extends Controller
 	// 	$sizeId = $booking->plot->size->id;
 	// 	if($booking){
 	// 		$data['booking'] = $booking;			
-	// 		$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+	// 		$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 	// 	}
 	// 	$criteria = new CDbCriteria();
 	// 	$criteria->addCondition("phase_id = $phaseId");
@@ -238,7 +238,7 @@ class BookingController extends Controller
 		$sizeId = $booking->plot->size->id;
 		if($booking){
 			$data['booking'] = $booking;			
-			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id',array(':id'=>$booking->paymentSchedule->id));
+			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 		}
 		$criteria = new CDbCriteria();
 		$criteria->addCondition("phase_id = $phaseId");
@@ -272,7 +272,7 @@ class BookingController extends Controller
 		$sizeId = $booking->plot->size->id;
 		if($booking){
 			$data['booking'] = $booking;			
-			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id',array(':id'=>$booking->paymentSchedule->id));
+			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 // 			if($paymentmodes){
 // 				foreach($paymentmodes as $pm){
 // 					$sql = "SELECT SUM(amount) as total  FROM `customer_plot_transactions` WHERE `plot_payment_mode_id` = ".$pm->id." AND plot_id = $id";
@@ -1067,8 +1067,6 @@ class BookingController extends Controller
 					}	
 				}
 
-				$extraTransMode = ['development','penalty','others','lease_charges','transfer_fee','road_facing','west_open','corner','extra_land','park_facing'];
-				
 				$connection = Yii::app()->db;
                 $transaction = $connection->beginTransaction();
 
@@ -1090,7 +1088,7 @@ class BookingController extends Controller
                     
     				foreach($_POST['mode'] as $ind => $modes){
     						$newlyAddedTransId = $lastTransactionId+($ind);
-    						if(!in_array($modes,$extraTransMode)){
+    						if(is_numeric($modes)){
     							$plot = new CustomerPlotTransactions;
     							//$plot->id = $newlyAddedTransId;
     							$plot->customer_id = @$_POST['customer_id'];
@@ -1104,6 +1102,11 @@ class BookingController extends Controller
     							$plot->comment =  @$_POST['comment'];
     							$plot->bank =  @$_POST['bank'][$ind];
     							$plot->branch =  @$_POST['branch'][$ind];
+    							if(@$_POST['transaction_type'][$ind] != 'cash' && !empty($_POST['payment_date'][$ind])){
+    								$plot->payment_date = $this->convertDateFormat($_POST['payment_date'][$ind]);
+    							} else{
+    								$plot->payment_date = null;
+    							}
     							//$plot->createdOn =  @$_POST['createdOn'];
     							$plot->createdOn = $this->convertDateFormat(@$_POST['createdOn']);;
     							$plot->phase_id = $phaseId;
@@ -1131,6 +1134,11 @@ class BookingController extends Controller
     							$plot->comment =  @$_POST['comment'];
     							$plot->bank =  @$_POST['bank'][$ind];
     							$plot->branch =  @$_POST['branch'][$ind];
+    							if(@$_POST['transaction_type'][$ind] != 'cash' && !empty($_POST['payment_date'][$ind])){
+    								$plot->payment_date = $this->convertDateFormat($_POST['payment_date'][$ind]);
+    							} else{
+    								$plot->payment_date = null;
+    							}
     							//$plot->createdOn =  @$_POST['createdOn'];
     							$plot->createdOn = $this->convertDateFormat(@$_POST['createdOn']);;
     							$plot->phase_id = $phaseId;
@@ -1225,8 +1233,6 @@ class BookingController extends Controller
 		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
 		$userModel = Yii::app()->session->get('userModel');
 		if(isset($_POST['mode'])){
-				$extraTransMode = ['development','penalty','others','lease_charges','transfer_fee','road_facing','west_open','corner','extra_land','park_facing'];
-				
 				$connection = Yii::app()->db;
                 $transaction = $connection->beginTransaction();
 
@@ -1234,7 +1240,7 @@ class BookingController extends Controller
 				$amount = '';
 				try {
 				    foreach($_POST['mode'] as $ind => $modes){
-    						if(!in_array($modes,$extraTransMode)){
+    						if(is_numeric($modes)){
     							$plot = new CustomerPlotTransactions;
     							$plot->customer_id = @$_POST['customer_id'];
     							$plot->plot_id = @$_POST['plot_id'];
@@ -2426,11 +2432,11 @@ class BookingController extends Controller
 	public function getPlotLedgerDetail($id){
 		$checkMonth = explode('-',date('M-Y',strtotime(date('Y-m-d')."+0 month")));
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 		if($booking->customerpaymentSchedule){
-			$origModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+			$origModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 			$modeIds = [];
 			array_map(function($item) use(&$modeIds) {
 				$modeIds[$item['mode']] = $item['id'];
@@ -2539,7 +2545,7 @@ class BookingController extends Controller
 	public function getPlotLedgerDetail2($id){
 		$checkMonth = explode('-',date('M-Y',strtotime(date('Y-m-d')."+0 month")));
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 
@@ -2712,11 +2718,11 @@ class BookingController extends Controller
 
 	public function getPlotLedgerDetailSingle($id,$mode,$csv=false,$invoiceTransactionId = NULL){
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 		if($booking->customerpaymentSchedule){
-			$origModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+			$origModes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 			$modeIds = [];
 			array_map(function($item) use(&$modeIds) {
 				//array_push($modeIds,[$item['mode']=>$item['id']]);
@@ -3460,7 +3466,7 @@ class BookingController extends Controller
 	public function getPlotLedgerDetailCustom($id){
 		$checkMonth = explode('-',date('M-Y',strtotime(date('Y-m-d')."+0 month")));
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 		if($booking->customerpaymentSchedule){

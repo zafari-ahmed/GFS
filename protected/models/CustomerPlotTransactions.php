@@ -12,6 +12,7 @@
  * @property string $reference_number
  * @property double $amount
  * @property string $transaction_type
+ * @property string $payment_date
  * @property string $bank
  * @property string $branch
  * @property string $comment
@@ -50,10 +51,10 @@ class CustomerPlotTransactions extends CActiveRecord
 			array('customer_id, plot_id, plot_payment_mode_id, transaction_number, status, phase_id', 'numerical', 'integerOnly'=>true),
 			array('amount', 'numerical'),
 			array('reference_number, transaction_type, bank, branch, createdBy, updatedBy, monthlyDate', 'length', 'max'=>255),
-			array('reason', 'safe'),
+			array('reason, payment_date', 'safe'),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, customer_id, plot_id, plot_payment_mode_id, transaction_number, reference_number, amount, transaction_type, bank, branch, comment, reason, createdOn, createdBy, updatedBy, status, monthlyDate, phase_id', 'safe', 'on'=>'search'),
+			array('id, customer_id, plot_id, plot_payment_mode_id, transaction_number, reference_number, amount, transaction_type, payment_date, bank, branch, comment, reason, createdOn, createdBy, updatedBy, status, monthlyDate, phase_id', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -86,6 +87,7 @@ class CustomerPlotTransactions extends CActiveRecord
 			'reference_number' => 'Reference Number',
 			'amount' => 'Amount',
 			'transaction_type' => 'Transaction Type',
+			'payment_date' => 'Payment Date',
 			'bank' => 'Bank',
 			'branch' => 'Branch',
 			'comment' => 'Comment',
@@ -125,6 +127,7 @@ class CustomerPlotTransactions extends CActiveRecord
 		$criteria->compare('reference_number',$this->reference_number,true);
 		$criteria->compare('amount',$this->amount);
 		$criteria->compare('transaction_type',$this->transaction_type,true);
+		$criteria->compare('payment_date',$this->payment_date,true);
 		$criteria->compare('bank',$this->bank,true);
 		$criteria->compare('branch',$this->branch,true);
 		$criteria->compare('comment',$this->comment,true);

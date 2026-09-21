@@ -10,14 +10,20 @@ class PaymentscheduleController extends Controller
 	    }
 	}
 
-	public function actionAdd()
+	protected function getDistinctBlocks()
 	{
 		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
-		$data['types'] = Plots::model()->findAll(array(
-                    'select'=>'t.block_number',
-                    'distinct'=>true,
-                    'condition'=>"phase_id=$phaseId",
-                ));
+		return Plots::model()->findAll(array(
+			'select' => 't.block_number',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.block_number ASC',
+		));
+	}
+
+	public function actionAdd()
+	{
+		$data['types'] = $this->getDistinctBlocks();
 		$data['total'] = PaymentSchedules::model()->count();
 		$this->render('add',$data);
 	}
@@ -33,7 +39,7 @@ class PaymentscheduleController extends Controller
                 ));
 		$data['total'] = PaymentSchedules::model()->count();
 		$data['booking'] = $booking =  CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 		if($paymentmodes){
 			foreach($paymentmodes as $pmodes){
 				$data['paymentmodes'][$pmodes->mode] = $pmodes->attributes; 
@@ -50,12 +56,7 @@ class PaymentscheduleController extends Controller
 
 	public function actionEdit($id)
 	{
-		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
-		$data['types'] = Plots::model()->findAll(array(
-                    'select'=>'t.plot_type',
-                    'distinct'=>true,
-                    'condition'=>"phase_id=$phaseId",
-                ));
+		$data['types'] = $this->getDistinctBlocks();
 		$data['total'] = PaymentSchedules::model()->count();
 		$data['PaymentSchedule'] = PaymentSchedules::model()->findByPk($id);
 		$this->render('edit',$data);
@@ -63,19 +64,31 @@ class PaymentscheduleController extends Controller
 
 	public function actionUpdate()
 	{
-		//echo '<pre>';print_r($_POST);exit;
 		$paymentSchedule = PaymentSchedules::model()->findByPk($_POST['id']);
 		if($paymentSchedule){
 			$paymentSchedule->name = $_POST['name'];
 			$paymentSchedule->save();
-			//PaymentSchedulePaymentModes::model()->deleteAll('payment_schedule_id = :id',array(':id'=>$paymentSchedule->id));
 			foreach($_POST['payment'] as $mode=>$plotTypes):
 				foreach($plotTypes as $type=>$amount):
-					$psm = PaymentSchedulePaymentModes::model()->findByPk($amount['id']);
+					$amountValue = is_array($amount) ? $amount['amount'] : $amount;
+					$recordId = is_array($amount) ? @$amount['id'] : null;
+					$psm = null;
+					if(!empty($recordId)){
+						$psm = PaymentSchedulePaymentModes::model()->findByPk($recordId);
+					}
+					if(!$psm){
+						$psm = PaymentSchedulePaymentModes::model()->find(
+							'payment_schedule_id = :id AND mode = :mode AND plot_type = :type',
+							array(':id'=>$paymentSchedule->id, ':mode'=>$mode, ':type'=>$type)
+						);
+					}
+					if(!$psm){
+						$psm = new PaymentSchedulePaymentModes;
+					}
 					$psm->payment_schedule_id = $paymentSchedule->id;
 					$psm->plot_type = $type;
 					$psm->mode = $mode;
-					$psm->amount = $amount['amount'];
+					$psm->amount = $amountValue;
 					$psm->save();
 				endforeach;
 			endforeach;
@@ -86,12 +99,7 @@ class PaymentscheduleController extends Controller
 
 	public function actionIndex()
 	{
-		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
-		$data['types'] = Plots::model()->findAll(array(
-            'select'=>'t.block_number',
-            'distinct'=>true,
-            'condition'=>"phase_id=$phaseId",
-        ));
+		$data['types'] = $this->getDistinctBlocks();
 		$data['payments'] = PaymentSchedules::model()->findAll();
 		$this->render('index',$data);		
 	}

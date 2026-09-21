@@ -237,7 +237,7 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
 
                                 <div class="form-group col-lg-3">
                                 <label>Transaction Type</label>
-                                <select name="transaction_type[]" id="transaction_type" class="form-control" required>
+                                <select name="transaction_type[]" id="transaction_type" class="form-control transaction-type" required>
                                     <option value="">Please select transaction type</option>
                                     <option value="cash">Cash</option>
                                     <option value="cheque">Cheque</option>
@@ -245,6 +245,10 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                                     <option value="PayOrder">PayOrder</option>
                                     <option value="DebitVoucher">DebitVoucher</option>
                                 </select>
+                                </div>
+                                <div class="form-group col-lg-3 payment-date-box hide">
+                                    <label>Payment Date</label>
+                                    <input class="form-control calender payment-date-input" name="payment_date[]" placeholder="Payment Date" autocomplete="off">
                                 </div>
                             
                                 <div class="form-group col-lg-3" style="padding-left: 0px;">
@@ -467,7 +471,7 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
         </div>
         <div class="form-group col-lg-3">
             <label>Transaction Type</label>
-            <select name="transaction_type[]" id="transaction_type" class="form-control" required>
+            <select name="transaction_type[]" id="transaction_type" class="form-control transaction-type" required>
                 <option value="">Please select transaction type</option>
                 <option value="cash">Cash</option>
                 <option value="cheque">Cheque</option>
@@ -475,6 +479,10 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                 <option value="PayOrder">PayOrder</option>
                 <option value="DebitVoucher">DebitVoucher</option>
             </select>
+        </div>
+        <div class="form-group col-lg-3 payment-date-box hide">
+            <label>Payment Date</label>
+            <input class="form-control calender payment-date-input" name="payment_date[]" placeholder="Payment Date" autocomplete="off">
         </div>
         
         <div class="form-group col-lg-3" style="padding-left: 0px;">
@@ -563,12 +571,39 @@ form.addEventListener("submit", function (e) {
     submitBtn.textContent = "Submitting...";
 });
 
-$('#transaction_type').on('change', function () {
-    if ($(this).val() === 'online') {
-        $('#bank').val('Bank Al Habib Limited').trigger('change'); // trigger change if using Select2
-    } else{
-        $('#bank').val('').trigger('change'); // trigger change if using Select2
+function togglePaymentDate($select) {
+    var $row = $select.closest('.modeSBoxOrig, .modeSBox');
+    var val = $select.val();
+    var $paymentDateBox = $row.find('.payment-date-box');
+    var $paymentDate = $row.find('.payment-date-input');
+    var $bank = $row.find('select[name="bank[]"]');
+
+    if (val && val !== 'cash') {
+        $paymentDateBox.removeClass('hide');
+        if (!$paymentDate.val()) {
+            $paymentDate.val('<?php echo date('d-m-Y')?>');
+        }
+        if (!$paymentDate.hasClass('hasDatepicker')) {
+            $paymentDate.datepicker({
+                format: 'dd-mm-yyyy',
+                autoclose: true,
+                todayHighlight: true
+            });
+        }
+    } else {
+        $paymentDateBox.addClass('hide');
+        $paymentDate.val('');
     }
+
+    if (val === 'online') {
+        $bank.val('Bank Al Habib Limited').trigger('change');
+    } else {
+        $bank.val('').trigger('change');
+    }
+}
+
+$(document).on('change', 'select.transaction-type', function () {
+    togglePaymentDate($(this));
 });
 </script>
             

@@ -48,7 +48,7 @@
                                             <tr>
                                                 <td><?php echo $modes?></td>
                                                 <?php foreach($types as $type):?>
-                                                    <td><input class="form-control col-md-3" name="payment[<?php echo strtolower($modes)?>][<?php echo strtolower($type->plot_type)?>]" id="name" placeholder="<?php echo $modes?> Amount" required></td>
+                                                    <td><input class="form-control col-md-3" name="payment[<?php echo strtolower($modes)?>][<?php echo strtolower($type->block_number)?>]" placeholder="<?php echo $modes?> Amount" required></td>
                                                 <?php endforeach;?>
                                             </tr>
                                         <?php endforeach;?>

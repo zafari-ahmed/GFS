@@ -30,16 +30,14 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
-                       <?php $paymentDetail = [];if($payments){ foreach($payments as $payment):?>
-                            <?php 
+                    <tbody id="tableBody">
+                       <?php if($payments){ foreach($payments as $payment):?>
+                            <?php
+                                $paymentDetail = array();
                                 foreach($payment->paymentSchedulePaymentModes as $pspD):
-
-                                    $paymentDetail[$pspD->mode][strtolower($pspD->plot_type)] = $pspD->amount;
-
+                                    $paymentDetail[strtolower($pspD->mode)][strtolower($pspD->plot_type)] = $pspD->amount;
                                 endforeach;
-                                //echo '<pre>';print_r($paymentDetail);
-                            ?>    
+                            ?>
                        		<tr>
                                 <td style="text-align: center;font-weight: bold;" colspan="<?php echo count($types)+1?>"><?php echo $payment->name?></td>
                                 <td><a href="<?php echo Yii::app()->baseUrl?>/paymentschedule/edit/<?php echo $payment->id?>"><span class="aLink label label-info">Edit</span></a></td>
@@ -48,17 +46,15 @@
                                 <tr>
                                     <td><?php echo ucfirst($modes)?></td>
                                     <?php foreach(@$types as $type):?>
-                                        <td><?php echo @$paymentDetail[strtolower($modes)][strtolower($type->plot_type)]?></th>
+                                        <td><?php echo isset($paymentDetail[strtolower($modes)][strtolower($type->block_number)]) ? number_format($paymentDetail[strtolower($modes)][strtolower($type->block_number)]) : '-'; ?></td>
                                     <?php endforeach?>
                                     <td>-</td>
                                 </tr>
                             <?php endforeach;?>
                             <tr>
                                 <td>Total</td>
-                                <?php //foreach($this->paymentScheduleModes() as $modes):?>
-                                <?php //endforeach;?>
-                                <?php foreach($types as $o=>$type):?>
-                                <td><?php echo $o?>-</td>
+                                <?php foreach($types as $type):?>
+                                <td><?php echo number_format($this->getPaymentScheduleTotal($type->block_number, $payment->id));?></td>
                                 <?php endforeach;?>
                                 <td></td>
                             </tr>
@@ -78,7 +74,7 @@
     $(document).on('click', '#report2btn', function (e) {
        var divToPrint=document.getElementById("tableBody");
        newWin= window.open("");
-       var heading = '<div><h3>Kainat City<span style="margin-left:25%">Kainat City</span><span style="float:right">All Dealers</h3></div>';
+       var heading = '<div><h3>Payment Schedule</h3></div>';
        newWin.document.write('<style>table, th, td {border: 1px solid black;} .dnone{display:none}</style>'+heading+divToPrint.outerHTML);
        newWin.print();
        newWin.close();

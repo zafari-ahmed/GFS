@@ -263,7 +263,7 @@ class AgentController extends Controller
 	public function getPlotLedgerDetail($id){
 		$checkMonth = explode('-',date('M-Y',strtotime(date('Y-m-d')."+0 month")));
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 
@@ -579,7 +579,7 @@ class AgentController extends Controller
 		$booking = CustomerPlots::model()->findByPk($id);
 		$html = '-';
 		if($booking){
-			$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+			$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 			$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 
@@ -728,7 +728,7 @@ class AgentController extends Controller
 	public function getPlotLedgerDetail2($id){
 		$checkMonth = explode('-',date('M-Y',strtotime(date('Y-m-d')."+0 month")));
 		$booking = CustomerPlots::model()->findByPk($id);
-		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->plot_type)));
+		$paymentmodes = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
 
 		$netTotalCheck = $this->plotDiscount($booking->plot->id,false) - intval($booking->customerPlotTransactionSum);
 

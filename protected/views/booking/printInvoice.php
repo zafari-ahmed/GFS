@@ -181,10 +181,11 @@
                                     echo "<strong>Due Months:</strong> " . htmlspecialchars($beforeStar) . "<br/>";
                                 }
                                 ?>
+                                <strong>Payment Date:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?date('d-M-Y',strtotime(@$transaction[0]->payment_date)):'N/A'?> <br>
                                 <strong>Bank:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->bank):'N/A'?> <br>
                                 <strong>Branch:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->branch):'N/A'?> <br>
-                                <strong>Comment:</strong> <?php echo @$transaction[0]->comment?> <br>
                                 <strong>Reference No:</strong> <?php echo @$transaction[0]->reference_number?> <br>
+                                <strong>Comment:</strong> <?php echo @$transaction[0]->comment?> <br>
                             </td>
                         </tr>
                     </table>
@@ -333,6 +334,7 @@
                                     echo "<strong>Due Months:</strong> " . htmlspecialchars($beforeStar) . "<br/>";
                                 }
                                 ?>
+                                <strong>Payment Date:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?date('d-M-Y',strtotime(@$transaction[0]->payment_date)):'N/A'?> <br>
                                 <strong>Bank:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->bank):'N/A'?> <br>
                                 <strong>Branch:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->branch):'N/A'?> <br>
                                 <strong>Comment:</strong> <?php echo @$transaction[0]->comment?> <br>
@@ -484,6 +486,7 @@
                                     echo "<strong>Due Months:</strong> " . htmlspecialchars($beforeStar) . "<br/>";
                                 }
                                 ?>
+                                <strong>Payment Date:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?date('d-M-Y',strtotime(@$transaction[0]->payment_date)):'N/A'?> <br>
                                 <strong>Bank:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->bank):'N/A'?> <br>
                                 <strong>Branch:</strong> <?php echo (@$transaction[0]->transaction_type!='cash')?ucfirst(@$transaction[0]->branch):'N/A'?> <br>
                                 <strong>Comment:</strong> <?php echo @$transaction[0]->comment?> <br>

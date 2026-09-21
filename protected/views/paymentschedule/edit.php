@@ -26,28 +26,31 @@
                                 <tr>
                                     <th>Description</th>
                                     <?php foreach($types as $type):?>
-                                        <th><?php echo ucwords($type->plot_type)?></th>
+                                        <th><?php echo ucwords($type->block_number)?></th>
                                     <?php endforeach;?>
                                 </tr>
                                 <tbody>
-                                    <?php $modes = PaymentSchedulePaymentModes::model()->findAll(array(
-                                            'select'=>'t.mode',
-                                            'condition'=>"payment_schedule_id = $PaymentSchedule->id",
-                                            'distinct'=>true,
-                                        ));
-                                    foreach($modes as $mode):
-                                        $modeDetail = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND mode = :type',array(':id'=>$PaymentSchedule->id,':type'=>$mode->mode));
-                                        foreach($modeDetail as $md){
-                                            $modeDetailData[$md->plot_type]['type'] = $md->plot_type;
-                                            $modeDetailData[$md->plot_type]['amount'] = $md->amount;
-                                            $modeDetailData[$md->plot_type]['id'] = $md->id;
-                                        }
+                                    <?php
+                                    $modeDetailData = array();
+                                    foreach($PaymentSchedule->paymentSchedulePaymentModes as $md){
+                                        $modeDetailData[strtolower($md->mode)][strtolower($md->plot_type)] = array(
+                                            'amount' => $md->amount,
+                                            'id' => $md->id,
+                                        );
+                                    }
+                                    foreach($this->paymentScheduleModes() as $modes):
+                                        $modeKey = strtolower($modes);
                                     ?>
                                         <tr>
-                                            <td><?php echo ucfirst($mode->mode)?></td>
+                                            <td><?php echo ucfirst($modes)?></td>
                                             <?php foreach($types as $type):
-                                                 ?>
-                                                <td><input class="form-control col-md-3" name="payment[<?php echo strtolower($mode->mode)?>][<?php echo strtolower($type->plot_type)?>][amount]" value="<?php echo $modeDetailData[strtolower($type->plot_type)]['amount']?>" required><input  type="hidden" name="payment[<?php echo strtolower($mode->mode)?>][<?php echo strtolower($type->plot_type)?>][id]" value="<?php echo $modeDetailData[strtolower($type->plot_type)]['id']?>"></td>
+                                                $blockKey = strtolower($type->block_number);
+                                                $existing = isset($modeDetailData[$modeKey][$blockKey]) ? $modeDetailData[$modeKey][$blockKey] : array('amount'=>'','id'=>'');
+                                            ?>
+                                                <td>
+                                                    <input class="form-control col-md-3" name="payment[<?php echo $modeKey?>][<?php echo $blockKey?>][amount]" value="<?php echo $existing['amount']?>" required>
+                                                    <input type="hidden" name="payment[<?php echo $modeKey?>][<?php echo $blockKey?>][id]" value="<?php echo $existing['id']?>">
+                                                </td>
                                             <?php endforeach;?>
                                         </tr>
                                     <?php endforeach;?>
@@ -69,4 +72,3 @@
     </div>
     <!-- /.col-lg-12 -->
 </div>
-            
