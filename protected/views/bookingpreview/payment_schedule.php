@@ -276,8 +276,8 @@
         </div>
     <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
         <div class="line-field"><div class="lab">Plot No.</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @@$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></div></div>
-        <div class="line-field"><div class="lab">Category:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->category->name?></div></div>
-        <div class="line-field"><div class="lab">Size:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->size->size?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Category:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->category->name?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Size:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->size->size?></div></div>
       </div>
 
 
