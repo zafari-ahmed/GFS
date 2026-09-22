@@ -254,8 +254,12 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                                     <option value="DebitVoucher">DebitVoucher</option>
                                 </select>
                                 </div>
+                                <div class="form-group col-lg-3 payment-date-box hide" style="padding-right: 0px;">
+                                    <label>Payment Date</label>
+                                    <input class="form-control calender payment-date-input" name="payment_date[]" placeholder="Payment Date" autocomplete="off" value="<?php echo date('d-m-Y')?>">
+                                </div>
                             
-                                <div class="form-group col-lg-3" style="padding-left: 0px;">
+                                <div class="form-group col-lg-3" style="padding-left: 30px;">
                                     <label>Bank</label>
                                     <!-- <input class="form-control" id="bank" name="bank" placeholder="Bank" autocomplete="off"> -->
                                     <select name="bank[]" id="bank" class="form-control">
@@ -484,6 +488,10 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                 <option value="DebitVoucher">DebitVoucher</option>
             </select>
         </div>
+        <div class="form-group col-lg-3 payment-date-box hide" style="padding-right: 0px;">
+            <label>Payment Date</label>
+            <input class="form-control calender payment-date-input" name="payment_date[]" placeholder="Payment Date" autocomplete="off">
+        </div>
         
         <div class="form-group col-lg-3" style="padding-left: 0px;">
             <label>Bank</label>
@@ -571,12 +579,45 @@ form.addEventListener("submit", function (e) {
     submitBtn.textContent = "Submitting...";
 });
 
-$('#transaction_type').on('change', function () {
-    if ($(this).val() === 'online') {
-        $('#bank').val('Bank Al Habib Limited').trigger('change'); // trigger change if using Select2
-    } else{
-        $('#bank').val('').trigger('change'); // trigger change if using Select2
+function todayPaymentDate() {
+    var today = new Date();
+    var dd = ('0' + today.getDate()).slice(-2);
+    var mm = ('0' + (today.getMonth() + 1)).slice(-2);
+    var yyyy = today.getFullYear();
+    return dd + '-' + mm + '-' + yyyy;
+}
+
+function togglePaymentDate($select) {
+    var $row = $select.closest('.modeSBoxOrig, .modeSBox');
+    var $box = $row.find('.payment-date-box');
+    var $input = $row.find('.payment-date-input');
+    var type = $select.val();
+
+    if (type && type !== 'cash') {
+        $box.removeClass('hide');
+        if (!$input.val()) {
+            $input.val(todayPaymentDate());
+        }
+        $input.removeClass('hasDatepicker').removeAttr('id');
+        $input.datepicker({
+            format: 'dd-mm-yyyy',
+            autoclose: true,
+            todayHighlight: true
+        });
+    } else {
+        $box.addClass('hide');
+        $input.val('');
     }
+}
+
+$(document).on('change', 'select[name="transaction_type[]"]', function () {
+    var $row = $(this).closest('.modeSBoxOrig, .modeSBox');
+    if ($(this).val() === 'online') {
+        $row.find('select[name="bank[]"]').val('Bank Al Habib Limited').trigger('change');
+    } else {
+        $row.find('select[name="bank[]"]').val('').trigger('change');
+    }
+    togglePaymentDate($(this));
 });
 </script>
             
