@@ -43,7 +43,7 @@
   .cell:nth-child(3n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
   .cell.label { font-weight:600; }
   .cell.subtle { font-style: italic; font-weight: 600; }
-  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold;}
+  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold; white-space: pre-line; text-align:center; }
 
   /* Cost of plot row */
   .costrow {
@@ -198,7 +198,11 @@
                 // Decode JSON to PHP array
                 $data = json_decode($booking->payment_schedule_json, true);
                 $cop = $data['cop'];
-                foreach (@$data['rows'] as $row): ?>
+                foreach (@$data['rows'] as $row):
+                    if (trim((string)($row['value'] ?? '')) === '') {
+                        continue;
+                    }
+                ?>
               <div class="cell label">
                 <?= ($row['heading1'] !== 'Empty Box') ? htmlspecialchars($row['heading1']) : '' ?>
               </div>

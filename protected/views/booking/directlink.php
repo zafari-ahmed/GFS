@@ -34,11 +34,20 @@
                                 <?php endforeach;?>
                             </select>
                         </div>
-                        <div class="form-group col-lg-3">
+                        <div class="form-group col-lg-2">
+                            <label>Plot Type</label>
+                            <select name="plot_type" id="direct_plot_type" class="form-control select2">
+                                <option value="">All Plot Types</option>
+                                <?php foreach($plotTypes as $type):?>
+                                    <option value="<?php echo CHtml::encode($type->plot_type)?>" <?php echo (@$plot_type==$type->plot_type)?'selected':''?>><?php echo CHtml::encode($type->plot_type)?></option>
+                                <?php endforeach;?>
+                            </select>
+                        </div>
+                        <div class="form-group col-lg-2">
                             <label>Customer Name</label>
                             <input type="text" name="customer_name" class="form-control" placeholder="Customer Name" value="<?php echo CHtml::encode(@$customer_name)?>" autocomplete="off">
                         </div>
-                        <div class="form-group col-lg-3">
+                        <div class="form-group col-lg-2">
                             <label>Customer CNIC</label>
                             <input type="text" name="customer_cnic" class="form-control cnic" placeholder="Customer CNIC" value="<?php echo CHtml::encode(@$customer_cnic)?>" autocomplete="off">
                         </div>

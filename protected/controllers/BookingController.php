@@ -391,8 +391,15 @@ class BookingController extends Controller
 			'condition' => "phase_id=$phaseId",
 			'order' => 't.block_number ASC',
 		));
+		$data['plotTypes'] = Plots::model()->findAll(array(
+			'select' => 't.plot_type',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.plot_type ASC',
+		));
 		$data['block_number'] = Yii::app()->request->getParam('block_number');
 		$data['plot_number'] = Yii::app()->request->getParam('plot_number');
+		$data['plot_type'] = Yii::app()->request->getParam('plot_type');
 		$data['customer_name'] = trim(Yii::app()->request->getParam('customer_name', ''));
 		$data['customer_cnic'] = trim(Yii::app()->request->getParam('customer_cnic', ''));
 		$data['bookings'] = array();
@@ -431,6 +438,10 @@ class BookingController extends Controller
 			if(!empty($data['plot_number'])){
 				$criteria->addCondition('plot.plot_number = :plotNumber');
 				$criteria->params[':plotNumber'] = $data['plot_number'];
+			}
+			if(!empty($data['plot_type'])){
+				$criteria->addCondition('plot.plot_type = :plotType');
+				$criteria->params[':plotType'] = $data['plot_type'];
 			}
 			if(!empty($data['customer_name'])){
 				$criteria->addCondition('customer.name LIKE :customerName');

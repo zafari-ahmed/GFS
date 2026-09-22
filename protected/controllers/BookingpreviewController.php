@@ -73,6 +73,13 @@ class BookingpreviewController extends Controller
                 $r['heading1'] = isset($r['heading1']) ? trim($r['heading1']) : '';
                 $r['heading2'] = isset($r['heading2']) ? trim($r['heading2']) : '';
                 $r['value']    = isset($r['value'])    ? trim($r['value'])    : '';
+                $extra         = isset($r['value_extra']) ? trim($r['value_extra']) : '';
+
+                if (strcasecmp($r['heading2'], 'Monthly Installment') === 0) {
+                    $r['value'] = $this->mergeMonthlyInstallmentValue($r['value'], $extra);
+                }
+
+                unset($r['value_extra']);
             }
             unset($r);
         
@@ -89,6 +96,19 @@ class BookingpreviewController extends Controller
         }
 		   
 		$this->renderPartial('add_payment_schedule',$data);
+	}
+
+	private function mergeMonthlyInstallmentValue($main, $extra)
+	{
+		$main = trim((string)$main);
+		$extra = trim((string)$extra);
+		if ($main === '') {
+			return $extra;
+		}
+		if ($extra === '') {
+			return $main;
+		}
+		return $main . ' = ' . $extra;
 	}
 	
 	public function actionAddpssoftware($id)
