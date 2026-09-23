@@ -54,6 +54,23 @@ $heading2Options = [
 function h($v) {
     return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 }
+
+function psIsMonthlyHeading2($heading2) {
+    return strcasecmp(trim((string)$heading2), 'Monthly Installment') === 0;
+}
+
+function psSplitMonthlyValue($value) {
+    $main = trim((string)$value);
+    $extra = '';
+    $firstLine = preg_split("/\r\n|\n/", $main);
+    $main = trim($firstLine[0]);
+    if (strpos($main, '=') !== false) {
+        $parts = preg_split('/\s*=\s*/', $main, 2);
+        $main = trim($parts[0]);
+        $extra = isset($parts[1]) ? trim($parts[1]) : '';
+    }
+    return array($main, $extra);
+}
 ?>
 
 <!DOCTYPE html>
@@ -71,7 +88,27 @@ function h($v) {
     table {
         border-collapse: collapse;
         width: 100%;
-        max-width: 900px;
+        max-width: 1100px;
+    }
+
+    .value-fields {
+        display: flex;
+        gap: 6px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .value-fields input[type="text"] {
+        width: 100%;
+        flex: 1;
+    }
+
+    .monthly-extra-input {
+        display: none;
+    }
+
+    .monthly-extra-input.is-visible {
+        display: block;
     }
 
     th, td {
@@ -156,6 +193,11 @@ function h($v) {
                 $selH1 = $row['heading1'] ?? '';
                 $selH2 = $row['heading2'] ?? '';
                 $val   = $row['value'] ?? '';
+                $isMonthly = psIsMonthlyHeading2($selH2);
+                $valExtra = '';
+                if ($isMonthly) {
+                    list($val, $valExtra) = psSplitMonthlyValue($val);
+                }
 
         ?>
 
@@ -164,8 +206,7 @@ function h($v) {
                 <td>
                     <select
                         name="rows[<?php echo $rowKey; ?>][heading1]"
-                        class="form-control"
-                        required>
+                        class="form-control">
 
                         <?php foreach ($heading1Options as $opt): ?>
 
@@ -184,8 +225,8 @@ function h($v) {
                 <td>
                     <select
                         name="rows[<?php echo $rowKey; ?>][heading2]"
-                        class="form-control"
-                        required>
+                        class="form-control heading2-select"
+                        onchange="toggleMonthlyExtra(this)">
 
                         <?php foreach ($heading2Options as $opt): ?>
 
@@ -202,11 +243,21 @@ function h($v) {
                 </td>
 
                 <td>
-                    <input
-                        type="text"
-                        name="rows[<?php echo $rowKey; ?>][value]"
-                        value="<?php echo h($val); ?>"
-                        required>
+                    <div class="value-fields">
+                        <input
+                            type="text"
+                            name="rows[<?php echo $rowKey; ?>][value]"
+                            value="<?php echo h($val); ?>"
+                            placeholder="0.00"
+                            >
+                        <input
+                            type="text"
+                            class="monthly-extra-input<?php echo $isMonthly ? ' is-visible' : ''; ?>"
+                            name="rows[<?php echo $rowKey; ?>][value_extra]"
+                            value="<?php echo h($valExtra); ?>"
+                            placeholder="Total"
+                            <?php echo $isMonthly ? '' : 'disabled'; ?>>
+                    </div>
                 </td>
 
                 <td>
@@ -255,8 +306,8 @@ function h($v) {
                 <td>
                     <select
                         name="rows[<?php echo $rowKey; ?>][heading2]"
-                        class="form-control"
-                        required>
+                        class="form-control heading2-select"
+                        onchange="toggleMonthlyExtra(this)">
 
                         <?php foreach ($heading2Options as $opt): ?>
 
@@ -270,11 +321,20 @@ function h($v) {
                 </td>
 
                 <td>
-                    <input
-                        type="text"
-                        name="rows[<?php echo $rowKey; ?>][value]"
-                        value=""
-                        required>
+                    <div class="value-fields">
+                        <input
+                            type="text"
+                            name="rows[<?php echo $rowKey; ?>][value]"
+                            value=""
+                            placeholder="0.00">
+                        <input
+                            type="text"
+                            class="monthly-extra-input"
+                            name="rows[<?php echo $rowKey; ?>][value_extra]"
+                            value=""
+                            placeholder="Total"
+                            disabled>
+                    </div>
                 </td>
 
                 <td>
@@ -396,7 +456,8 @@ function addRow() {
 
             <select
                 name="rows[${rowKey}][heading2]"
-                class="form-control"
+                class="form-control heading2-select"
+                onchange="toggleMonthlyExtra(this)"
                 required>
 
                 ${heading2Html}
@@ -407,13 +468,21 @@ function addRow() {
 
 
         <td>
-
-            <input
-                type="text"
-                name="rows[${rowKey}][value]"
-                value=""
-                required>
-
+            <div class="value-fields">
+                <input
+                    type="text"
+                    name="rows[${rowKey}][value]"
+                    value=""
+                    placeholder="100 * 20"
+                    required>
+                <input
+                    type="text"
+                    class="monthly-extra-input"
+                    name="rows[${rowKey}][value_extra]"
+                    value=""
+                    placeholder="Total"
+                    disabled>
+            </div>
         </td>
 
 
@@ -434,9 +503,36 @@ function addRow() {
 
 
     tbody.appendChild(row);
-
+    toggleMonthlyExtra(row.querySelector('.heading2-select'));
     rowCounter++;
 }
+
+
+function toggleMonthlyExtra(select) {
+    if (!select) {
+        return;
+    }
+
+    const row = select.closest('tr');
+    if (!row) {
+        return;
+    }
+
+    const extra = row.querySelector('.monthly-extra-input');
+    if (!extra) {
+        return;
+    }
+
+    const isMonthly = (select.value || '').toLowerCase() === 'monthly installment';
+    extra.classList.toggle('is-visible', isMonthly);
+    extra.disabled = !isMonthly;
+    extra.style.display = isMonthly ? 'block' : 'none';
+}
+
+
+document.querySelectorAll('.heading2-select').forEach(function(select) {
+    toggleMonthlyExtra(select);
+});
 
 
 // Remove row

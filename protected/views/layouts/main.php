@@ -350,6 +350,9 @@
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
+                        <li>
+                            <a href="<?php echo Yii::app()->baseUrl.'/booking/directlink'?>"><i class="fa fa-link fa-fw"></i> Direct Link</a>
+                        </li>
                         <?php } ?>
                         <!--<li>-->
                         <!--    <a href="<?php //echo Yii::app()->baseUrl.'/plot?status=0'?>"><i class="fa fa-dashboard fa-fw"></i> Available Bookings</a>-->

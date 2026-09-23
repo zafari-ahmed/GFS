@@ -43,7 +43,7 @@
   .cell:nth-child(3n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
   .cell.label { font-weight:600; }
   .cell.subtle { font-style: italic; font-weight: 600; }
-  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold;}
+  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold; white-space: pre-line; text-align:center; }
 
   /* Cost of plot row */
   .costrow {
@@ -198,7 +198,11 @@
                 // Decode JSON to PHP array
                 $data = json_decode($booking->payment_schedule_json, true);
                 $cop = $data['cop'];
-                foreach (@$data['rows'] as $row): ?>
+                foreach (@$data['rows'] as $row):
+                    if (trim((string)($row['value'] ?? '')) === '') {
+                        continue;
+                    }
+                ?>
               <div class="cell label">
                 <?= ($row['heading1'] !== 'Empty Box') ? htmlspecialchars($row['heading1']) : '' ?>
               </div>
@@ -270,12 +274,10 @@
       <div class="grid5">
         <div class="line-field"><div class="lab">Name:</div><div class="val"><?php echo @$booking->customer->name?></div></div>
         </div>
-    <div class="grid4">
-        <div class="line-field"><div class="lab">Plot No.</div><div class="val thin"><?php echo @$booking->plot->plot_number?></div></div>
-        <div class="line-field"><div class="lab">Block No.</div><div class="val thin"><?php echo @$booking->plot->block_number?></div></div>
-
-        <div class="line-field"><div class="lab">Category:</div><div class="val thin"><?php echo @$booking->plot->category->name?></div></div>
-        <div class="line-field"><div class="lab">Size:</div><div class="val thin"><?php echo @$booking->plot->size->size?></div></div>
+    <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
+        <div class="line-field"><div class="lab">Plot No.</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @@$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Category:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->category->name?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Size:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->size->size?></div></div>
       </div>
 
 

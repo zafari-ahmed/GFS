@@ -382,6 +382,108 @@ class BookingController extends Controller
 		$this->render('index',$data);
 	}
 
+	public function actionDirectlink()
+	{
+		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+		$data['blocks'] = Plots::model()->findAll(array(
+			'select' => 't.block_number',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.block_number ASC',
+		));
+		$data['plotTypes'] = Plots::model()->findAll(array(
+			'select' => 't.plot_type',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.plot_type ASC',
+		));
+		$data['block_number'] = Yii::app()->request->getParam('block_number');
+		$data['plot_number'] = Yii::app()->request->getParam('plot_number');
+		$data['plot_type'] = Yii::app()->request->getParam('plot_type');
+		$data['customer_name'] = trim(Yii::app()->request->getParam('customer_name', ''));
+		$data['customer_cnic'] = trim(Yii::app()->request->getParam('customer_cnic', ''));
+		$data['bookings'] = array();
+		$data['plotOptions'] = array();
+		$data['searched'] = false;
+
+		if(!empty($data['block_number'])){
+			$plotCriteria = new CDbCriteria();
+			$plotCriteria->with = array('plot');
+			$plotCriteria->together = true;
+			$plotCriteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$plotCriteria->addCondition('plot.block_number = :block');
+			$plotCriteria->params = array(':phase' => $phaseId, ':block' => $data['block_number']);
+			$plotCriteria->order = 'plot.plot_number ASC';
+			$plotBookings = CustomerPlots::model()->findAll($plotCriteria);
+			foreach($plotBookings as $pb){
+				if($pb->plot && !in_array($pb->plot->plot_number, $data['plotOptions'])){
+					$data['plotOptions'][] = $pb->plot->plot_number;
+				}
+			}
+		}
+
+		if(isset($_GET['search'])){
+			$data['searched'] = true;
+			$criteria = new CDbCriteria();
+			$criteria->with = array('plot', 'customer');
+			$criteria->together = true;
+			$criteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$criteria->params = array(':phase' => $phaseId);
+			$criteria->order = 'plot.block_number ASC, plot.plot_number ASC';
+
+			if(!empty($data['block_number'])){
+				$criteria->addCondition('plot.block_number = :block');
+				$criteria->params[':block'] = $data['block_number'];
+			}
+			if(!empty($data['plot_number'])){
+				$criteria->addCondition('plot.plot_number = :plotNumber');
+				$criteria->params[':plotNumber'] = $data['plot_number'];
+			}
+			if(!empty($data['plot_type'])){
+				$criteria->addCondition('plot.plot_type = :plotType');
+				$criteria->params[':plotType'] = $data['plot_type'];
+			}
+			if(!empty($data['customer_name'])){
+				$criteria->addCondition('customer.name LIKE :customerName');
+				$criteria->params[':customerName'] = '%'.$data['customer_name'].'%';
+			}
+			if(!empty($data['customer_cnic'])){
+				$criteria->addCondition('customer.cnic LIKE :customerCnic');
+				$criteria->params[':customerCnic'] = '%'.$data['customer_cnic'].'%';
+			}
+
+			$data['bookings'] = CustomerPlots::model()->findAll($criteria);
+		}
+
+		$this->render('directlink', $data);
+	}
+
+	public function actionDirectlinkplots()
+	{
+		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+		$block = Yii::app()->request->getParam('block');
+		$options = '<option value="">All Plot Numbers</option>';
+		if(!empty($block)){
+			$criteria = new CDbCriteria();
+			$criteria->with = array('plot');
+			$criteria->together = true;
+			$criteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$criteria->addCondition('plot.block_number = :block');
+			$criteria->params = array(':phase' => $phaseId, ':block' => $block);
+			$criteria->order = 'plot.plot_number ASC';
+			$bookings = CustomerPlots::model()->findAll($criteria);
+			$seen = array();
+			foreach($bookings as $booking){
+				if($booking->plot && !in_array($booking->plot->plot_number, $seen)){
+					$seen[] = $booking->plot->plot_number;
+					$options .= '<option value="'.CHtml::encode($booking->plot->plot_number).'">'.CHtml::encode($booking->plot->plot_number).'</option>';
+				}
+			}
+		}
+		echo CJSON::encode(array('success' => 1, 'data' => $options));
+		Yii::app()->end();
+	}
+
 	public function actionbookingdocument()
 	{
 		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
