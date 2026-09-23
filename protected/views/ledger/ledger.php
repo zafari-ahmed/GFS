@@ -358,13 +358,13 @@
                             
                                     <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='monthly'){ ?>
                                         <br><span style="font-size:10px;">
-                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
+                                            <?php //echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
                                         </span>
                                     <?php } ?>
                             
                                     <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='yearly'){ ?>
                                         <br><span style="font-size:10px;">
-                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
+                                            <?php //echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
                                         </span>
                                     <?php } ?>
                                 </td>

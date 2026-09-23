@@ -214,7 +214,7 @@
 
     <div class="page-break"></div>
     <br/><br/>
-    <div class="receipt" style="margin-top: 20px;">
+    <div class="receipt" style="border: 1px solid;padding: 20px;margin-top: 20px;">
         <div class="header">
             <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -30%;margin-top: 15%;opacity: 0.1;">
             <div style="overflow:hidden;">
@@ -366,7 +366,7 @@
     </div>
     <div class="page-break"></div>
     <br/><br/>
-    <div class="receipt" style="margin-top: 20px;">
+    <div class="receipt" style="border: 1px solid;padding: 20px;margin-top: 20px;">
         <div class="header">
             <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -30%;margin-top: 15%;opacity: 0.1;">
             <div style="overflow:hidden;">

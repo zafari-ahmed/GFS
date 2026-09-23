@@ -22,7 +22,7 @@
                             </div>
                             <div class="form-group col-lg-3">
                                 <label>Block #</label>
-                                <input class="form-control"  name="block_number" placeholder="Block #" required>
+                                <input class="form-control"  name="block_number" placeholder="Block #">
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-3">

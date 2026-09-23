@@ -47,7 +47,7 @@ class Plots extends CActiveRecord
 		// NOTE: you should only define rules for those attributes that
 		// will receive user inputs.
 		return array(
-			array('block_number, category_id, size_id, plot_number, is_road_facing, is_road_facing_amount, is_corner, is_corner_amount, is_park_facing, is_park_facing_amount, is_west_open, is_west_open_amount, total, discount, status', 'required'),
+			array('category_id, size_id, plot_number, is_road_facing, is_road_facing_amount, is_corner, is_corner_amount, is_park_facing, is_park_facing_amount, is_west_open, is_west_open_amount, total, discount, status', 'required'),
 			array('category_id, size_id, is_road_facing, is_corner, is_park_facing, is_park_facing_amount, is_west_open, is_west_open_amount, total, phase_id, status', 'numerical', 'integerOnly'=>true),
 			array('is_road_facing_amount, is_corner_amount, discount', 'numerical'),
 			array('block_number, plot_number, length, width, description, plot_type', 'length', 'max'=>255),

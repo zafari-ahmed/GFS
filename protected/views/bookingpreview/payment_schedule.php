@@ -149,11 +149,26 @@
 </head>
 <body>
 <div class="page">
-  <div class="inner">
-
+  <!-- <div class="inner"> -->
+  <div class="inner" style="border: 1px solid;padding: 20px;margin-top: 20px;">
+    <div class="header">  
+        <!-- <img src="<?php //echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -15%;margin-top: 15%;opacity: 0.1;"> -->
+        <div style="overflow:hidden;">
+            <div style="width:10em;float:left">
+                <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="width: 15em">                
+            </div>
+            <div style="float:left;margin-top:15%;margin-left: 15%;">
+            <div class="title" style=";font-size: 1.5em;">PAYMENT SCHEDULE</div> 
+            </div>
+            <div style="float:right;position:relative;">
+                <img src="<?php echo Yii::app()->baseUrl?>/images/seven-wonder-1.png" style="">
+            </div>
+            
+        </div>
+    </div>
     <div class="row">
-      <div class="title">PAYMENT SCHEDULE</div>
-      <div class="subtitle"><b><?php echo strtoupper(@$booking->plot->category->name)?></b></div>
+      
+      <!-- <div class="subtitle"><b><?php //echo strtoupper(@$booking->plot->category->name)?></b></div> -->
     </div>
     <div class="divline"></div>
 
@@ -273,6 +288,7 @@
     <div class="details">
       <div class="grid5">
         <div class="line-field"><div class="lab">Name:</div><div class="val"><?php echo @$booking->customer->name?></div></div>
+        <div class="line-field"><div class="lab">Father/Husband Name:</div><div class="val" style="margin-left: 40px;"><?php echo @$booking->customer->father_husband_name?></div></div>
         </div>
     <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
         <div class="line-field"><div class="lab">Plot No.</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @@$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></div></div>
