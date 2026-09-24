@@ -414,7 +414,7 @@ class PlotController extends Controller
                     //$plot->id,
                     @($plot->customerPlots)?$plot->customerPlots[0]->customer->name:'-',
                     '<a href="'.Yii::app()->baseUrl.'/plot/view/'.$plot->id.'">
-                        *'.$plot->plot_type.'-'.$plot->plot_number.'-'.$plot->block_number.'*
+                        *'.$plot->plot_type.'-'.$plot->plot_number.($plot->block_number?'-'.$plot->block_number:'').'*
                      </a>',
                     @$plot->category->name,
                     @$plot->size->size,

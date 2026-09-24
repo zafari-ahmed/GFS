@@ -205,9 +205,9 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                                         <option value="registration">Registration</option>
                                         <option value="start_of_work">Start Of Work</option>
                                         <?php foreach(@$paymentmodes as $mode):?>
-                                            <option value="<?php echo $mode['id']?>" rel="<?php echo $mode['amount']?>"><?php echo ucwords($mode['mode'])?></option>
+                                        <option value="<?php echo $mode['id']?>" rel="<?php echo $mode['amount']?>"><?php echo ucwords($mode['mode'])?></option>
                                         <?php endforeach;?>
-
+                                        <option value="demarcation">Demarcation</option>
                                         <option value="development">Development</option>
                                         <option value="documentation">Documentation</option>
                                         <option value="electricity_charges">Electricity Charges</option>
@@ -223,6 +223,8 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                                         <option value="corner">Corner</option>
                                         <option value="extra_land">Extra Land</option>
                                         <option value="park_facing">Park Facing</option>
+
+
                                         <?php /*if( $booking->customerPlotPlanTransactionsDevlopment || $userModel['user_type']['id'] == 1 ){?>
                                             <option value="development">Development</option>
                                         <?php }*/ ?>

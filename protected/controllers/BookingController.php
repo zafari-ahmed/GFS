@@ -272,7 +272,12 @@ class BookingController extends Controller
 		$sizeId = $booking->plot->size->id;
 		if($booking){
 			$data['booking'] = $booking;			
-			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
+			//$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
+			$criteria = new CDbCriteria;
+			$criteria->condition = 'payment_schedule_id = 1';
+			$criteria->group = 'mode';
+
+			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll($criteria);
 // 			if($paymentmodes){
 // 				foreach($paymentmodes as $pm){
 // 					$sql = "SELECT SUM(amount) as total  FROM `customer_plot_transactions` WHERE `plot_payment_mode_id` = ".$pm->id." AND plot_id = $id";
@@ -3499,7 +3504,7 @@ class BookingController extends Controller
 
                 $documentCompleted = ($booking->CPDCount == 6)?'<span class="label label-success" style="text-decoration: none;"> Doc Up</span>':'<span class="label label-danger" style="text-decoration: none;">Doc INC</span>';
 
-				$result['data'][$i][]= '<a href="'.Yii::app()->baseUrl.'/booking/viewbooking/'.$booking->id.'">'.('*'.$booking->plot->plot_type.'-'.$booking->plot->plot_number.'-'.$booking->plot->block_number).'*</a>';
+				$result['data'][$i][]= '<a href="'.Yii::app()->baseUrl.'/booking/viewbooking/'.$booking->id.'">'.('*'.$booking->plot->plot_type.'-'.$booking->plot->plot_number.($booking->plot->block_number?'-'.$booking->plot->block_number:'')).'*</a>';
                 
 				$cpText = '';
 				if(@$booking->customerpaymentSchedule){
