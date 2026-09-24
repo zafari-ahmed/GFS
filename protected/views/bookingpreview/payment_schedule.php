@@ -290,7 +290,11 @@
         <div class="line-field"><div class="lab">Name:</div><div class="val"><?php echo @$booking->customer->name?></div></div>
         <div class="line-field"><div class="lab">Father/Husband Name:</div><div class="val" style="margin-left: 40px;"><?php echo @$booking->customer->father_husband_name?></div></div>
         </div>
-    <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
+      <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
+        <div class="line-field"><div class="lab">CNIC. No.</div><div class="val thin" style="width: 8em;font-size: 12px;padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->customer->cnic?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Address:</div><div class="val thin" style="font-size: 12px;padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->customer->address?></div></div>
+      </div>
+      <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
         <div class="line-field"><div class="lab">Plot No.</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @@$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></div></div>
         <div class="line-field" style="column-gap: 3mm;"><div class="lab">Category:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->category->name?></div></div>
         <div class="line-field" style="column-gap: 3mm;"><div class="lab">Size:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->size->size?></div></div>
