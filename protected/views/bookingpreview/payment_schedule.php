@@ -25,22 +25,22 @@
     margin-top: 2mm;
     border: 1px solid #000;
     display: grid;
-    grid-template-columns: 88mm 1fr;
+    grid-template-columns: 28mm 40mm 32mm 1fr;
     margin-bottom: 5px;
   }
-  .mode-left, .mode-right { display:flex; align-items:center; justify-content:center; height:10mm; font-size:13px; }
-  .mode-left { border-right:1px solid #000; font-weight:600; }
-  .mode-right { }
+  .mode-left, .mode-right, .mode-date, .mode-mid { display:flex; align-items:center; justify-content:center; height:10mm; font-size:13px; }
+  .mode-date, .mode-left, .mode-mid { border-right:1px solid #000; font-weight:600; }
+  .mode-right { font-weight:600; }
 
   .schedule {
     border:1px solid #000; border-top:none;
-    display:grid; grid-template-columns: 54mm 34mm 1fr;
+    display:grid; grid-template-columns: 28mm 40mm 32mm 1fr;
   }
   .cell {
     min-height: 10mm; display:flex; align-items:center; justify-content:center;
     border-right:1px solid #000; border-top:1px solid #000; font-size:12px;
   }
-  .cell:nth-child(3n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
+  .cell:nth-child(4n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
   .cell.label { font-weight:600; }
   .cell.subtle { font-style: italic; font-weight: 600; }
   .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold; white-space: pre-line; text-align:center; }
@@ -174,8 +174,10 @@
 
     <!-- Mode of Payment header -->
     <div class="mode-grid">
+      <div class="mode-date">DATE</div>
       <div class="mode-left">MODE OF PAYMENT</div>
-      <div class="mode-right"><b><?php echo (@$booking->plot->size->size)?></b></div>
+      <div class="mode-mid"></div>
+      <div class="mode-right"><b>AMOUNTS (IN RS.)<?php //echo (@$booking->plot->size->size)?></b></div>
     </div>
 
     <!-- Schedule table -->
@@ -217,7 +219,16 @@
                     if (trim((string)($row['value'] ?? '')) === '') {
                         continue;
                     }
+                    $rowDate = trim((string)($row['date'] ?? ''));
+                    $rowDateDisplay = '';
+                    if ($rowDate !== '') {
+                        $rowDateTs = strtotime($rowDate);
+                        $rowDateDisplay = $rowDateTs ? date('d-m-Y', $rowDateTs) : $rowDate;
+                    }
                 ?>
+              <div class="cell label">
+                <?= htmlspecialchars($rowDateDisplay) ?>
+              </div>
               <div class="cell label">
                 <?= ($row['heading1'] !== 'Empty Box') ? htmlspecialchars($row['heading1']) : '' ?>
               </div>

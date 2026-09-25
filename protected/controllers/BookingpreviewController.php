@@ -21,6 +21,30 @@ class BookingpreviewController extends Controller
 		$this->layout = '';
 		$this->renderPartial('previewDuplicateBack',$data);
 	}
+
+	public function actionApplicationform($id)
+	{
+		$this->renderApplicationPrint($id, 'form');
+	}
+
+	public function actionApplicationterms($id)
+	{
+		$this->renderApplicationPrint($id, 'terms');
+	}
+
+	protected function renderApplicationPrint($id, $printPage)
+	{
+		$booking = CustomerPlots::model()->findByPk($id);
+		if (!$booking) {
+			throw new CHttpException(404, 'Booking not found.');
+		}
+
+		$this->layout = '';
+		$this->renderPartial('application_form_print', array(
+			'booking' => $booking,
+			'printPage' => $printPage,
+		));
+	}
 	
 	public function actionWelcome($id)
 	{
@@ -70,6 +94,7 @@ class BookingpreviewController extends Controller
         
             // (Optional) trim values
             foreach ($rows as $rk => &$r) {
+                $r['date']     = isset($r['date'])     ? trim($r['date'])     : '';
                 $r['heading1'] = isset($r['heading1']) ? trim($r['heading1']) : '';
                 $r['heading2'] = isset($r['heading2']) ? trim($r['heading2']) : '';
                 $r['value']    = isset($r['value'])    ? trim($r['value'])    : '';

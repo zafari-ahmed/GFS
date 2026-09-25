@@ -34,7 +34,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
             }
         ?>
         <h1 class="page-header">View Booking (<?php echo $this->getBookingRegNo($booking->id)?>)</h1><br/>
-        <?php if($booking->status!=3){?>
+        <?php /*if($booking->status!=3){?>
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead style="color: #3c763d;background-color: #dff0d8;    text-transform: UPPERCASE;font-weight: bold;">
                     <th>Monthly Amount</th>
@@ -70,7 +70,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                     </tr>
                 </tbody>
             </table>
-        <?php }?>
+        <?php }*/?>
         <div class="buttonsDiv <?php echo $buttonClass?>">
         <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>
             <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Booking Form</button></a></span>
@@ -116,6 +116,8 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                     
                     <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm <?php echo @$buttonClass?>">Add PS</button></a></span>
                     <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
                     
                     <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addpssoftware/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS Software</button></a></span>
                     <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/paymentsoftware/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule(Software)</button></a></span>
@@ -173,6 +175,8 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
         <?php } else {?>
             <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
             <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+            <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
+            <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
             <span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
             <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>   
                 <?php //if($booking->blocked !=1 && $userModel['user_type']['id'] == 1) {?>
@@ -693,7 +697,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                     }
                                     ?>
                             
-                                    <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='monthly'){ ?>
+                                    <?php /*if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='monthly'){ ?>
                                         <br><span style="font-size:10px;">
                                             <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
                                         </span>
@@ -703,7 +707,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                         <br><span style="font-size:10px;">
                                             <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
                                         </span>
-                                    <?php } ?>
+                                    <?php }*/ ?>
                                 </td>
                             
                                 <td><?php echo ($this->startsWith($txn->transaction_number, '#')) ? $txn->transaction_number : '#'.ltrim($txn->transaction_number,0) ?></td>

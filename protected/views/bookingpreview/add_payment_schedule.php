@@ -59,6 +59,18 @@ function psIsMonthlyHeading2($heading2) {
     return strcasecmp(trim((string)$heading2), 'Monthly Installment') === 0;
 }
 
+function psDateInputValue($date) {
+    $date = trim((string)$date);
+    if ($date === '') {
+        return '';
+    }
+    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+        return $date;
+    }
+    $ts = strtotime($date);
+    return $ts ? date('Y-m-d', $ts) : '';
+}
+
 function psSplitMonthlyValue($value) {
     $main = trim((string)$value);
     $extra = '';
@@ -88,7 +100,7 @@ function psSplitMonthlyValue($value) {
     table {
         border-collapse: collapse;
         width: 100%;
-        max-width: 1100px;
+        max-width: 1200px;
     }
 
     .value-fields {
@@ -122,7 +134,8 @@ function psSplitMonthlyValue($value) {
     }
 
     select,
-    input[type="text"] {
+    input[type="text"],
+    input[type="date"] {
         width: 95%;
         padding: 6px;
         border: 1px solid #555;
@@ -172,6 +185,7 @@ function psSplitMonthlyValue($value) {
 
         <thead>
             <tr>
+                <th width="160">Date</th>
                 <th>Heading 1</th>
                 <th>Heading 2</th>
                 <th>Value</th>
@@ -190,6 +204,7 @@ function psSplitMonthlyValue($value) {
 
             foreach ($data as $rowKey => $row):
 
+                $selDate = psDateInputValue($row['date'] ?? '');
                 $selH1 = $row['heading1'] ?? '';
                 $selH2 = $row['heading2'] ?? '';
                 $val   = $row['value'] ?? '';
@@ -202,6 +217,14 @@ function psSplitMonthlyValue($value) {
         ?>
 
             <tr>
+
+                <td>
+                    <input
+                        type="date"
+                        name="rows[<?php echo $rowKey; ?>][date]"
+                        class="form-control"
+                        value="<?php echo h($selDate); ?>">
+                </td>
 
                 <td>
                     <select
@@ -285,6 +308,14 @@ function psSplitMonthlyValue($value) {
         ?>
 
             <tr>
+
+                <td>
+                    <input
+                        type="date"
+                        name="rows[<?php echo $rowKey; ?>][date]"
+                        class="form-control"
+                        value="">
+                </td>
 
                 <td>
                     <select
@@ -437,6 +468,14 @@ function addRow() {
 
 
     row.innerHTML = `
+
+        <td>
+            <input
+                type="date"
+                name="rows[${rowKey}][date]"
+                class="form-control"
+                value="">
+        </td>
 
         <td>
 

@@ -116,7 +116,7 @@ function bookingFilterUrl($key, $value = null)
                 <span class="pull-right">
                     <a href="<?php echo Yii::app()->baseUrl?>/report/exportavailableplot"><span class="label label-success">Export</span></a>
                     &nbsp;
-                    <a href="<?php echo Yii::app()->baseUrl?>/import/uploaddealer"><span class="label label-success">Import</span></a>
+                    <a href="<?php echo Yii::app()->baseUrl?>/import/upload"><span class="label label-success">Import</span></a>
                 </span>
                 
             </div>
