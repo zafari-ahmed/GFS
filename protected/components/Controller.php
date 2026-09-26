@@ -905,13 +905,13 @@ class Controller extends CController
     
     /**
 	 * Pending dues for a booking (customer_plots.id).
-	 * @see CustomerPlots::calculateDues()
+	 * @see CustomerPlots::calculateScheduleDues()
 	 * @param integer $bookingId
 	 * @return array
 	 */
 	public function calculateBookingDues($bookingId)
 	{
-		return CustomerPlots::calculateDues($bookingId);
+		return CustomerPlots::calculateScheduleDues($bookingId);
 	}
 
 }

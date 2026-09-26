@@ -281,6 +281,7 @@
           <td style="font-weight: bold;width: 110px;width: 65%;">PAID AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format($booking->customerPlotTransactionSum + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
         </tr>
+        <?php if(!empty($bookingDues['due_amount']) && $bookingDues['due_amount'] > 0){ ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">DUE MONTH:</td>
           <td class="value normal" colspan="2"><b><?php echo @$bookingDues['due_months']?> Month(s)</b></td>
@@ -289,6 +290,22 @@
           <td style="font-weight: bold;width: 110px;">DUE AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format(@$bookingDues['due_amount'])?> PKR</b></td>
         </tr>
+        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+        <tr>
+          <td style="font-weight: bold;width: 110px;vertical-align:top;">DUE DETAIL:</td>
+          <td class="value normal" colspan="2">
+            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+              <b><?php echo CHtml::encode($dueItem['label']); ?>:</b>
+              <?php echo number_format(@$dueItem['due_amount']); ?> PKR
+              <?php if(!empty($dueItem['is_monthly']) && @$dueItem['due_months'] > 0){ ?>
+                (<?php echo $dueItem['due_months']; ?> month(s))
+              <?php } ?>
+              <br>
+            <?php endforeach; ?>
+          </td>
+        </tr>
+        <?php }*/ ?>
+        <?php } ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">BALANCE AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum - @$booking->plot->discount + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
@@ -401,6 +418,23 @@
                                 <td><?php echo date('d M,Y',strtotime($txn->createdOn)) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+                            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+                            <tr>
+                                <td style="width: 20%;"><b><?php echo CHtml::encode($dueItem['label']); ?></b></td>
+                                <td>-</td>
+                                <td>Due</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$dueItem['due_amount']); ?></b></td>
+                                <td>-</td>
+                                <td><?php echo !empty($dueItem['due_date']) ? date('d M,Y', strtotime($dueItem['due_date'])) : '-'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <tr class="grand-total">
+                                <td colspan="3" class="grand-label">TOTAL DUE:</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$bookingDues['due_amount']); ?></b></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        <?php }*/ ?>
         <!-- Example opening row (like your sheet has POST / BOOKING...) -->
         <?php /*?>
         <tr>

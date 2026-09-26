@@ -34,43 +34,34 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
             }
         ?>
         <h1 class="page-header">View Booking (<?php echo $this->getBookingRegNo($booking->id)?>)</h1><br/>
-        <?php /*if($booking->status!=3){?>
+        <?php if($booking->status!=3 && !empty($dues['due_items'])){ ?>
             <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead style="color: #3c763d;background-color: #dff0d8;    text-transform: UPPERCASE;font-weight: bold;">
-                    <th>Monthly Amount</th>
-                    <th>Elapsed Months</th>
-                    <th>Months Paid</th>
+                    <th>Payment Mode</th>
+                    <th>Due Date</th>
+                    <th>Scheduled</th>
+                    <th>Paid</th>
                     <th>Due Months</th>
-                    <th>Total Paid</th>
-                    <th>Remaining Balance</th>
-                    <th>Total Due</th>
+                    <th>Due Amount</th>
                 </thead>
                 <tbody>
+                    <?php foreach ($dues['due_items'] as $dueItem): ?>
                     <tr>
-                        <td><b><?php echo 'PKR '.number_format(@$dues['monthly_amount'],2,'.',',');?></b></td>
-                        <td><?php echo (int)@$dues['elapsed_months'];?></td>
-                        <td><?php echo @$dues['months_paid'];?></td>
-                        <td><b><?php echo @$dues['due_months'];?></b></td>
-                        <td><?php echo 'PKR '.number_format(@$dues['total_paid'],2,'.',',');?></td>
-                        <td><?php echo 'PKR '.number_format(@$dues['remaining_balance'],2,'.',',');?></td>
-                        <td><b><?php echo 'PKR '.number_format(@$dues['due_amount'],2,'.',',');?></b></td>
+                        <td><b><?php echo CHtml::encode($dueItem['label']); ?></b></td>
+                        <td><?php echo !empty($dueItem['due_date']) ? date('d M, Y', strtotime($dueItem['due_date'])) : '-'; ?></td>
+                        <td><?php echo 'PKR '.number_format(@$dueItem['scheduled_amount'], 2, '.', ','); ?></td>
+                        <td><?php echo 'PKR '.number_format(@$dueItem['paid_amount'], 2, '.', ','); ?></td>
+                        <td><?php echo !empty($dueItem['is_monthly']) ? @$dueItem['due_months'] : '-'; ?></td>
+                        <td><b><?php echo 'PKR '.number_format(@$dueItem['due_amount'], 2, '.', ','); ?></b></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <tr style="background-color: #fcf8e3; font-weight: bold;">
+                        <td colspan="5">Total Due</td>
+                        <td><?php echo 'PKR '.number_format(@$dues['due_amount'], 2, '.', ','); ?></td>
                     </tr>
                 </tbody>
             </table>
-            
-            <table width="100%" class="hide table table-striped table-bordered table-hover">
-                <thead style="color: #3c763d;background-color: #dff0d8;    text-transform: UPPERCASE;font-weight: bold;">
-                    <th>Booking Dues Summary</th>
-                    <th>Total Dues</th>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><?php echo $det['html'];?></td>
-                        <td><b><?php echo 'PKR '.number_format(@$det['amount'],2,'.',',');?></b></td>
-                    </tr>
-                </tbody>
-            </table>
-        <?php }*/?>
+        <?php } ?>
         <div class="buttonsDiv <?php echo $buttonClass?>">
         <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>
             <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Booking Form</button></a></span>

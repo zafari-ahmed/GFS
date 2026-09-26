@@ -228,20 +228,10 @@ class CustomerPlots extends CActiveRecord
 	}
 	
 	
-	/**
-	 * Calculate pending dues for a customer booking as of today.
+	/*
+	 * Old monthly-from-first-transaction dues calculator.
+	 * Replaced by calculateScheduleDues() which uses payment_schedule_json dates.
 	 *
-	 * Rules:
-	 * - Monthly rate = amount of the first (oldest) active transaction
-	 * - Elapsed months = from booking/monthly start date to today
-	 * - Expected due = elapsed months × monthly rate
-	 * - Total paid = sum of all active transactions
-	 *   (e.g. one payment of 15000 with monthly 5000 covers 3 months)
-	 * - Pending due = expected − paid, capped by remaining booking total
-	 *
-	 * @param integer $bookingId customer_plots.id
-	 * @return array
-	 */
 	public static function calculateDues($bookingId)
 	{
 		$result = array(
@@ -281,8 +271,6 @@ class CustomerPlots extends CActiveRecord
 			'params' => array(':plot_id' => $booking->id),
 			'order' => 'createdOn ASC, id ASC',
 		));
-		
-		//echo '<pre>';print_r($transactions);exit;
 
 		if (empty($transactions)) {
 			$result['status'] = 'error';
@@ -305,20 +293,12 @@ class CustomerPlots extends CActiveRecord
 			$totalPaid += (float)$txn->amount;
 		}
 		
-		//Extra Transaction
 		if($transactionsExtra){
 		    foreach ($transactionsExtra as $txn) {
     			$totalPaid += (float)$txn->amount;
     		}    
 		}
-		
 
-		// Prefer monthly_start_date; fall back to booking createdOn
-// 		$startDateRaw = !empty($booking->monthly_start_date)
-// 			? $booking->monthly_start_date
-// 			: $booking->createdOn;
-
-    
         $startDateRaw = $booking->createdOn;
 		$start = new DateTime(date('Y-m-01', strtotime($startDateRaw)));
 		$now = new DateTime(date('Y-m-01'));
@@ -352,6 +332,431 @@ class CustomerPlots extends CActiveRecord
 			: 'No dues';
 
 		return $result;
+	}
+	*/
+
+	/**
+	 * Calculate dues from payment_schedule_json dates.
+	 *
+	 * Each schedule row becomes due on/after its date.
+	 * Due amount = scheduled (or expected-to-date for monthly) minus paid for that mode.
+	 * Monthly / yearly / half-yearly use elapsed periods from the row date
+	 * (monthly falls back to monthly_start_date when the row date is empty).
+	 *
+	 * @param integer $bookingId customer_plots.id
+	 * @return array
+	 */
+	public static function calculateScheduleDues($bookingId)
+	{
+		$today = date('Y-m-d');
+		$result = array(
+			'booking_id' => (int)$bookingId,
+			'monthly_amount' => 0,
+			'elapsed_months' => 0,
+			'months_paid' => 0,
+			'due_months' => 0,
+			'expected_amount' => 0,
+			'total_paid' => 0,
+			'booking_total' => 0,
+			'remaining_balance' => 0,
+			'due_amount' => 0,
+			'start_date' => null,
+			'current_date' => $today,
+			'first_transaction_date' => null,
+			'last_transaction_date' => null,
+			'items' => array(),
+			'due_items' => array(),
+			'status' => 'ok',
+			'message' => '',
+		);
+
+		$booking = self::model()->with('plot')->findByPk($bookingId);
+		if (!$booking) {
+			$result['status'] = 'error';
+			$result['message'] = 'Booking not found';
+			return $result;
+		}
+
+		$paidByMode = self::loadPaidAmountsByMode($booking->id);
+		$totalPaid = 0;
+		foreach ($paidByMode as $paidAmount) {
+			$totalPaid += (float)$paidAmount;
+		}
+
+		$bookingTotal = self::resolveBookingTotal($booking);
+		$remainingBalance = max(0, $bookingTotal - $totalPaid);
+
+		$result['total_paid'] = round($totalPaid, 2);
+		$result['booking_total'] = round($bookingTotal, 2);
+		$result['remaining_balance'] = round($remainingBalance, 2);
+
+		$schedule = array();
+		if (!empty($booking->payment_schedule_json)) {
+			$decoded = json_decode($booking->payment_schedule_json, true);
+			if (is_array($decoded) && !empty($decoded['rows']) && is_array($decoded['rows'])) {
+				$schedule = $decoded['rows'];
+			}
+		}
+
+		if (empty($schedule)) {
+			$result['status'] = 'error';
+			$result['message'] = 'Payment schedule not found';
+			return $result;
+		}
+
+		$paidRemaining = $paidByMode;
+		$items = array();
+		$expectedTotal = 0;
+		$monthlyAmount = 0;
+		$elapsedMonths = 0;
+		$monthsPaid = 0;
+		$monthlyDueMonths = 0;
+		$monthlyStartDate = null;
+
+		foreach ($schedule as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+
+			$heading1 = trim((string)(isset($row['heading1']) ? $row['heading1'] : ''));
+			$heading2 = trim((string)(isset($row['heading2']) ? $row['heading2'] : ''));
+			$valueRaw = trim((string)(isset($row['value']) ? $row['value'] : ''));
+			$rowDate = self::normalizeScheduleDate(isset($row['date']) ? $row['date'] : '');
+
+			if ($valueRaw === '' || $valueRaw === '0') {
+				continue;
+			}
+
+			$modeKey = self::resolveScheduleModeKey($heading1, $heading2);
+			if ($modeKey === '') {
+				continue;
+			}
+
+			$parsed = self::parseScheduleValue($valueRaw);
+			$unitAmount = $parsed['amount'];
+			$duration = $parsed['duration'];
+			$scheduledTotal = $parsed['total'];
+			if ($scheduledTotal <= 0) {
+				continue;
+			}
+
+			$isMonthly = ($modeKey === 'monthly');
+			$isYearly = ($modeKey === 'yearly');
+			$isHalfYearly = ($modeKey === 'half_yearly');
+			$isRecurring = ($isMonthly || $isYearly || $isHalfYearly);
+
+			$dueDate = $rowDate;
+			if ($dueDate === '' && $isMonthly && !empty($booking->monthly_start_date)) {
+				$dueDate = self::normalizeScheduleDate($booking->monthly_start_date);
+			}
+
+			if ($dueDate === '') {
+				continue;
+			}
+
+			if ($monthlyStartDate === null && $isMonthly) {
+				$monthlyStartDate = $dueDate;
+			}
+
+			$isDateDue = (strtotime($dueDate) <= strtotime($today));
+			$periodMonths = $isMonthly ? 1 : ($isHalfYearly ? 6 : ($isYearly ? 12 : 0));
+			$elapsedPeriods = $isDateDue
+				? ($isRecurring ? self::countElapsedPeriods($dueDate, $today, $periodMonths, $duration) : 1)
+				: 0;
+
+			$expectedAmount = $isRecurring
+				? min($elapsedPeriods * $unitAmount, $scheduledTotal)
+				: ($isDateDue ? $scheduledTotal : 0);
+
+			$paidPoolKey = self::paidPoolKey($modeKey);
+			$availablePaid = isset($paidRemaining[$paidPoolKey]) ? (float)$paidRemaining[$paidPoolKey] : 0;
+			$allocatedPaid = min($availablePaid, $scheduledTotal);
+			$paidRemaining[$paidPoolKey] = max(0, $availablePaid - $allocatedPaid);
+
+			$itemDue = $isDateDue ? max(0, $expectedAmount - $allocatedPaid) : 0;
+			$itemDueMonths = ($isMonthly && $unitAmount > 0) ? round($itemDue / $unitAmount, 2) : 0;
+
+			if ($isMonthly) {
+				$monthlyAmount = $unitAmount;
+				$elapsedMonths = $elapsedPeriods;
+				$monthsPaid = ($unitAmount > 0) ? round($allocatedPaid / $unitAmount, 2) : 0;
+				$monthlyDueMonths = $itemDueMonths;
+			}
+
+			$expectedTotal += $expectedAmount;
+
+			$label = self::scheduleItemLabel($heading1, $heading2, $modeKey);
+			$item = array(
+				'label' => $label,
+				'heading1' => $heading1,
+				'heading2' => $heading2,
+				'mode' => $modeKey,
+				'due_date' => $dueDate,
+				'scheduled_amount' => round($scheduledTotal, 2),
+				'unit_amount' => round($unitAmount, 2),
+				'duration' => $duration,
+				'expected_amount' => round($expectedAmount, 2),
+				'paid_amount' => round($allocatedPaid, 2),
+				'due_amount' => round($itemDue, 2),
+				'is_due' => ($isDateDue && $itemDue > 0),
+				'is_recurring' => $isRecurring,
+				'is_monthly' => $isMonthly,
+				'elapsed_periods' => $elapsedPeriods,
+				'due_months' => $itemDueMonths,
+			);
+			$items[] = $item;
+		}
+
+		$remainingCap = $remainingBalance;
+		$dueItems = array();
+		$totalDue = 0;
+		foreach ($items as $index => $item) {
+			$cappedDue = min($item['due_amount'], $remainingCap);
+			$items[$index]['due_amount'] = round($cappedDue, 2);
+			$items[$index]['is_due'] = ($cappedDue > 0);
+			if ($item['is_monthly'] && $item['unit_amount'] > 0) {
+				$items[$index]['due_months'] = round($cappedDue / $item['unit_amount'], 2);
+				$monthlyDueMonths = $items[$index]['due_months'];
+			}
+			$remainingCap = max(0, $remainingCap - $cappedDue);
+			if ($cappedDue > 0) {
+				$dueItems[] = $items[$index];
+				$totalDue += $cappedDue;
+			}
+		}
+
+		$result['items'] = $items;
+		$result['due_items'] = $dueItems;
+		$result['monthly_amount'] = round($monthlyAmount, 2);
+		$result['elapsed_months'] = (int)$elapsedMonths;
+		$result['months_paid'] = $monthsPaid;
+		$result['due_months'] = $monthlyDueMonths;
+		$result['expected_amount'] = round($expectedTotal, 2);
+		$result['due_amount'] = round($totalDue, 2);
+		$result['start_date'] = $monthlyStartDate;
+		$result['message'] = ($totalDue > 0) ? 'Dues pending' : 'No dues';
+
+		return $result;
+	}
+
+	/**
+	 * Paid totals keyed by normalized payment mode.
+	 * @param integer $bookingId
+	 * @return array
+	 */
+	protected static function loadPaidAmountsByMode($bookingId)
+	{
+		$paid = array();
+
+		$rows = Yii::app()->db->createCommand()
+			->select('LOWER(p.mode) AS mode, SUM(t.amount) AS paid')
+			->from('customer_plot_transactions t')
+			->leftJoin('payment_schedule_payment_modes p', 'p.id = t.plot_payment_mode_id')
+			->where('t.plot_id = :plot_id AND t.status = 1', array(':plot_id' => $bookingId))
+			->group('LOWER(p.mode)')
+			->queryAll();
+
+		foreach ($rows as $row) {
+			$key = self::normalizePaidModeName($row['mode']);
+			if ($key === '') {
+				continue;
+			}
+			if (!isset($paid[$key])) {
+				$paid[$key] = 0;
+			}
+			$paid[$key] += (float)$row['paid'];
+		}
+
+		$extraRows = Yii::app()->db->createCommand()
+			->select('LOWER(plot_payment_mode) AS mode, SUM(amount) AS paid')
+			->from('customer_plot_extra_transactions')
+			->where('plot_id = :plot_id AND status = 1', array(':plot_id' => $bookingId))
+			->group('plot_payment_mode')
+			->queryAll();
+
+		foreach ($extraRows as $row) {
+			$key = 'extra:' . str_replace(' ', '_', trim((string)$row['mode']));
+			if (!isset($paid[$key])) {
+				$paid[$key] = 0;
+			}
+			$paid[$key] += (float)$row['paid'];
+		}
+
+		return $paid;
+	}
+
+	/**
+	 * @param string $heading1
+	 * @param string $heading2
+	 * @return string
+	 */
+	protected static function resolveScheduleModeKey($heading1, $heading2)
+	{
+		$h1 = strtolower(trim((string)$heading1));
+		$h2 = strtolower(trim((string)$heading2));
+		$empty = array('', 'empty box');
+
+		$extraKeys = array(
+			'corner' => 'extra:corner',
+			'road facing' => 'extra:road_facing',
+			'west open' => 'extra:west_open',
+			'extra land' => 'extra:extra_land',
+			'park facing' => 'extra:park_facing',
+		);
+
+		if (isset($extraKeys[$h2])) {
+			return $extraKeys[$h2];
+		}
+		if (isset($extraKeys[$h1])) {
+			return $extraKeys[$h1];
+		}
+		if ($h1 === 'extra' && $h2 !== '' && !in_array($h2, $empty, true)) {
+			return 'extra:' . str_replace(' ', '_', $h2);
+		}
+
+		$source = (!in_array($h1, $empty, true)) ? $h1 : $h2;
+		return self::normalizePaidModeName($source);
+	}
+
+	/**
+	 * @param string $name
+	 * @return string
+	 */
+	protected static function normalizePaidModeName($name)
+	{
+		$key = strtolower(trim((string)$name));
+		$key = str_replace(array('-', '.'), ' ', $key);
+		$key = preg_replace('/\s+/', ' ', $key);
+
+		$map = array(
+			'booking' => 'booking',
+			'allocation' => 'allocation',
+			'confirmation' => 'confirmation',
+			'monthly' => 'monthly',
+			'monthly installment' => 'monthly',
+			'm installment' => 'monthly',
+			'yearly' => 'yearly',
+			'half yearly' => 'half_yearly',
+			'demarcation' => 'possession',
+			'possession' => 'possession',
+			'2nd last payment' => 'possession',
+			'last payment' => 'possession',
+			'development' => 'extra:development',
+			'documentation' => 'extra:documentation',
+		);
+
+		return isset($map[$key]) ? $map[$key] : $key;
+	}
+
+	/**
+	 * Recurring extras share the same paid bucket as their base mode.
+	 * @param string $modeKey
+	 * @return string
+	 */
+	protected static function paidPoolKey($modeKey)
+	{
+		if ($modeKey === 'half_yearly') {
+			return 'yearly';
+		}
+		return $modeKey;
+	}
+
+	/**
+	 * Parse schedule value: 5000, 5000 x 36, 5000 x 36 = 180000, 5000 = 180000.
+	 * @param string $value
+	 * @return array
+	 */
+	protected static function parseScheduleValue($value)
+	{
+		$value = str_replace(',', '', trim((string)$value));
+		$amount = 0;
+		$duration = 0;
+		$total = 0;
+
+		if (preg_match('/([\d.]+)\s*[\*xX]\s*([\d.]+)(?:\s*=\s*([\d.]+))?/', $value, $matches)) {
+			$amount = (float)$matches[1];
+			$duration = (float)$matches[2];
+			$total = (isset($matches[3]) && $matches[3] !== '') ? (float)$matches[3] : ($amount * $duration);
+		} elseif (preg_match('/([\d.]+)\s*=\s*([\d.]+)/', $value, $matches)) {
+			$amount = (float)$matches[1];
+			$total = (float)$matches[2];
+			$duration = ($amount > 0) ? (int)round($total / $amount) : 0;
+		} elseif (preg_match('/([\d.]+)/', $value, $matches)) {
+			$amount = (float)$matches[1];
+			$total = $amount;
+		}
+
+		return array(
+			'amount' => $amount,
+			'duration' => $duration,
+			'total' => $total,
+		);
+	}
+
+	/**
+	 * @param string $date
+	 * @return string Y-m-d or empty
+	 */
+	protected static function normalizeScheduleDate($date)
+	{
+		$date = trim((string)$date);
+		if ($date === '' || $date === '0000-00-00') {
+			return '';
+		}
+		$ts = strtotime($date);
+		return $ts ? date('Y-m-d', $ts) : '';
+	}
+
+	/**
+	 * Periods from start date through today, inclusive of the start period.
+	 * @param string $startDate
+	 * @param string $today
+	 * @param integer $periodMonths
+	 * @param integer $maxPeriods
+	 * @return integer
+	 */
+	protected static function countElapsedPeriods($startDate, $today, $periodMonths, $maxPeriods = 0)
+	{
+		if ($periodMonths < 1) {
+			return 0;
+		}
+
+		$start = new DateTime(date('Y-m-01', strtotime($startDate)));
+		$now = new DateTime(date('Y-m-01', strtotime($today)));
+		$diff = $start->diff($now);
+		if ($diff->invert) {
+			return 0;
+		}
+
+		$elapsedMonths = ($diff->y * 12) + $diff->m + 1;
+		$periods = (int)ceil($elapsedMonths / $periodMonths);
+		if ($maxPeriods > 0) {
+			$periods = min($periods, (int)$maxPeriods);
+		}
+		return max(0, $periods);
+	}
+
+	/**
+	 * @param string $heading1
+	 * @param string $heading2
+	 * @param string $modeKey
+	 * @return string
+	 */
+	protected static function scheduleItemLabel($heading1, $heading2, $modeKey)
+	{
+		$h1 = trim((string)$heading1);
+		$h2 = trim((string)$heading2);
+		$empty = array('', 'Empty Box');
+
+		if (!in_array($h1, $empty, true)) {
+			return $h1;
+		}
+		if (!in_array($h2, $empty, true)) {
+			return $h2;
+		}
+
+		$label = str_replace(array('extra:', '_'), array('', ' '), $modeKey);
+		return ucwords($label);
 	}
 
 	/**
