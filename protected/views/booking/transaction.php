@@ -318,18 +318,18 @@ $formattedTransactions = $booking->getFormattedLatestTransaction();
                                 <label>Comment</label>
                                 <textarea class="form-control" rows="3" name="comment" placeholder="Comments"></textarea>
                             </div>
-                            <?php if($userModel['id'] != 40 && $userModel['id'] != 43 && $userModel['id'] != 1){?>
+                            <?php //if($userModel['id'] != 40 && $userModel['id'] != 43 && $userModel['id'] != 1){?>
                             <div class="form-group col-lg-6" style="padding-left: 0px;">
                                 <label>Created Date</label>
                                 <input class="form-control calender"  name="createdOn" placeholder="Created Date" autocomplete="off" value="<?php echo date('d-m-Y')//date('Y-m-d')?>">
                             </div>
-                            <?php } else {?>
+                            <?php /*} else {?>
                                 <div class="form-group col-lg-6" style="padding-left: 0px;">
                                     <label>Created Date</label>
                                     <input class="form-control"  placeholder="Created Date" disabled="true" value="<?php echo date('d-m-Y')?>">
                                 </div>
                                 <input   name="createdOn" type="hidden" value="<?php echo date('d-m-Y')?>">
-                            <?php } ?>
+                            <?php } */?>
                             <div class="form-group col-lg-6" style="padding-left: 0px;">
                                 <label>Another Number</label>
                                 <input class="form-control"  name="another_number" placeholder="Another Number" autocomplete="off">
