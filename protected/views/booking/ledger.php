@@ -139,6 +139,24 @@
 
     /* Optional: prevent row breaking awkwardly */
     tr { page-break-inside: avoid; }
+
+    table.ledger-summary {
+      width: 62%;
+      margin: 8mm 0 0 auto;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+    }
+    table.ledger-summary th,
+    table.ledger-summary td {
+      border: 1px solid #000;
+      padding: 2mm 2mm;
+      text-align: center;
+      font-weight: 700;
+    }
+    table.ledger-summary th {
+      text-transform: uppercase;
+    }
     
   </style>
 </head>
@@ -534,6 +552,28 @@
           <td class="num">{{totalCr}}</td>
           <td class="num">{{grandBalance}}</td>
         </tr><?php */?>
+      </tbody>
+    </table>
+
+    <?php
+      $ledgerTotalPaid = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+      $ledgerTotalCost = (float)$tpp;
+      $ledgerBalanceAmount = $ledgerTotalCost - $ledgerTotalPaid;
+    ?>
+    <table class="ledger-summary">
+      <thead>
+        <tr>
+          <th>TOTAL PAID</th>
+          <th>BALANCE AMOUNT</th>
+          <th>TOTAL COST</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><?php echo number_format($ledgerTotalPaid); ?> PKR</td>
+          <td><?php echo number_format($ledgerBalanceAmount); ?> PKR</td>
+          <td><?php echo number_format($ledgerTotalCost); ?> PKR</td>
+        </tr>
       </tbody>
     </table>
 

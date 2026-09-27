@@ -23,7 +23,7 @@ $plot = @$booking->plot;
 $customer = @$booking->customer;
 $printPage = $printPage ?? 'form';
 
-$book_by = @$booking->agent->name ?: @$booking->agent_name;
+$book_by = @$booking->agent->name ?: str_replace(' ', '<br/>', @$booking->agent_name); 
 $plot_no = @$plot->plot_number;
 $plot_type = @$plot->plot_type;
 $plot_size = @$plot->size->size;
@@ -52,7 +52,7 @@ if (!empty($booking->createdOn) && $booking->createdOn !== '0000-00-00') {
 
 $nominee_name = @$customer->nominee_name;
 $nominee_relation = @$customer->nominee_relation;
-$nominee_age = '';
+$nominee_age = 15;
 $nominee_parent_name = '';
 
 $cost_of_plot = @$plot->total;
@@ -125,7 +125,6 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
         text-transform: uppercase;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
         line-height: 1.25;
     }
     .f .v.wrap { white-space: normal; }
@@ -224,35 +223,39 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 <body>
 
 <?php if ($printPage === 'form'): ?>
-<section class="page p1">
-    <?php if (!empty($booking->agent_cnic)): ?>
+<section class="page p1" style="margin-top:215px;">
+    <?php /*if (!empty($booking->agent_cnic)): ?>
     <div class="applicant-photo">
         <img src="<?php echo Yii::app()->baseUrl?>/uploads/booking/<?php echo e($booking->agent_cnic)?>" alt="">
     </div>
-    <?php endif; ?>
+    <?php endif;*/ ?>
     <div class="content">
 
         <div class="header">
-            <div class="book-by f"><span class="v"><?= e($book_by) ?></span></div>
+            <div class="book-by f">
+    <span class="v" style="margin-left: 330px; font-size: 10px; display: inline-block; vertical-align: top;">
+        <?= $book_by ?>
+    </span>
+</div>
         </div>
 
         <div class="row plot-row">
-            <div class="f"><span class="v"><?= e($plot_no) ?></span></div>
-            <div class="f"><span class="v"><?= e($plot_type) ?></span></div>
-            <div class="f"><span class="v"><?= e($plot_size) ?></span></div>
-            <div class="f"><span class="v"><?= e($cluster) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:120px;margin-top:5px"><?= e($plot_no) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:120px"><?= e($plot_type) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:110px"><?= e($plot_size) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:150px"><?= e($cluster) ?></span></div>
         </div>
 
         <div class="spacer"></div>
 
-        <div class="row">
-            <div class="f"><span class="v"><?= e($applicant_name) ?></span></div>
+        <div class="row" style="margin-top:40px">
+            <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($applicant_name) ?></span></div>
         </div>
         <div class="row">
-            <div class="f"><span class="v"><?= e($cnic_no) ?></span></div>
+            <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($cnic_no) ?></span></div>
         </div>
         <div class="row">
-            <div class="f"><span class="v"><?= e($father_husband_name) ?></span></div>
+            <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($father_husband_name) ?></span></div>
         </div>
         <div class="row">
             <div class="f"><span class="v"><?= e($guardian_name) ?></span></div>
@@ -260,36 +263,36 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
         <div class="spacer-sm"></div>
 
-        <div class="row">
-            <div class="f"><span class="v"><?= e($date_of_birth) ?></span></div>
+        <div class="row" style="margin-top:-8px">
+            <div class="f"><span class="v" style="margin-left:100px;"><?= e($date_of_birth) ?></span></div>
             <div class="f"><span class="v"><?= e($nationality) ?></span></div>
-            <div class="f grow-2"><span class="v"><?= e($occupation) ?></span></div>
+            <div class="f grow-2"><span class="v" style="margin-left:200px"><?= e($occupation) ?></span></div>
         </div>
-        <div class="row">
-            <div class="f"><span class="v wrap"><?= e($address) ?></span></div>
+        <div class="row" style="margin-top: -15px;">
+            <div class="f" style="margin-left:120px;"><span class="v wrap"><?= e($address) ?></span></div>
         </div>
 
         <div class="spacer-sm"></div>
 
-        <div class="row">
-            <div class="f"><span class="v"><?= e($phone_office) ?></span></div>
-            <div class="f"><span class="v"><?= e($cell_no) ?></span></div>
-            <div class="f grow-2"><span class="v"><?= e($residence_no) ?></span></div>
+        <div class="row" style="margin-top: -2px;">
+            <div class="f"><span class="v" style="margin-left:150px"><?= e($phone_office) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:150px"><?= e($cell_no) ?></span></div>
+            <div class="f grow-2"><span class="v" style="margin-left:200px"><?= e($residence_no) ?></span></div>
         </div>
 
         <div class="spacer-decl"></div>
 
-        <div class="row">
-            <div class="f"><span class="v"><?= e($application_date) ?></span></div>
+        <div class="row" style="margin-top: 5%;">
+            <div class="f"><span class="v" style="margin-left:100px"><?= e($application_date) ?></span></div>
             <div class="f"><span class="v"></span></div>
         </div>
 
         <div class="spacer-md"></div>
 
-        <div class="row">
-            <div class="f grow-2"><span class="v"><?= e($nominee_name) ?></span></div>
-            <div class="f"><span class="v"><?= e($nominee_relation) ?></span></div>
-            <div class="f"><span class="v"><?= e($nominee_age) ?></span></div>
+        <div class="row" style="margin-top: 2%;">
+            <div class="f grow-2"><span class="v" style="margin-left:250px"><?= e($nominee_name) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:100px"><?= e($nominee_relation) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:100px"><?= e($nominee_age) ?></span></div>
         </div>
 
         <div class="row">
