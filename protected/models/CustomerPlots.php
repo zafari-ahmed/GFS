@@ -637,12 +637,22 @@ class CustomerPlots extends CActiveRecord
 			'm installment' => 'monthly',
 			'yearly' => 'yearly',
 			'half yearly' => 'half_yearly',
-			'demarcation' => 'possession',
+			'demarcation' => 'extra:demarcation',
 			'possession' => 'possession',
 			'2nd last payment' => 'possession',
 			'last payment' => 'possession',
 			'development' => 'extra:development',
 			'documentation' => 'extra:documentation',
+			'registration' => 'extra:registration',
+			'start of work' => 'extra:start_of_work',
+			'electricity charges' => 'extra:electricity_charges',
+			'quarterly installment' => 'extra:quarterly_installment',
+			'own money' => 'extra:own_money',
+			'penalty' => 'extra:penalty',
+			'transfer fee' => 'extra:transfer_fee',
+			'lease charges' => 'extra:lease_charges',
+			'water sewerage charges' => 'extra:water_sewerage_charges',
+			'others' => 'extra:others',
 		);
 
 		return isset($map[$key]) ? $map[$key] : $key;

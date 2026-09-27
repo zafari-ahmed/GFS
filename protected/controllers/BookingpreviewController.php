@@ -97,10 +97,16 @@ class BookingpreviewController extends Controller
                 $r['date']     = isset($r['date'])     ? trim($r['date'])     : '';
                 $r['heading1'] = isset($r['heading1']) ? trim($r['heading1']) : '';
                 $r['heading2'] = isset($r['heading2']) ? trim($r['heading2']) : '';
-                $r['value']    = isset($r['value'])    ? trim($r['value'])    : '';
-                $extra         = isset($r['value_extra']) ? trim($r['value_extra']) : '';
+                $r['value']    = $this->stripAmountCommas(isset($r['value']) ? trim($r['value']) : '');
+                $extra         = $this->stripAmountCommas(isset($r['value_extra']) ? trim($r['value_extra']) : '');
 
-                if (strcasecmp($r['heading2'], 'Monthly Installment') === 0) {
+                $isMonthlyHeading = (
+                    strcasecmp($r['heading1'], 'Monthly') === 0
+                    || strcasecmp($r['heading1'], 'Monthly Installment') === 0
+                    || strcasecmp($r['heading2'], 'Monthly') === 0
+                    || strcasecmp($r['heading2'], 'Monthly Installment') === 0
+                );
+                if ($isMonthlyHeading) {
                     $r['value'] = $this->mergeMonthlyInstallmentValue($r['value'], $extra);
                 }
 
@@ -109,7 +115,7 @@ class BookingpreviewController extends Controller
             unset($r);
         
             // Wrap as required
-            $payload = ['rows' => $rows,'cop'=>@$_POST['cost_of_plot']];
+            $payload = ['rows' => $rows,'cop'=>$this->stripAmountCommas(@$_POST['cost_of_plot'])];
             //print_r($payload);exit;
             // Pretty JSON
             $jsonOut = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -134,6 +140,11 @@ class BookingpreviewController extends Controller
 			return $main;
 		}
 		return $main . ' = ' . $extra;
+	}
+
+	private function stripAmountCommas($value)
+	{
+		return str_replace(',', '', (string)$value);
 	}
 	
 	public function actionAddpssoftware($id)

@@ -1,3 +1,21 @@
+<?php
+if (!function_exists('psFormatScheduleAmount')) {
+    function psFormatScheduleAmount($value) {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        return preg_replace_callback('/\d+(?:\.\d+)?/', function ($matches) {
+            $number = $matches[0];
+            if (strpos($number, '.') !== false) {
+                return number_format((float)$number, 2, '.', ',');
+            }
+            return number_format((float)$number, 0, '.', ',');
+        }, str_replace(',', '', $value));
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -235,7 +253,7 @@
               <div class="cell subtle">
                 <?= ($row['heading2'] !== 'Empty Box') ? htmlspecialchars($row['heading2']) : '' ?>
               </div>
-              <div class="cell amount"><?= htmlspecialchars($row['value']) ?></div>
+              <div class="cell amount"><?= htmlspecialchars(psFormatScheduleAmount($row['value'] ?? '')) ?></div>
             <?php endforeach; ?>
         <?php } ?>
     </div>
@@ -243,7 +261,7 @@
     <!-- Cost of Plot -->
     <div class="costrow">
       <div class="left">COST OF PLOT</div>
-      <div class="right"><?php echo number_format($cop)?></div>
+      <div class="right"><?php echo htmlspecialchars(psFormatScheduleAmount($cop)); ?></div>
     </div>
 
 

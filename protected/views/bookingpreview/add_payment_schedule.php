@@ -18,19 +18,32 @@ if (!empty($booking->payment_schedule_json)) {
 
 $heading1Options = [
     'Empty Box',
+    'Registration',
+    'Start Of Work',
     'Booking',
-    'Allocation',
     'Confirmation',
-    'Monthly Installment',
-    'Half Yearly',
+    'Allocation',
+    'Monthly',
     'Yearly',
-    'Demarcation',
+    'Half Yearly',
+    'Quarterly',
     'Possession',
-    '2nd Last Payment',
-    'Last Payment',
-    'Extra',
-    'Documentation',
+    'Demarcation',
     'Development',
+    'Documentation',
+    'Electricity Charges',
+    'Quarterly Installment',
+    'Own Money',
+    'Penalty',
+    'Transfer Fee',
+    'Lease Charges',
+    'Water Sewerage Charges',
+    'Others',
+    'Road Facing',
+    'West Open',
+    'Corner',
+    'Extra Land',
+    'Park Facing',
 ];
 
 $heading2Options = [
@@ -38,16 +51,12 @@ $heading2Options = [
     '1st Payment',
     '2nd Payment',
     '3rd Payment',
-    'Monthly Installment',
-    'Half Yearly',
+    'Monthly',
     'Yearly',
+    'Half Yearly',
+    'Quarterly',
     '2nd Last Payment',
     'Last Payment',
-    'Corner',
-    'Road Facing',
-    'West Open' ,
-    'Extra Land',
-    'Park Facing',
 ];
 
 // Helper: HTML-escape
@@ -55,8 +64,13 @@ function h($v) {
     return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 }
 
-function psIsMonthlyHeading2($heading2) {
-    return strcasecmp(trim((string)$heading2), 'Monthly Installment') === 0;
+function psIsMonthlyHeading($heading1, $heading2 = '') {
+    $values = array(
+        strtolower(trim((string)$heading1)),
+        strtolower(trim((string)$heading2)),
+    );
+    return in_array('monthly', $values, true)
+        || in_array('monthly installment', $values, true);
 }
 
 function psDateInputValue($date) {
@@ -82,6 +96,21 @@ function psSplitMonthlyValue($value) {
         $extra = isset($parts[1]) ? trim($parts[1]) : '';
     }
     return array($main, $extra);
+}
+
+function psFormatAmountValue($value) {
+    $value = trim((string)$value);
+    if ($value === '') {
+        return '';
+    }
+
+    return preg_replace_callback('/\d+(?:\.\d+)?/', function ($matches) {
+        $number = $matches[0];
+        if (strpos($number, '.') !== false) {
+            return number_format((float)$number, 2, '.', ',');
+        }
+        return number_format((float)$number, 0, '.', ',');
+    }, str_replace(',', '', $value));
 }
 ?>
 
@@ -207,8 +236,14 @@ function psSplitMonthlyValue($value) {
                 $selDate = psDateInputValue($row['date'] ?? '');
                 $selH1 = $row['heading1'] ?? '';
                 $selH2 = $row['heading2'] ?? '';
+                if (strcasecmp($selH1, 'Monthly Installment') === 0) {
+                    $selH1 = 'Monthly';
+                }
+                if (strcasecmp($selH2, 'Monthly Installment') === 0) {
+                    $selH2 = 'Monthly';
+                }
                 $val   = $row['value'] ?? '';
-                $isMonthly = psIsMonthlyHeading2($selH2);
+                $isMonthly = psIsMonthlyHeading($selH1, $selH2);
                 $valExtra = '';
                 if ($isMonthly) {
                     list($val, $valExtra) = psSplitMonthlyValue($val);
@@ -229,7 +264,8 @@ function psSplitMonthlyValue($value) {
                 <td>
                     <select
                         name="rows[<?php echo $rowKey; ?>][heading1]"
-                        class="form-control">
+                        class="form-control heading1-select"
+                        onchange="toggleMonthlyExtra(this)">
 
                         <?php foreach ($heading1Options as $opt): ?>
 
@@ -269,15 +305,16 @@ function psSplitMonthlyValue($value) {
                     <div class="value-fields">
                         <input
                             type="text"
+                            class="ps-amount"
                             name="rows[<?php echo $rowKey; ?>][value]"
-                            value="<?php echo h($val); ?>"
+                            value="<?php echo h(psFormatAmountValue($val)); ?>"
                             placeholder="0.00"
                             >
                         <input
                             type="text"
-                            class="monthly-extra-input<?php echo $isMonthly ? ' is-visible' : ''; ?>"
+                            class="monthly-extra-input ps-amount<?php echo $isMonthly ? ' is-visible' : ''; ?>"
                             name="rows[<?php echo $rowKey; ?>][value_extra]"
-                            value="<?php echo h($valExtra); ?>"
+                            value="<?php echo h(psFormatAmountValue($valExtra)); ?>"
                             placeholder="Total"
                             <?php echo $isMonthly ? '' : 'disabled'; ?>>
                     </div>
@@ -320,7 +357,8 @@ function psSplitMonthlyValue($value) {
                 <td>
                     <select
                         name="rows[<?php echo $rowKey; ?>][heading1]"
-                        class="form-control"
+                        class="form-control heading1-select"
+                        onchange="toggleMonthlyExtra(this)"
                         required>
 
                         <?php foreach ($heading1Options as $opt): ?>
@@ -355,12 +393,13 @@ function psSplitMonthlyValue($value) {
                     <div class="value-fields">
                         <input
                             type="text"
+                            class="ps-amount"
                             name="rows[<?php echo $rowKey; ?>][value]"
                             value=""
                             placeholder="0.00">
                         <input
                             type="text"
-                            class="monthly-extra-input"
+                            class="monthly-extra-input ps-amount"
                             name="rows[<?php echo $rowKey; ?>][value_extra]"
                             value=""
                             placeholder="Total"
@@ -403,8 +442,9 @@ function psSplitMonthlyValue($value) {
 
         <input
             type="text"
+            class="ps-amount"
             name="cost_of_plot"
-            value="<?php echo h($cop); ?>"
+            value="<?php echo h(psFormatAmountValue($cop)); ?>"
             required>
 
     </div>
@@ -481,7 +521,8 @@ function addRow() {
 
             <select
                 name="rows[${rowKey}][heading1]"
-                class="form-control"
+                class="form-control heading1-select"
+                onchange="toggleMonthlyExtra(this)"
                 required>
 
                 ${heading1Html}
@@ -510,13 +551,14 @@ function addRow() {
             <div class="value-fields">
                 <input
                     type="text"
+                    class="ps-amount"
                     name="rows[${rowKey}][value]"
                     value=""
                     placeholder="100 * 20"
                     required>
                 <input
                     type="text"
-                    class="monthly-extra-input"
+                    class="monthly-extra-input ps-amount"
                     name="rows[${rowKey}][value_extra]"
                     value=""
                     placeholder="Total"
@@ -542,10 +584,15 @@ function addRow() {
 
 
     tbody.appendChild(row);
-    toggleMonthlyExtra(row.querySelector('.heading2-select'));
+    toggleMonthlyExtra(row.querySelector('.heading1-select') || row.querySelector('.heading2-select'));
     rowCounter++;
 }
 
+
+function isMonthlyHeading(value) {
+    const heading = (value || '').toLowerCase();
+    return heading === 'monthly' || heading === 'monthly installment';
+}
 
 function toggleMonthlyExtra(select) {
     if (!select) {
@@ -562,14 +609,17 @@ function toggleMonthlyExtra(select) {
         return;
     }
 
-    const isMonthly = (select.value || '').toLowerCase() === 'monthly installment';
+    const heading1 = row.querySelector('.heading1-select');
+    const heading2 = row.querySelector('.heading2-select');
+    const isMonthly = isMonthlyHeading(heading1 ? heading1.value : '')
+        || isMonthlyHeading(heading2 ? heading2.value : '');
     extra.classList.toggle('is-visible', isMonthly);
     extra.disabled = !isMonthly;
     extra.style.display = isMonthly ? 'block' : 'none';
 }
 
 
-document.querySelectorAll('.heading2-select').forEach(function(select) {
+document.querySelectorAll('.heading1-select, .heading2-select').forEach(function(select) {
     toggleMonthlyExtra(select);
 });
 
@@ -597,6 +647,21 @@ function escapeHtml(value) {
         .replace(/'/g, '&#039;');
 
 }
+
+function formatAmountValue(value) {
+    return String(value || '').replace(/\d+(?:\.\d+)?/g, function (number) {
+        var parts = number.split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return parts.join('.');
+    });
+}
+
+document.addEventListener('focusout', function (event) {
+    if (!event.target.classList.contains('ps-amount')) {
+        return;
+    }
+    event.target.value = formatAmountValue(event.target.value.replace(/,/g, ''));
+});
 
 </script>
 
