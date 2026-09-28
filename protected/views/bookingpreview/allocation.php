@@ -10,7 +10,7 @@ $receiptNo = ltrim((string)@$booking->id, '0');
 $created = '';
 if (!empty($booking->createdOn) && $booking->createdOn !== '0000-00-00') {
     $createdTs = strtotime($booking->createdOn);
-    $created = $createdTs ? date('d-m-Y', $createdTs) : $booking->createdOn;
+    $created = $createdTs ? date('d-M-Y', $createdTs) : $booking->createdOn;
 }
 $soDoWo = trim((string)@$booking->agent_name);
 $father = trim((string)@$customer->father_husband_name);
@@ -157,6 +157,7 @@ $soLine = trim($soDoWo.' '.$father);
             padding: 0 4px 1px;
             font-weight: bold;
             vertical-align: bottom;
+            padding-left: 10%;
         }
         .unit-row {
             display: table;
@@ -183,6 +184,7 @@ $soLine = trim($soDoWo.' '.$father);
             padding: 0 4px 1px;
             font-weight: bold;
             margin-left: 3px;
+            padding-left: 10%;
         }
         .addr-date {
             display: table;
@@ -224,7 +226,7 @@ $soLine = trim($soDoWo.' '.$father);
             position: absolute;
             left: 28mm;
             right: 28mm;
-            bottom: 22mm;
+            bottom: 25%;
             display: table;
             width: calc(100% - 56mm);
             font-size: 13.5px;
@@ -233,9 +235,20 @@ $soLine = trim($soDoWo.' '.$father);
         .signs .s {
             display: table-cell;
             width: 50%;
+            vertical-align: bottom;
         }
         .signs .s.right {
             text-align: right;
+        }
+        .signs .line-box {
+            display: inline-block;
+            min-width: 48mm;
+            text-align: center;
+        }
+        .signs .sig-line {
+            border-bottom: 1px solid #111;
+            height: 12mm;
+            margin-bottom: 3px;
         }
         @media print {
             html, body {
@@ -266,15 +279,15 @@ $soLine = trim($soDoWo.' '.$father);
         <div class="header">
             <div class="col left">
                 <div class="mini-box">
-                    <div class="title">Ref: Receipt</div>
+                    <div class="title" style="text-align: center!important;">Ref: Receipt</div>
                     <table>
                         <tr>
                             <td class="label">No.</td>
-                            <td><?php echo htmlspecialchars($receiptNo)?></td>
+                            <td style="font-weight: bold;text-align: center!important;"><?php echo htmlspecialchars($receiptNo)?></td>
                         </tr>
                         <tr>
                             <td class="label">Dt:</td>
-                            <td><?php echo htmlspecialchars($created)?></td>
+                            <td style="font-weight: bold;text-align: center!important;"><?php echo htmlspecialchars($created)?></td>
                         </tr>
                     </table>
                 </div>
@@ -284,11 +297,11 @@ $soLine = trim($soDoWo.' '.$father);
             </div>
             <div class="col right">
                 <div class="mini-box">
-                    <div class="title">Allocation<br>Letter</div>
+                    <div class="title" style="text-align: center!important;">Allocation <br/>Letter</div>
                     <table>
                         <tr>
                             <td class="label">No.</td>
-                            <td><?php echo htmlspecialchars($letterNo)?></td>
+                            <td style="font-weight: bold;text-align: center!important;"><?php echo htmlspecialchars($letterNo)?></td>
                         </tr>
                     </table>
                 </div>
@@ -361,8 +374,18 @@ $soLine = trim($soDoWo.' '.$father);
         </div>
 
         <div class="signs">
-            <div class="s">Signature of Allottee</div>
-            <div class="s right">Authorized Signature</div>
+            <div class="s">
+                <div class="line-box">
+                    <div class="sig-line"></div>
+                    Signature of Allottee
+                </div>
+            </div>
+            <div class="s right">
+                <div class="line-box">
+                    <div class="sig-line"></div>
+                    Authorized Signature
+                </div>
+            </div>
         </div>
     </div>
 </div>
