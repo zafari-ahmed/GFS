@@ -186,19 +186,21 @@ $soLine = trim($soDoWo.' '.$father);
             margin-left: 3px;
             padding-left: 10%;
         }
-        .addr-date {
+        .cnic-date {
             display: table;
             width: 100%;
+            margin: 3.2mm 0;
         }
-        .addr-date .addr {
+        .cnic-date .half {
             display: table-cell;
-            width: 68%;
+            width: 50%;
+            vertical-align: bottom;
+        }
+        .cnic-date .half:first-child {
             padding-right: 4mm;
         }
-        .addr-date .dt {
-            display: table-cell;
-            width: 32%;
-            vertical-align: bottom;
+        .cnic-date .line {
+            margin: 0;
         }
         .note {
             margin-top: 7mm;
@@ -328,23 +330,23 @@ $soLine = trim($soDoWo.' '.$father);
             <div class="lbl">S/o. D/o. W/o.</div>
             <div class="val"><?php echo htmlspecialchars($soLine)?></div>
         </div>
-        <div class="addr-date">
-            <div class="addr">
-                <div class="line" style="margin-top:0">
-                    <div class="lbl">Address</div>
-                    <div class="val"><?php echo htmlspecialchars(@$customer->address)?></div>
+        <div class="line">
+            <div class="lbl">Address</div>
+            <div class="val"><?php echo htmlspecialchars(@$customer->address)?></div>
+        </div>
+        <div class="cnic-date">
+            <div class="half">
+                <div class="line">
+                    <div class="lbl">C.N.I.C No :</div>
+                    <div class="val"><?php echo htmlspecialchars(@$customer->cnic)?></div>
                 </div>
             </div>
-            <div class="dt">
-                <div class="line" style="margin-top:0">
+            <div class="half">
+                <div class="line">
                     <div class="lbl">Date:</div>
                     <div class="val"><?php echo htmlspecialchars($created)?></div>
                 </div>
             </div>
-        </div>
-        <div class="line">
-            <div class="lbl">C.N.I.C No :</div>
-            <div class="val"><?php echo htmlspecialchars(@$customer->cnic)?></div>
         </div>
         <div class="line">
             <div class="lbl">Nominee:</div>
