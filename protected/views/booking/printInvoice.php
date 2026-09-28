@@ -55,11 +55,30 @@
         }
     </style>
 </head>
-<?php $userModel = Yii::app()->session->get('userModel');?>
+<?php
+$userModel = Yii::app()->session->get('userModel');
+$txnStatuses = array();
+if (!empty($transaction)) {
+    foreach ($transaction as $txnRow) {
+        $txnStatuses[] = (int)$txnRow->status;
+    }
+}
+$isCancelledInvoice = !empty($isCancelled)
+    || (isset($booking) && ((int)$booking->status === 0 || (int)$booking->blocked === 1))
+    || in_array(0, $txnStatuses, true);
+
+$cancelledWatermark = Yii::app()->baseUrl . '/images/cancelled.png';
+if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
+    $cancelledWatermark = Yii::app()->baseUrl . '/images/cancelled.png';
+}
+?>
 <body>
     <div class="receipt" style="border: 1px solid;padding: 20px;">
         <div class="header">
             
+            <?php if ($isCancelledInvoice) { ?>
+            <img src="<?php echo $cancelledWatermark?>" style="    position: absolute;z-index: 999;width: 50%;margin-left: -25%;margin-top: 10%;opacity: 0.35;">
+            <?php } ?>
             <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -30%;margin-top: 15%;opacity: 0.1;">
             <div style="overflow:hidden;">
                 <div style="width:10%;float:left;position: relative;left: -5%;">
@@ -214,8 +233,11 @@
 
     <div class="page-break"></div>
     <br/><br/>
-    <div class="receipt" style="margin-top: 20px;">
+    <div class="receipt" style="border: 1px solid;padding: 20px;margin-top: 20px;">
         <div class="header">
+            <?php if ($isCancelledInvoice) { ?>
+                <img src="<?php echo $cancelledWatermark?>" style="    position: absolute;z-index: 999;width: 50%;margin-left: -25%;margin-top: 10%;opacity: 0.35;">
+            <?php } ?>
             <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -30%;margin-top: 15%;opacity: 0.1;">
             <div style="overflow:hidden;">
                 <div style="width:10%;float:left;position: relative;left: -5%;">
@@ -225,7 +247,6 @@
                     <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="    max-width: 40%;margin-top: 5px;margin-left: -115px;">
                 </div>
                 <div style="float:left;margin-top:8%">
-                    <!--<img src="<?php //echo Yii::app()->baseUrl?>/images/SS-B.png" style="    max-width: 70%;margin-top: 5px;margin-left: -115px;">-->
                     <span style="padding: 6px;margin: 10px;padding-left: 25px;padding-right: 25px;letter-spacing: 3px;font-size: 13px;">FILE</span>
                     <br><br>
                     <span style="    padding: 6px;border: 1px solid #000;margin: 10px;background: #0000005c;color: #fff;padding-left: 25px;padding-right: 25px;letter-spacing: 3px;font-size: 13px;">RECEIPT</span>
@@ -366,8 +387,11 @@
     </div>
     <div class="page-break"></div>
     <br/><br/>
-    <div class="receipt" style="margin-top: 20px;">
+    <div class="receipt" style="border: 1px solid;padding: 20px;margin-top: 20px;">
         <div class="header">
+            <?php if ($isCancelledInvoice) { ?>
+                <img src="<?php echo $cancelledWatermark?>" style="    position: absolute;z-index: 999;width: 50%;margin-left: -25%;margin-top: 10%;opacity: 0.35;">
+            <?php } ?>
             <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -30%;margin-top: 15%;opacity: 0.1;">
             <div style="overflow:hidden;">
                 <div style="width:10%;float:left;position: relative;left: -5%;">
@@ -377,7 +401,6 @@
                     <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="    max-width: 40%;margin-top: 5px;margin-left: -115px;">
                 </div>
                 <div style="float:left;margin-top:8%">
-                    <!--<img src="<?php //echo Yii::app()->baseUrl?>/images/SS-B.png" style="    max-width: 70%;margin-top: 5px;margin-left: -115px;">-->
                     <span style="padding: 6px;margin: 10px;padding-left: 25px;padding-right: 25px;letter-spacing: 3px;font-size: 13px;">ACCOUNTS</span>
                     <br><br>
                     <span style="    padding: 6px;border: 1px solid #000;margin: 10px;background: #0000005c;color: #fff;padding-left: 25px;padding-right: 25px;letter-spacing: 3px;font-size: 13px;">RECEIPT</span>

@@ -34,7 +34,10 @@ class BookingController extends Controller
 			$data['currentPlot'] = Plots::model()->findByPk($id);
 			//$data['paymentmodes'] = PaymentModes::model()->findAll('plot_size_id = :size',array(':size'=>$data['currentPlot']->size_id));
 		}
-		$data['agents'] = Agents::model()->findAll('status = 1 AND parent_id IS NULL');
+		$data['agents'] = Agents::model()->with('agentParent')->findAll(array(
+			'condition' => 't.status = 1',
+			'order' => 't.name ASC',
+		));
 		$data['agentsub'] = Agents::model()->findAll('status = 1 AND parent_id IS NOT NULL');
 		$data['accounts'] = Accounts::model()->findAll('is_visible = 1');
 		$data['charges'] = DevelopmentCharges::model()->findAll();
@@ -272,7 +275,12 @@ class BookingController extends Controller
 		$sizeId = $booking->plot->size->id;
 		if($booking){
 			$data['booking'] = $booking;			
-			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
+			//$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll('payment_schedule_id = :id AND plot_type = :type',array(':id'=>$booking->paymentSchedule->id,':type'=>strtolower($booking->plot->block_number)));
+			$criteria = new CDbCriteria;
+			$criteria->condition = 'payment_schedule_id = 1';
+			$criteria->group = 'mode';
+
+			$data['paymentmodes'] = PaymentSchedulePaymentModes::model()->findAll($criteria);
 // 			if($paymentmodes){
 // 				foreach($paymentmodes as $pm){
 // 					$sql = "SELECT SUM(amount) as total  FROM `customer_plot_transactions` WHERE `plot_payment_mode_id` = ".$pm->id." AND plot_id = $id";
@@ -380,6 +388,108 @@ class BookingController extends Controller
 
 		//$data['bookings'] = CustomerPlots::model()->with('plot')->findAll($criteria);
 		$this->render('index',$data);
+	}
+
+	public function actionDirectlink()
+	{
+		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+		$data['blocks'] = Plots::model()->findAll(array(
+			'select' => 't.block_number',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.block_number ASC',
+		));
+		$data['plotTypes'] = Plots::model()->findAll(array(
+			'select' => 't.plot_type',
+			'distinct' => true,
+			'condition' => "phase_id=$phaseId",
+			'order' => 't.plot_type ASC',
+		));
+		$data['block_number'] = Yii::app()->request->getParam('block_number');
+		$data['plot_number'] = Yii::app()->request->getParam('plot_number');
+		$data['plot_type'] = Yii::app()->request->getParam('plot_type');
+		$data['customer_name'] = trim(Yii::app()->request->getParam('customer_name', ''));
+		$data['customer_cnic'] = trim(Yii::app()->request->getParam('customer_cnic', ''));
+		$data['bookings'] = array();
+		$data['plotOptions'] = array();
+		$data['searched'] = false;
+
+		if(!empty($data['block_number'])){
+			$plotCriteria = new CDbCriteria();
+			$plotCriteria->with = array('plot');
+			$plotCriteria->together = true;
+			$plotCriteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$plotCriteria->addCondition('plot.block_number = :block');
+			$plotCriteria->params = array(':phase' => $phaseId, ':block' => $data['block_number']);
+			$plotCriteria->order = 'plot.plot_number ASC';
+			$plotBookings = CustomerPlots::model()->findAll($plotCriteria);
+			foreach($plotBookings as $pb){
+				if($pb->plot && !in_array($pb->plot->plot_number, $data['plotOptions'])){
+					$data['plotOptions'][] = $pb->plot->plot_number;
+				}
+			}
+		}
+
+		if(isset($_GET['search'])){
+			$data['searched'] = true;
+			$criteria = new CDbCriteria();
+			$criteria->with = array('plot', 'customer');
+			$criteria->together = true;
+			$criteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$criteria->params = array(':phase' => $phaseId);
+			$criteria->order = 'plot.block_number ASC, plot.plot_number ASC';
+
+			if(!empty($data['block_number'])){
+				$criteria->addCondition('plot.block_number = :block');
+				$criteria->params[':block'] = $data['block_number'];
+			}
+			if(!empty($data['plot_number'])){
+				$criteria->addCondition('plot.plot_number = :plotNumber');
+				$criteria->params[':plotNumber'] = $data['plot_number'];
+			}
+			if(!empty($data['plot_type'])){
+				$criteria->addCondition('plot.plot_type = :plotType');
+				$criteria->params[':plotType'] = $data['plot_type'];
+			}
+			if(!empty($data['customer_name'])){
+				$criteria->addCondition('customer.name LIKE :customerName');
+				$criteria->params[':customerName'] = '%'.$data['customer_name'].'%';
+			}
+			if(!empty($data['customer_cnic'])){
+				$criteria->addCondition('customer.cnic LIKE :customerCnic');
+				$criteria->params[':customerCnic'] = '%'.$data['customer_cnic'].'%';
+			}
+
+			$data['bookings'] = CustomerPlots::model()->findAll($criteria);
+		}
+
+		$this->render('directlink', $data);
+	}
+
+	public function actionDirectlinkplots()
+	{
+		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+		$block = Yii::app()->request->getParam('block');
+		$options = '<option value="">All Plot Numbers</option>';
+		if(!empty($block)){
+			$criteria = new CDbCriteria();
+			$criteria->with = array('plot');
+			$criteria->together = true;
+			$criteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
+			$criteria->addCondition('plot.block_number = :block');
+			$criteria->params = array(':phase' => $phaseId, ':block' => $block);
+			$criteria->order = 'plot.plot_number ASC';
+			$bookings = CustomerPlots::model()->findAll($criteria);
+			$seen = array();
+			foreach($bookings as $booking){
+				if($booking->plot && !in_array($booking->plot->plot_number, $seen)){
+					$seen[] = $booking->plot->plot_number;
+					$options .= '<option value="'.CHtml::encode($booking->plot->plot_number).'">'.CHtml::encode($booking->plot->plot_number).'</option>';
+				}
+			}
+		}
+		echo CJSON::encode(array('success' => 1, 'data' => $options));
+		Yii::app()->end();
 	}
 
 	public function actionbookingdocument()
@@ -3397,7 +3507,7 @@ class BookingController extends Controller
 
                 $documentCompleted = ($booking->CPDCount == 6)?'<span class="label label-success" style="text-decoration: none;"> Doc Up</span>':'<span class="label label-danger" style="text-decoration: none;">Doc INC</span>';
 
-				$result['data'][$i][]= '<a href="'.Yii::app()->baseUrl.'/booking/viewbooking/'.$booking->id.'">'.('*'.$booking->plot->plot_type.'-'.$booking->plot->plot_number.'-'.$booking->plot->block_number).'*</a>';
+				$result['data'][$i][]= '<a href="'.Yii::app()->baseUrl.'/booking/viewbooking/'.$booking->id.'">'.('*'.$booking->plot->plot_type.'-'.$booking->plot->plot_number.($booking->plot->block_number?'-'.$booking->plot->block_number:'')).'*</a>';
                 
 				$cpText = '';
 				if(@$booking->customerpaymentSchedule){

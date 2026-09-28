@@ -21,6 +21,30 @@ class BookingpreviewController extends Controller
 		$this->layout = '';
 		$this->renderPartial('previewDuplicateBack',$data);
 	}
+
+	public function actionApplicationform($id)
+	{
+		$this->renderApplicationPrint($id, 'form');
+	}
+
+	public function actionApplicationterms($id)
+	{
+		$this->renderApplicationPrint($id, 'terms');
+	}
+
+	protected function renderApplicationPrint($id, $printPage)
+	{
+		$booking = CustomerPlots::model()->findByPk($id);
+		if (!$booking) {
+			throw new CHttpException(404, 'Booking not found.');
+		}
+
+		$this->layout = '';
+		$this->renderPartial('application_form_print', array(
+			'booking' => $booking,
+			'printPage' => $printPage,
+		));
+	}
 	
 	public function actionWelcome($id)
 	{
@@ -70,14 +94,28 @@ class BookingpreviewController extends Controller
         
             // (Optional) trim values
             foreach ($rows as $rk => &$r) {
+                $r['date']     = isset($r['date'])     ? trim($r['date'])     : '';
                 $r['heading1'] = isset($r['heading1']) ? trim($r['heading1']) : '';
                 $r['heading2'] = isset($r['heading2']) ? trim($r['heading2']) : '';
-                $r['value']    = isset($r['value'])    ? trim($r['value'])    : '';
+                $r['value']    = $this->stripAmountCommas(isset($r['value']) ? trim($r['value']) : '');
+                $extra         = $this->stripAmountCommas(isset($r['value_extra']) ? trim($r['value_extra']) : '');
+
+                $isMonthlyHeading = (
+                    strcasecmp($r['heading1'], 'Monthly') === 0
+                    || strcasecmp($r['heading1'], 'Monthly Installment') === 0
+                    || strcasecmp($r['heading2'], 'Monthly') === 0
+                    || strcasecmp($r['heading2'], 'Monthly Installment') === 0
+                );
+                if ($isMonthlyHeading) {
+                    $r['value'] = $this->mergeMonthlyInstallmentValue($r['value'], $extra);
+                }
+
+                unset($r['value_extra']);
             }
             unset($r);
         
             // Wrap as required
-            $payload = ['rows' => $rows,'cop'=>@$_POST['cost_of_plot']];
+            $payload = ['rows' => $rows,'cop'=>$this->stripAmountCommas(@$_POST['cost_of_plot'])];
             //print_r($payload);exit;
             // Pretty JSON
             $jsonOut = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -89,6 +127,24 @@ class BookingpreviewController extends Controller
         }
 		   
 		$this->renderPartial('add_payment_schedule',$data);
+	}
+
+	private function mergeMonthlyInstallmentValue($main, $extra)
+	{
+		$main = trim((string)$main);
+		$extra = trim((string)$extra);
+		if ($main === '') {
+			return $extra;
+		}
+		if ($extra === '') {
+			return $main;
+		}
+		return $main . ' = ' . $extra;
+	}
+
+	private function stripAmountCommas($value)
+	{
+		return str_replace(',', '', (string)$value);
 	}
 	
 	public function actionAddpssoftware($id)

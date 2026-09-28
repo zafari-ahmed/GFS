@@ -1091,9 +1091,9 @@ class ReportController extends Controller
 
 	public function actionExportavailableplot(){
 		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
-		$plots = Plots::model()->findAll("status = 0 AND phase_id = $phaseId");
+		$plots = Plots::model()->findAll("phase_id = $phaseId");
 		$list = array (
-	        array('S.No','Block #','Plot Type','Plot #','Details','Sq. Yds.','Category','SCHEDULE','Dealer','Sub Dealer','Discount','Commission','Date','Commision Recived','Payment','Number','Corner','West Open','Park Facing'),
+	        array('S.No','Block #','Plot Type','Plot #','Details','Sq. Yds.','Category','SCHEDULE','Dealer','Sub Dealer','Discount','Commission','Date','Commision Recived','Payment','Number','Corner','West Open','Park Facing','Total','Status'),
 	    );
       		
       	
@@ -1118,10 +1118,12 @@ class ReportController extends Controller
 			$list[$count][] = @($plot->is_corner)?'1':'0';;
 			$list[$count][] = @($plot->is_west_open)?'1':'0';;
 			$list[$count][] = @($plot->is_park_facing)?'1':'0';;
+			$list[$count][] = @$plot->total;
+			$list[$count][] = ($plot->status == 0) ? 'Available' : 'Booked';
 			$count++;
         endforeach;
 
-        $fileName = 'Available-Plots-'.date('Y-m-d-H-i').'.csv';
+        $fileName = 'Plots-'.date('Y-m-d-H-i').'.csv';
 		$fp = fopen($fileName, 'w');
       	foreach ($list as $fields) {
           fputcsv($fp, $fields);

@@ -1,4 +1,4 @@
-<!doctype html>
+  <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -139,6 +139,24 @@
 
     /* Optional: prevent row breaking awkwardly */
     tr { page-break-inside: avoid; }
+
+    table.ledger-summary {
+      width: 62%;
+      margin: 8mm 0 0 auto;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+    }
+    table.ledger-summary th,
+    table.ledger-summary td {
+      border: 1px solid #000;
+      padding: 2mm 2mm;
+      text-align: center;
+      font-weight: 700;
+    }
+    table.ledger-summary th {
+      text-transform: uppercase;
+    }
     
   </style>
 </head>
@@ -281,6 +299,7 @@
           <td style="font-weight: bold;width: 110px;width: 65%;">PAID AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format($booking->customerPlotTransactionSum + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
         </tr>
+        <?php if(!empty($bookingDues['due_amount']) && $bookingDues['due_amount'] > 0){ ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">DUE MONTH:</td>
           <td class="value normal" colspan="2"><b><?php echo @$bookingDues['due_months']?> Month(s)</b></td>
@@ -289,6 +308,22 @@
           <td style="font-weight: bold;width: 110px;">DUE AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format(@$bookingDues['due_amount'])?> PKR</b></td>
         </tr>
+        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+        <tr>
+          <td style="font-weight: bold;width: 110px;vertical-align:top;">DUE DETAIL:</td>
+          <td class="value normal" colspan="2">
+            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+              <b><?php echo CHtml::encode($dueItem['label']); ?>:</b>
+              <?php echo number_format(@$dueItem['due_amount']); ?> PKR
+              <?php if(!empty($dueItem['is_monthly']) && @$dueItem['due_months'] > 0){ ?>
+                (<?php echo $dueItem['due_months']; ?> month(s))
+              <?php } ?>
+              <br>
+            <?php endforeach; ?>
+          </td>
+        </tr>
+        <?php }*/ ?>
+        <?php } ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">BALANCE AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum - @$booking->plot->discount + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
@@ -371,13 +406,13 @@
                             
                                     <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='monthly'){ ?>
                                         <br><span style="font-size:10px;">
-                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
+                                            <?php //echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
                                         </span>
                                     <?php } ?>
                             
                                     <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='yearly'){ ?>
                                         <br><span style="font-size:10px;">
-                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
+                                            <?php //echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
                                         </span>
                                     <?php } ?>
                                 </td>
@@ -401,6 +436,23 @@
                                 <td><?php echo date('d M,Y',strtotime($txn->createdOn)) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+                            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+                            <tr>
+                                <td style="width: 20%;"><b><?php echo CHtml::encode($dueItem['label']); ?></b></td>
+                                <td>-</td>
+                                <td>Due</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$dueItem['due_amount']); ?></b></td>
+                                <td>-</td>
+                                <td><?php echo !empty($dueItem['due_date']) ? date('d M,Y', strtotime($dueItem['due_date'])) : '-'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <tr class="grand-total">
+                                <td colspan="3" class="grand-label">TOTAL DUE:</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$bookingDues['due_amount']); ?></b></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        <?php }*/ ?>
         <!-- Example opening row (like your sheet has POST / BOOKING...) -->
         <?php /*?>
         <tr>
@@ -500,6 +552,28 @@
           <td class="num">{{totalCr}}</td>
           <td class="num">{{grandBalance}}</td>
         </tr><?php */?>
+      </tbody>
+    </table>
+
+    <?php
+      $ledgerTotalPaid = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+      $ledgerTotalCost = (float)$tpp;
+      $ledgerBalanceAmount = $ledgerTotalCost - $ledgerTotalPaid;
+    ?>
+    <table class="ledger-summary">
+      <thead>
+        <tr>
+          <th>TOTAL PAID</th>
+          <th>BALANCE AMOUNT</th>
+          <th>TOTAL COST</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><?php echo number_format($ledgerTotalPaid); ?> PKR</td>
+          <td><?php echo number_format($ledgerBalanceAmount); ?> PKR</td>
+          <td><?php echo number_format($ledgerTotalCost); ?> PKR</td>
+        </tr>
       </tbody>
     </table>
 

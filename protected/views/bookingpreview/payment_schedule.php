@@ -1,3 +1,21 @@
+<?php
+if (!function_exists('psFormatScheduleAmount')) {
+    function psFormatScheduleAmount($value) {
+        $value = trim((string)$value);
+        if ($value === '') {
+            return '';
+        }
+
+        return preg_replace_callback('/\d+(?:\.\d+)?/', function ($matches) {
+            $number = $matches[0];
+            if (strpos($number, '.') !== false) {
+                return number_format((float)$number, 2, '.', ',');
+            }
+            return number_format((float)$number, 0, '.', ',');
+        }, str_replace(',', '', $value));
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -25,25 +43,25 @@
     margin-top: 2mm;
     border: 1px solid #000;
     display: grid;
-    grid-template-columns: 88mm 1fr;
+    grid-template-columns: 28mm 40mm 32mm 1fr;
     margin-bottom: 5px;
   }
-  .mode-left, .mode-right { display:flex; align-items:center; justify-content:center; height:10mm; font-size:13px; }
-  .mode-left { border-right:1px solid #000; font-weight:600; }
-  .mode-right { }
+  .mode-left, .mode-right, .mode-date, .mode-mid { display:flex; align-items:center; justify-content:center; height:10mm; font-size:13px; }
+  .mode-date, .mode-left, .mode-mid { border-right:1px solid #000; font-weight:600; }
+  .mode-right { font-weight:600; }
 
   .schedule {
     border:1px solid #000; border-top:none;
-    display:grid; grid-template-columns: 54mm 34mm 1fr;
+    display:grid; grid-template-columns: 28mm 40mm 32mm 1fr;
   }
   .cell {
     min-height: 10mm; display:flex; align-items:center; justify-content:center;
     border-right:1px solid #000; border-top:1px solid #000; font-size:12px;
   }
-  .cell:nth-child(3n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
+  .cell:nth-child(4n) { border-right:none; justify-content:flex-start; padding-left:8mm; }
   .cell.label { font-weight:600; }
   .cell.subtle { font-style: italic; font-weight: 600; }
-  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold;}
+  .cell.amount { justify-content:center; padding-right:8mm; font-size: 15px;font-weight: bold; white-space: pre-line; text-align:center; }
 
   /* Cost of plot row */
   .costrow {
@@ -149,18 +167,35 @@
 </head>
 <body>
 <div class="page">
-  <div class="inner">
-
+  <!-- <div class="inner"> -->
+  <div class="inner" style="border: 1px solid;padding: 20px;margin-top: 20px;">
+    <div class="header">  
+        <!-- <img src="<?php //echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="position: absolute;z-index: 999;width: 65%;margin-left: -15%;margin-top: 15%;opacity: 0.1;"> -->
+        <div style="overflow:hidden;">
+            <div style="width:10em;float:left">
+                <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="width: 15em">                
+            </div>
+            <div style="float:left;margin-top:15%;margin-left: 15%;">
+            <div class="title" style=";font-size: 1.5em;">PAYMENT SCHEDULE</div> 
+            </div>
+            <div style="float:right;position:relative;">
+                <img src="<?php echo Yii::app()->baseUrl?>/images/seven-wonder-1.png" style="">
+            </div>
+            
+        </div>
+    </div>
     <div class="row">
-      <div class="title">PAYMENT SCHEDULE</div>
-      <div class="subtitle"><b><?php echo strtoupper(@$booking->plot->category->name)?></b></div>
+      
+      <!-- <div class="subtitle"><b><?php //echo strtoupper(@$booking->plot->category->name)?></b></div> -->
     </div>
     <div class="divline"></div>
 
     <!-- Mode of Payment header -->
     <div class="mode-grid">
+      <div class="mode-date">DATE</div>
       <div class="mode-left">MODE OF PAYMENT</div>
-      <div class="mode-right"><b><?php echo (@$booking->plot->size->size)?></b></div>
+      <div class="mode-mid"></div>
+      <div class="mode-right"><b>AMOUNTS (IN RS.)<?php //echo (@$booking->plot->size->size)?></b></div>
     </div>
 
     <!-- Schedule table -->
@@ -198,14 +233,27 @@
                 // Decode JSON to PHP array
                 $data = json_decode($booking->payment_schedule_json, true);
                 $cop = $data['cop'];
-                foreach (@$data['rows'] as $row): ?>
+                foreach (@$data['rows'] as $row):
+                    if (trim((string)($row['value'] ?? '')) === '') {
+                        continue;
+                    }
+                    $rowDate = trim((string)($row['date'] ?? ''));
+                    $rowDateDisplay = '';
+                    if ($rowDate !== '') {
+                        $rowDateTs = strtotime($rowDate);
+                        $rowDateDisplay = $rowDateTs ? date('d-m-Y', $rowDateTs) : $rowDate;
+                    }
+                ?>
+              <div class="cell label">
+                <?= htmlspecialchars($rowDateDisplay) ?>
+              </div>
               <div class="cell label">
                 <?= ($row['heading1'] !== 'Empty Box') ? htmlspecialchars($row['heading1']) : '' ?>
               </div>
               <div class="cell subtle">
                 <?= ($row['heading2'] !== 'Empty Box') ? htmlspecialchars($row['heading2']) : '' ?>
               </div>
-              <div class="cell amount"><?= htmlspecialchars($row['value']) ?></div>
+              <div class="cell amount"><?= htmlspecialchars(psFormatScheduleAmount($row['value'] ?? '')) ?></div>
             <?php endforeach; ?>
         <?php } ?>
     </div>
@@ -213,7 +261,7 @@
     <!-- Cost of Plot -->
     <div class="costrow">
       <div class="left">COST OF PLOT</div>
-      <div class="right"><?php echo number_format($cop)?></div>
+      <div class="right"><?php echo htmlspecialchars(psFormatScheduleAmount($cop)); ?></div>
     </div>
 
 
@@ -269,13 +317,16 @@
     <div class="details">
       <div class="grid5">
         <div class="line-field"><div class="lab">Name:</div><div class="val"><?php echo @$booking->customer->name?></div></div>
+        <div class="line-field"><div class="lab">Father/Husband Name:</div><div class="val" style="margin-left: 40px;"><?php echo @$booking->customer->father_husband_name?></div></div>
         </div>
-    <div class="grid4">
-        <div class="line-field"><div class="lab">Plot No.</div><div class="val thin"><?php echo @$booking->plot->plot_number?></div></div>
-        <div class="line-field"><div class="lab">Block No.</div><div class="val thin"><?php echo @$booking->plot->block_number?></div></div>
-
-        <div class="line-field"><div class="lab">Category:</div><div class="val thin"><?php echo @$booking->plot->category->name?></div></div>
-        <div class="line-field"><div class="lab">Size:</div><div class="val thin"><?php echo @$booking->plot->size->size?></div></div>
+      <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
+        <div class="line-field"><div class="lab">CNIC. No.</div><div class="val thin" style="width: 8em;font-size: 12px;padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->customer->cnic?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Address:</div><div class="val thin" style="font-size: 12px;padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->customer->address?></div></div>
+      </div>
+      <div class="grid4" style="display:inline-flex; column-gap: 5mm; align-items:center;font-size:15px;">
+        <div class="line-field"><div class="lab">Plot No.</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @@$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Category:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->category->name?></div></div>
+        <div class="line-field" style="column-gap: 3mm;"><div class="lab">Size:</div><div class="val thin" style="padding-left: 5mm;padding-right: 5mm;"><?php echo @$booking->plot->size->size?></div></div>
       </div>
 
 

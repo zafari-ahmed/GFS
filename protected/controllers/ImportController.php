@@ -4,83 +4,225 @@ class ImportController extends Controller
 {
 	public function actionPlotData()
 	{
+		if (empty($_FILES['plot']['tmp_name'])) {
+			Yii::app()->user->setFlash('error', 'Please upload a CSV file.');
+			$this->redirect(Yii::app()->baseUrl.'/import/upload');
+			return;
+		}
+
 		$uploadFolder = getcwd() . '/imports/plots/';
-        $fileName = 'report.csv';
-        $orig_fileName = $_FILES['plot']['name'];
-        move_uploaded_file($_FILES['plot']['tmp_name'], $uploadFolder.$fileName);
-        $result = [];
-        if (($handle = fopen($uploadFolder.$fileName, 'r')) !== FALSE) {
-            $index = 0;
-            while (($row = fgetcsv($handle, 100000, ',')) !== FALSE) {
+		if (!is_dir($uploadFolder)) {
+			mkdir($uploadFolder, 0777, true);
+		}
 
-                if (empty($header)) {
-                    $header = $row;
-                } else {
-                    $result[] = $row;
-                }
-                $index++;
-            }
-            fclose($handle);
-        }
+		$fileName = 'report.csv';
+		move_uploaded_file($_FILES['plot']['tmp_name'], $uploadFolder.$fileName);
 
-        //$sql = 'SET FOREIGN_KEY_CHECKS = 0;TRUNCATE `plots`; SET FOREIGN_KEY_CHECKS = 1;';
-        //Yii::app()->db->createCommand($sql)->execute();
-        
-        if(!empty($result)){
-            //unset($result[0]);
-            foreach ($result as $i=>$value) {
-            	//if(!empty($value[0])){
-            		//plot
-            		//echo '<pre>';
-                    //print_r($result);
-                   	//exit;
-                   	if($value[2]=='200 S.Y'){
-                   	    $size = 4;
-                   	}
-                   	
-                   	if($value[2]=='120 S.Y'){
-                   	    $size = 2;
-                   	}
-                   	
-                   	if($value[2]=='80 S.Y'){
-                   	    $size = 1;
-                   	}
-                   	
-                   	if($value[2]=='150 S.Y'){
-                   	    $size = 3;
-                   	}
-		            $plot = new Plots;
-					$plot->block_number = $value[0];
-					$plot->category_id = ($value[3]=='RESIDENTIAL')?1:2;
-					$plot->size_id = $size;
-					$plot->plot_number = $value[1];
-					$plot->length = 0;
-					$plot->width = 0;
-					$plot->description = 0;
-					$plot->plot_type = 0;
-					$plot->is_road_facing = 0;
-					$plot->is_road_facing_amount = 0;
-					$plot->is_corner = 0;
-					$plot->is_corner_amount = 0;
-					$plot->is_park_facing = 0;
-					$plot->is_park_facing_amount = 0;
-					$plot->is_west_open = 0;
-					$plot->is_west_open_amount = 0;
-					$plot->total = 0;
-					$plot->discount = 0;
-					$plot->phase_id = 1;
-					$plot->status = 0;
-		            $plot->save(false);
-            	//}
-            }
-        }
-        echo 'Done';
+		$header = array();
+		$result = array();
+		if (($handle = fopen($uploadFolder.$fileName, 'r')) !== FALSE) {
+			while (($row = fgetcsv($handle, 100000, ',')) !== FALSE) {
+				if (empty($header)) {
+					if (isset($row[0])) {
+						$row[0] = preg_replace('/^\xEF\xBB\xBF/', '', $row[0]);
+					}
+					$header = $row;
+				} else {
+					$result[] = $row;
+				}
+			}
+			fclose($handle);
+		}
+
+		if (empty($result)) {
+			Yii::app()->user->setFlash('error', 'The CSV file is empty or invalid.');
+			$this->redirect(Yii::app()->baseUrl.'/import/upload');
+			return;
+		}
+
+		$columnMap = $this->mapPlotImportColumns($header);
+		$userModel = Yii::app()->session->get('userModel');
+		$phaseId = !empty($userModel['phase_id']) ? $userModel['phase_id'] : 1;
+
+		$created = 0;
+		$updated = 0;
+		$skipped = array();
+
+		foreach ($result as $index => $row) {
+			$rowNumber = $index + 2;
+			$data = $this->extractPlotImportRow($row, $columnMap);
+
+			if ($data['block_number'] === '' && $data['plot_number'] === '') {
+				continue;
+			}
+
+			if ($data['block_number'] === '' || $data['plot_number'] === '') {
+				$skipped[] = 'Row '.$rowNumber.': Block # and Plot # are required.';
+				continue;
+			}
+
+			if ($data['category'] === '') {
+				$skipped[] = 'Row '.$rowNumber.': Category is required (Residential or Commercial).';
+				continue;
+			}
+
+			$categoryId = $this->resolveCategoryId($data['category']);
+			if (!$categoryId) {
+				$skipped[] = 'Row '.$rowNumber.': Category "'.$data['category'].'" not found.';
+				continue;
+			}
+
+			if ($data['size'] === '') {
+				$skipped[] = 'Row '.$rowNumber.': Size is required.';
+				continue;
+			}
+
+			$sizeId = $this->resolveSizeId($data['size']);
+			if (!$sizeId) {
+				$skipped[] = 'Row '.$rowNumber.': Size "'.$data['size'].'" could not be saved.';
+				continue;
+			}
+
+			$criteria = new CDbCriteria();
+			$criteria->compare('block_number', $data['block_number']);
+			$criteria->compare('plot_number', $data['plot_number']);
+			$criteria->compare('phase_id', $phaseId);
+			if ($data['plot_type'] !== '') {
+				$criteria->compare('plot_type', $data['plot_type']);
+			}
+
+			$plot = Plots::model()->find($criteria);
+			$isNew = false;
+			if (!$plot) {
+				$plot = new Plots;
+				$plot->phase_id = $phaseId;
+				$plot->is_road_facing = 0;
+				$plot->is_road_facing_amount = 10;
+				$plot->is_corner = 0;
+				$plot->is_corner_amount = 10;
+				$plot->is_park_facing = 0;
+				$plot->is_park_facing_amount = 10;
+				$plot->is_west_open = 0;
+				$plot->is_west_open_amount = 10;
+				$plot->total = 0;
+				$plot->discount = 0;
+				$plot->status = 0;
+				$plot->length = '';
+				$plot->width = '';
+				$plot->description = '';
+				$isNew = true;
+			}
+
+			$plot->block_number = $data['block_number'];
+			$plot->plot_number = $data['plot_number'];
+			$plot->plot_type = $data['plot_type'];
+			$plot->category_id = $categoryId;
+			$plot->size_id = $sizeId;
+
+			if ($data['has']['description']) {
+				$plot->description = $data['description'];
+			}
+			if ($data['has']['length']) {
+				$plot->length = $data['length'];
+			}
+			if ($data['has']['width']) {
+				$plot->width = $data['width'];
+			}
+			if ($data['has']['is_road_facing']) {
+				$plot->is_road_facing = $this->parseFlagValue($data['is_road_facing']);
+			}
+			if ($data['has']['is_corner']) {
+				$plot->is_corner = $this->parseFlagValue($data['is_corner']);
+			}
+			if ($data['has']['is_park_facing']) {
+				$plot->is_park_facing = $this->parseFlagValue($data['is_park_facing']);
+			}
+			if ($data['has']['is_west_open']) {
+				$plot->is_west_open = $this->parseFlagValue($data['is_west_open']);
+			}
+			if ($data['has']['is_road_facing_amount']) {
+				$plot->is_road_facing_amount = $this->parseNumberValue($data['is_road_facing_amount'], 10);
+			}
+			if ($data['has']['is_corner_amount']) {
+				$plot->is_corner_amount = $this->parseNumberValue($data['is_corner_amount'], 10);
+			}
+			if ($data['has']['is_park_facing_amount']) {
+				$plot->is_park_facing_amount = $this->parseNumberValue($data['is_park_facing_amount'], 10);
+			}
+			if ($data['has']['is_west_open_amount']) {
+				$plot->is_west_open_amount = $this->parseNumberValue($data['is_west_open_amount'], 10);
+			}
+			if ($data['has']['total']) {
+				$plot->total = $this->parseNumberValue($data['total'], 0);
+			}
+			if ($data['has']['discount']) {
+				$plot->discount = $this->parseNumberValue($data['discount'], 0);
+			}
+			if ($data['has']['status'] && $data['status'] !== '') {
+				$plot->status = $this->resolvePlotStatus($data['status']);
+			}
+
+			$plot->save(false);
+			if ($isNew) {
+				$created++;
+			} else {
+				$updated++;
+			}
+		}
+
+		$message = 'Import completed. Created: '.$created.', Updated: '.$updated.'.';
+		if (!empty($skipped)) {
+			$message .= ' Skipped '.count($skipped).' row(s): '.implode(' ', $skipped);
+			Yii::app()->user->setFlash('error', $message);
+		} else {
+			Yii::app()->user->setFlash('success', $message);
+		}
+
+		$this->redirect(Yii::app()->baseUrl.'/import/upload');
 	}
 
 	public function actionUpload()
 	{
+		$data['categories'] = PlotCategories::model()->findAll();
+		$data['sizes'] = PlotSizes::model()->findAll();
+		$this->render('upload', $data);
+	}
 
-		$this->render('upload');
+	public function actionPlotsample()
+	{
+		$headers = $this->plotImportHeaders();
+		$categories = PlotCategories::model()->findAll();
+		$sizes = PlotSizes::model()->findAll();
+
+		$residential = 'Residential';
+		$commercial = 'Commercial';
+		foreach ($categories as $category) {
+			if (strcasecmp($category->name, 'Residential') === 0) {
+				$residential = $category->name;
+			}
+			if (strcasecmp($category->name, 'Commercial') === 0) {
+				$commercial = $category->name;
+			}
+		}
+
+		$sizeA = $sizes ? $sizes[0]->size : '80 SQ.YD';
+		$sizeB = (count($sizes) > 1) ? $sizes[1]->size : '120 SQ.YD';
+
+		$rows = array(
+			$headers,
+			array('JB', 'L', '01', $residential, $sizeA, '', '', '', '0', '0', '0', '0', '10', '10', '10', '10', '1800000', '0', 'Available'),
+			array('JB', 'R', '02', $commercial, $sizeB, '', '', '', '0', '1', '0', '0', '10', '10', '10', '10', '2600000', '0', 'Booked'),
+		);
+
+		$fileName = 'plot-import-sample.csv';
+		header('Content-Type: text/csv');
+		header('Content-Disposition: attachment; filename="'.$fileName.'"');
+		$fp = fopen('php://output', 'w');
+		foreach ($rows as $row) {
+			fputcsv($fp, $row);
+		}
+		fclose($fp);
+		Yii::app()->end();
 	}
 
 	public function actionAgentupdate()
@@ -553,6 +695,221 @@ class ImportController extends Controller
        echo 'Done';
     }
 
+
+	protected function plotImportHeaders()
+	{
+		return array(
+			'Block #',
+			'Plot Type',
+			'Plot #',
+			'Category',
+			'Size',
+			'Description',
+			'Length',
+			'Width',
+			'Road Facing',
+			'Corner',
+			'Park Facing',
+			'West Open',
+			'Road Facing Amount',
+			'Corner Amount',
+			'Park Facing Amount',
+			'West Open Amount',
+			'Total',
+			'Discount',
+			'Status',
+		);
+	}
+
+	protected function mapPlotImportColumns($header)
+	{
+		$aliases = array(
+			'block' => 'block_number',
+			'block#' => 'block_number',
+			'blocknumber' => 'block_number',
+			'plottype' => 'plot_type',
+			'type' => 'plot_type',
+			'plot' => 'plot_number',
+			'plot#' => 'plot_number',
+			'plotno' => 'plot_number',
+			'plotnumber' => 'plot_number',
+			'category' => 'category',
+			'size' => 'size',
+			'sqyds' => 'size',
+			'sqyd' => 'size',
+			'description' => 'description',
+			'details' => 'description',
+			'length' => 'length',
+			'width' => 'width',
+			'roadfacing' => 'is_road_facing',
+			'corner' => 'is_corner',
+			'parkfacing' => 'is_park_facing',
+			'westopen' => 'is_west_open',
+			'roadfacingamount' => 'is_road_facing_amount',
+			'corneramount' => 'is_corner_amount',
+			'parkfacingamount' => 'is_park_facing_amount',
+			'westopenamount' => 'is_west_open_amount',
+			'total' => 'total',
+			'discount' => 'discount',
+			'status' => 'status',
+		);
+
+		$map = array();
+		foreach ($header as $index => $label) {
+			$key = $this->normalizeImportHeader($label);
+			if (isset($aliases[$key])) {
+				$map[$aliases[$key]] = $index;
+			}
+		}
+
+		if (isset($map['block_number']) && isset($map['plot_number'])) {
+			return $map;
+		}
+
+		return array(
+			'block_number' => 0,
+			'plot_type' => 1,
+			'plot_number' => 2,
+			'category' => 3,
+			'size' => 4,
+			'description' => 5,
+			'length' => 6,
+			'width' => 7,
+			'is_road_facing' => 8,
+			'is_corner' => 9,
+			'is_park_facing' => 10,
+			'is_west_open' => 11,
+			'is_road_facing_amount' => 12,
+			'is_corner_amount' => 13,
+			'is_park_facing_amount' => 14,
+			'is_west_open_amount' => 15,
+			'total' => 16,
+			'discount' => 17,
+			'status' => 18,
+		);
+	}
+
+	protected function extractPlotImportRow($row, $columnMap)
+	{
+		$fields = array(
+			'block_number', 'plot_type', 'plot_number', 'category', 'size',
+			'description', 'length', 'width', 'is_road_facing', 'is_corner',
+			'is_park_facing', 'is_west_open', 'is_road_facing_amount',
+			'is_corner_amount', 'is_park_facing_amount', 'is_west_open_amount',
+			'total', 'discount', 'status',
+		);
+
+		$data = array('has' => array());
+		foreach ($fields as $field) {
+			$data['has'][$field] = array_key_exists($field, $columnMap);
+			$value = '';
+			if ($data['has'][$field] && isset($row[$columnMap[$field]])) {
+				$value = trim($row[$columnMap[$field]]);
+			}
+			$data[$field] = $value;
+		}
+
+		return $data;
+	}
+
+	protected function normalizeImportHeader($label)
+	{
+		$label = strtolower(trim($label));
+		$label = str_replace(array('.', '_', '-', ' '), '', $label);
+		return $label;
+	}
+
+	protected function resolveCategoryId($name)
+	{
+		$name = trim($name);
+		if ($name === '') {
+			return null;
+		}
+
+		$category = PlotCategories::model()->find('LOWER(name) = :name', array(
+			':name' => strtolower($name),
+		));
+		if ($category) {
+			return $category->id;
+		}
+
+		return null;
+	}
+
+	protected function resolveSizeId($sizeText)
+	{
+		$sizeText = trim($sizeText);
+		if ($sizeText === '') {
+			return null;
+		}
+
+		$size = PlotSizes::model()->find('size = :size', array(':size' => $sizeText));
+		if ($size) {
+			return $size->id;
+		}
+
+		$size = PlotSizes::model()->find('LOWER(size) = :size', array(
+			':size' => strtolower($sizeText),
+		));
+		if ($size) {
+			return $size->id;
+		}
+
+		$normalized = $this->normalizeSizeText($sizeText);
+		$allSizes = PlotSizes::model()->findAll();
+		foreach ($allSizes as $existing) {
+			if ($this->normalizeSizeText($existing->size) === $normalized) {
+				return $existing->id;
+			}
+		}
+
+		$size = new PlotSizes;
+		$size->size = $sizeText;
+		$size->size_amount = 0;
+		$size->save(false);
+
+		return $size->id;
+	}
+
+	protected function normalizeSizeText($text)
+	{
+		$text = strtolower(trim($text));
+		$text = str_replace(array('.', ',', '-'), '', $text);
+		$text = preg_replace('/\s+/', '', $text);
+		$text = str_replace(array('squareyards', 'sqyards', 'sqyrd', 'sqyds', 'sqyd', 'sqy', 'syds', 'syd', 'sy'), '', $text);
+		return $text;
+	}
+
+	protected function resolvePlotStatus($status)
+	{
+		$status = strtolower(trim($status));
+		if (in_array($status, array('booked', '1', 'sold'))) {
+			return 1;
+		}
+
+		return 0;
+	}
+
+	protected function parseFlagValue($value)
+	{
+		$value = strtolower(trim($value));
+		if (in_array($value, array('1', 'yes', 'y', 'true'))) {
+			return 1;
+		}
+
+		return 0;
+	}
+
+	protected function parseNumberValue($value, $default = 0)
+	{
+		$value = trim($value);
+		if ($value === '') {
+			return $default;
+		}
+
+		$value = str_replace(array('PKR', ',', ' '), '', $value);
+		return is_numeric($value) ? $value : $default;
+	}
 
 	// Uncomment the following methods and override them if needed
 	/*

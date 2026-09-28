@@ -64,6 +64,28 @@ class SizesController extends Controller
 		}
 	}
 
+	public function actionDelete($id)
+	{
+		$size = PlotSizes::model()->findByPk($id);
+		if(!$size){
+			Yii::app()->user->setFlash('error','Plot size not found.');
+			$this->redirect(Yii::app()->baseUrl.'/sizes');
+			return;
+		}
+
+		$plotExists = Plots::model()->exists('size_id = :size_id', array(':size_id' => $id));
+		if($plotExists){
+			Yii::app()->user->setFlash('error','This plot size cannot be deleted because it is already assigned to a plot.');
+			$this->redirect(Yii::app()->baseUrl.'/sizes');
+			return;
+		}
+
+		PaymentModes::model()->deleteAll('plot_size_id = :size_id', array(':size_id' => $id));
+		$size->delete();
+		Yii::app()->user->setFlash('success','Plot size has been deleted.');
+		$this->redirect(Yii::app()->baseUrl.'/sizes');
+	}
+
 	public function Percentage($total,$percentage,$view = 1){
 		if($view == 1){
 			return number_format((@$percentage / 100) * @$total);

@@ -23,7 +23,12 @@
                             </div>
                             <div class="form-group col-lg-3">
                                 <label>Block #</label>
-                                <input class="form-control"  name="block_number" id="block_number" placeholder="Block #" required value="<?php echo $plot->block_number?>">
+                                <input class="form-control"  name="block_number" id="block_number" placeholder="Block #" value="<?php echo $plot->block_number?>">
+                                <!-- <p class="help-block">Example block-level help text here.</p> -->
+                            </div>
+                            <div class="form-group col-lg-3">
+                                <label>Plot Type</label>
+                                <input class="form-control"  name="plot_type" id="plot_type" placeholder="Plot Type" value="<?php echo $plot->plot_type?>">
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-3" style="padding-right: 0px;">

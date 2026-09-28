@@ -150,7 +150,8 @@ class TransactionsController extends Controller
         $start  = (int)Yii::app()->request->getParam('start', 0);
         $length = (int)Yii::app()->request->getParam('length', 25);
     
-        //$status = (int)Yii::app()->request->getParam('status', 1);
+        $statusParam = Yii::app()->request->getParam('status', 1);
+        $status = (is_numeric($statusParam) && (int)$statusParam === 0) ? 0 : 1;
         $search = trim(Yii::app()->request->getParam('search', [])['value'] ?? '');
     
         // Order mapping (index -> column)
@@ -167,6 +168,12 @@ class TransactionsController extends Controller
         // -------------------------
         $criteria = new CDbCriteria();
         $criteria->with = ['plot', 'plotPaymentMode', 'customer']; // same as your code
+        $criteria->addCondition('t.status = :status AND t.phase_id = :phaseId');
+        $criteria->params[':status'] = $status;
+        $criteria->params[':phaseId'] = $phaseId;
+        if ($status === 0) {
+            $criteria->addCondition('t.reason IS NOT NULL');
+        }
     
         // Search (safe) - search on tx no, ref, customer fields
         if ($search !== '') {
@@ -202,6 +209,12 @@ class TransactionsController extends Controller
         $totalMainFiltered = (int)CustomerPlotTransactions::model()->count($criteriaCount);
     
         $criteriaTotalMain = new CDbCriteria();
+        $criteriaTotalMain->addCondition('t.status = :status AND t.phase_id = :phaseId');
+        $criteriaTotalMain->params[':status'] = $status;
+        $criteriaTotalMain->params[':phaseId'] = $phaseId;
+        if ($status === 0) {
+            $criteriaTotalMain->addCondition('t.reason IS NOT NULL');
+        }
         $totalMain = (int)CustomerPlotTransactions::model()->count($criteriaTotalMain);
     
         // -------------------------
@@ -209,6 +222,9 @@ class TransactionsController extends Controller
         // -------------------------
         $criteriaExt = new CDbCriteria();
         $criteriaExt->with = ['plot', 'customer'];
+        $criteriaExt->addCondition('t.status = :status AND t.phase_id = :phaseId');
+        $criteriaExt->params[':status'] = $status;
+        $criteriaExt->params[':phaseId'] = $phaseId;
     
         if ($search !== '') {
             $criteriaExt->addCondition("(
@@ -248,6 +264,9 @@ class TransactionsController extends Controller
         $totalExtraFiltered = (int)CustomerPlotExtraTransactions::model()->count($criteriaExtCount);
     
         $criteriaTotalExtra = new CDbCriteria();
+        $criteriaTotalExtra->addCondition('t.status = :status AND t.phase_id = :phaseId');
+        $criteriaTotalExtra->params[':status'] = $status;
+        $criteriaTotalExtra->params[':phaseId'] = $phaseId;
         $totalExtra = (int)CustomerPlotExtraTransactions::model()->count($criteriaTotalExtra);
     
         // -------------------------
