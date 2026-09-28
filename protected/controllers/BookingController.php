@@ -128,7 +128,7 @@ class BookingController extends Controller
 						$customer_plot->agent_id = $_POST['agent_id'];//$plot->agentReserve[0]->agent_id;
 						if($_POST['agent_id']){
 						    $agentDet = Agents::model()->findByPk($_POST['agent_id']);
-						    $customer_plot->agent_percentage = $agentDet->percentage_value;
+						    $customer_plot->agent_percentage = $agentDet->getSlabPercentForBooking(null);
 						}
 						
 					//}
@@ -629,6 +629,7 @@ class BookingController extends Controller
 
 
 		if($data['booking']){
+			Expenses::ensureAgentIdColumn();
 			$customerPlotIds = CustomerPlots::model()->findAll('plot_id = :id',array(":id"=>$data['booking']->plot_id));
 			$cpIDS = array_map(function($item){
 				return $item->id;
@@ -693,6 +694,7 @@ class BookingController extends Controller
 		$uploadFolder = getcwd() . '/uploads/booking/';
 		if($_POST['plot_id']){
 			$customer_plot = CustomerPlots::model()->findByPk($_POST['id']);
+			$originalAgentId = $customer_plot->agent_id;
 			$customer = Customers::model()->findByPk($customer_plot->customer_id);
 			//echo $customer->createdOn;exit;
 			$customer->attributes = $_POST;
@@ -718,9 +720,11 @@ class BookingController extends Controller
     			}
     			if($_POST['agent_id']){
 				    $agentDet = Agents::model()->findByPk($_POST['agent_id']);
-				    $customer_plot->agent_percentage = $agentDet->percentage_value;
+				    $seqBooking = ((int)$originalAgentId === (int)$_POST['agent_id']) ? $customer_plot : null;
+				    $customer_plot->agent_percentage = $agentDet->getSlabPercentForBooking($seqBooking);
+				} elseif (isset($_POST['agent_percentage']) && $_POST['agent_percentage'] !== '') {
+					$customer_plot->agent_percentage = $_POST['agent_percentage'];
 				}
-				$customer_plot->agent_percentage = $_POST['agent_percentage'];
 				$customer_plot->updatedBy = date('Y-m-d').'--'.Yii::app()->session['userModel']['first_name'].' '.Yii::app()->session['userModel']['last_name'];
 
 				if($_FILES['plot']['name']['pp']){
@@ -735,7 +739,7 @@ class BookingController extends Controller
 				foreach($modelAP as $MAP){
 					$MAP->agent_id = $_POST['agent_id'];
 					$MAP->plot_id = $_POST['plot_id'];
-					$MAP->commission = $_POST['agent_percentage'];
+					$MAP->commission = $customer_plot->agent_percentage;
 					$MAP->save(false);
 				}
 				

@@ -10,11 +10,16 @@ class ExpensesController extends Controller
     
 	public function actionAdd()
 	{
+		Expenses::ensureAgentIdColumn();
 		$data['accounts'] = Accounts::model()->findAll();
 		$data['phases'] = Phases::model()->findAll();
 		$data['booking'] = [];
+		$data['commissionAgent'] = null;
 		if(isset($_GET['booking_id'])){
 			$data['booking'] = CustomerPlots::model()->findByPk($_GET['booking_id']);	
+		}
+		if(!empty($_GET['agent_id'])){
+			$data['commissionAgent'] = Agents::model()->findByPk($_GET['agent_id']);
 		}
 		$data['expenseTypes'] = Yii::app()->params['expenseTypes'];
 		$criteria = new CDbCriteria();
@@ -133,6 +138,7 @@ class ExpensesController extends Controller
 
 	public function actionSave(){
 		if($_POST['description']){
+			Expenses::ensureAgentIdColumn();
 			$expense = new Expenses;
 			$expense->attributes = $_POST;
 			$expense->account_id = 5;
@@ -141,6 +147,9 @@ class ExpensesController extends Controller
 			$expense->status = 2;
 			if(isset($_POST['booking_id'])){
 			    $expense->status = 1;
+			}
+			if(!empty($_POST['agent_id'])){
+				$expense->agent_id = (int)$_POST['agent_id'];
 			}
 			$expense->reason = NULL;
 			$expense->save(false);

@@ -174,7 +174,7 @@ class Controller extends CController
 		//return $pettyCashPaymentCount;
 		//return 'EXP/'.$modes[$expense->expense_type].'-'.(sprintf('%03d',$totalCount+1)).'/GB';
 		
-		return 'EXP/'.(sprintf('%03d',$totalCount+1)).'/GB';
+		return 'EXP/'.(sprintf('%03d',$totalCount+1));
 		
 	}
 

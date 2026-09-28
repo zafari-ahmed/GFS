@@ -70,7 +70,7 @@
                                         <!--<th>Dues Desciption</th>-->
                                         <!--<th>Total Dues</th>-->
                                         <!--<th>Installments<br/> Paid Monthly/Yearly</th>-->
-                                        <th>Status</th>
+                                        <!-- <th>Status</th> -->
                                         
                                         
                                     </tr>
@@ -139,7 +139,7 @@
                                         <td style="display: none;"><?php echo (@$res->plot->customerPlots)?'<span class="label label-danger" style="text-decoration: none;">Booked</span>':'<span class="label label-success" style="text-decoration: none;">Available</span>'?></td>
                                         
                                         
-                                        <?php if(@$res->plot->customerPlots){?>
+                                        <?php /*if(@$res->plot->customerPlots){?>
                                         <?php if(@$res->plot->customerPlots[0]->blocked != 1 && $res->plot->customerPlots[0]->blocked != 2){?> 
                                             <td><?php echo (@$res->plot->customerPlots[0]->status==1)?(($complete==0)?'<span class="aLink label label-primary">Booked '.(($trasferred==1)?'(Transferred)':'').'</span>':'<span class="aLink label label-success">Completed</span>'):'<span class="aLink label label-danger">Temporary Booked</span>'?>
                                             </td>
@@ -152,19 +152,15 @@
                                             <?php } ?>
                                         <?php } } else{ ?>
                                             <td><span class="aLink label label-success">Available</span></td>
-                                        <?php } ?>
-
-                                        
-                                        
+                                        <?php }*/ ?>                                       
                                     </tr>
                                     
                                 <?php endforeach; }?>
                             </tbody>
-                            <tfoot style="font-weight: bold;">
+                            <!-- <tfoot style="font-weight: bold;">
                                 <td>Total</td>
-                                <td colspan="2"><?php echo 'PKR '.number_format(@$tComission)?></td>
-                                
-                            </tfoot>
+                                <td colspan="2"><?php //echo 'PKR '.number_format(@$tComission)?></td>
+                            </tfoot> -->
                         </table>
                             </div>
                             

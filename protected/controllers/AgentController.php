@@ -90,60 +90,69 @@ class AgentController extends Controller
 		}
 	}
 
+	protected function applyAgentPost($Users)
+	{
+		$Users->attributes = $_POST;
+		$Users->status = 1;
+		if (!isset($_POST['parent_id']) || $_POST['parent_id'] === '') {
+			$Users->parent_id = null;
+		}
+		if (!isset($_POST['percentage']) || $_POST['percentage'] === '') {
+			$Users->percentage = ($Users->percentage !== '' && $Users->percentage !== null) ? $Users->percentage : 0;
+		}
+		if (!isset($_POST['percentage_value']) || $_POST['percentage_value'] === '') {
+			$Users->percentage_value = ($Users->percentage_value !== '' && $Users->percentage_value !== null) ? $Users->percentage_value : 0;
+		}
+	}
+
 	public function actionSave()
 	{
-		if($_POST['name']){
+		if(!empty($_POST['name'])){
 			$Users = new Agents;
-			$Users->attributes = $_POST;
-			$Users->status = 1;
-			if (!isset($_POST['percentage']) || $_POST['percentage'] === '') {
-				$Users->percentage = 0;
-			}
-			if (!isset($_POST['percentage_value']) || $_POST['percentage_value'] === '') {
-				$Users->percentage_value = 0;
-			}
+			$this->applyAgentPost($Users);
 			$Users->save(false);
 			$this->saveCommissionTiers($Users->id);
 			Yii::app()->user->setFlash('success','Agent add successfully.');
             $this->redirect(Yii::app()->baseUrl.'/agent');
 		}
+		$this->redirect(Yii::app()->baseUrl.'/agent');
 	}
 
 	public function actionUpdate()
 	{
-		//echo '<pre>';print_r($_POST);exit;
-		if($_POST['name']){
-			$Users = Agents::model()->findByPk($_POST['id']);
-			$Users->attributes = $_POST;
-			$Users->status = 1;
-			if (!isset($_POST['percentage']) || $_POST['percentage'] === '') {
-				$Users->percentage = ($Users->percentage !== '' && $Users->percentage !== null) ? $Users->percentage : 0;
-			}
-			if (!isset($_POST['percentage_value']) || $_POST['percentage_value'] === '') {
-				$Users->percentage_value = ($Users->percentage_value !== '' && $Users->percentage_value !== null) ? $Users->percentage_value : 0;
-			}
-			$Users->save(false);
-			$this->saveCommissionTiers($Users->id);
-			if($_POST['plot_number']){
-				//AgentPlots::model()->deleteAll('agent_id = :id',array(':id'=>$_POST['id']));
-				foreach($_POST['plot_number'] as $plots){
-					if($plots){
-						$model = new AgentPlots;
-						$model->agent_id = $_POST['id'];
-						$model->plot_id = $plots;
-						$model->createdOn = date('Y-m-d');
-						$model->payment_schedule_id = null;
-						$model->discount = 0;
-						$model->commission = 0;
-						$model->save(false);
-					}
-				}
-				//Custom plots agent commission change
-				CustomerPlots::model()->updateAll(array('agent_percentage' => $Users->percentage),'agent_id = :agent_id',array(':agent_id' => $Users->id));
-			}
-			Yii::app()->user->setFlash('success','Agent update successfully.');
-            $this->redirect(Yii::app()->baseUrl.'/agent/edit/'.$_POST['id']);
+		if(empty($_POST['name']) || empty($_POST['id'])){
+			Yii::app()->user->setFlash('error','Agent update failed.');
+			$this->redirect(Yii::app()->baseUrl.'/agent');
+			return;
 		}
+
+		$Users = Agents::model()->findByPk($_POST['id']);
+		if(!$Users){
+			Yii::app()->user->setFlash('error','Agent not found.');
+			$this->redirect(Yii::app()->baseUrl.'/agent');
+			return;
+		}
+
+		$this->applyAgentPost($Users);
+		$Users->save(false);
+		$this->saveCommissionTiers($Users->id);
+		if(!empty($_POST['plot_number']) && is_array($_POST['plot_number'])){
+			foreach($_POST['plot_number'] as $plots){
+				if($plots){
+					$model = new AgentPlots;
+					$model->agent_id = $_POST['id'];
+					$model->plot_id = $plots;
+					$model->createdOn = date('Y-m-d');
+					$model->payment_schedule_id = null;
+					$model->discount = 0;
+					$model->commission = 0;
+					$model->save(false);
+				}
+			}
+			CustomerPlots::model()->updateAll(array('agent_percentage' => $Users->percentage),'agent_id = :agent_id',array(':agent_id' => $Users->id));
+		}
+		Yii::app()->user->setFlash('success','Agent update successfully.');
+		$this->redirect(Yii::app()->baseUrl.'/agent/edit/'.$_POST['id']);
 	}
 
 	public function actionDeleteagentplot($id){

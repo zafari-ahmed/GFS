@@ -115,13 +115,18 @@ if($userModel['user_type']['id'] == 1){
                                     </select>
                                     <!-- <p class="help-block">Example block-level help text here.</p> -->
                                 </div>
-                                <div class="form-group col-lg-3">
+                                <div class="form-group col-lg-3" >
                                     <label>Agent</label>
-                                    <!-- <input class="form-control" disabled="" name="size_id" id="size_id" placeholder="Plot Size"> -->
-                                    <select name="agent_id" class="form-control" >
+                                    
+                                    <select class="form-control select2" name="agent_id" id="agent_id">
                                         <option value="">Please select dealer</option>
-                                        <?php foreach($agents as $agent):?>
-                                            <option value="<?php echo $agent->id?>" <?php echo (@$booking->agent_id == $agent->id)?'selected':''?>><?php echo $agent->name?></option>
+                                        <?php foreach($agents as $agent):
+                                            $agentLabel = $agent->name;
+                                            if ($agent->parent_id && @$agent->agentParent) {
+                                                $agentLabel .= ' ('.$agent->agentParent->name.')';
+                                            }
+                                        ?>
+                                            <option rel="<?php echo $agent->percentage_value?>" value="<?php echo $agent->id?>" <?php echo (@$booking->agent_id == $agent->id)?'selected':''?>><?php echo CHtml::encode($agentLabel)?></option>
                                         <?php endforeach;?>
                                     </select>
                                     <!-- <p class="help-block">Example block-level help text here.</p> -->

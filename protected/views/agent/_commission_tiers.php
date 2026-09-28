@@ -14,8 +14,9 @@ if (!$tiers) {
         </div>
         <div class="panel-body">
             <p class="help-block" style="margin-top:0;">
-                Set commission against how many customer plots this dealer has booked.
-                Leave <strong>To</strong> empty for onwards (example: 25 onwards = 25%).
+                Set commission against how many customer plots this dealer has booked (counted in booking date order).</br>
+                Leave <strong>To</strong> empty for onwards (example: 25 onwards = 25%).</br>
+                If a <strong>sub-agent</strong> books, the parent also gets <b><?php echo (int)Agents::$parentCommissionPercent?>%</b> of the booking total.
             </p>
             <div class="row" style="font-weight:bold;margin-bottom:6px;">
                 <div class="col-lg-3">From (bookings)</div>
@@ -27,13 +28,13 @@ if (!$tiers) {
                 <?php foreach ($tiers as $tier): ?>
                 <div class="row commission-tier-row" style="margin-bottom:8px;">
                     <div class="col-lg-3">
-                        <input type="number" min="1" class="form-control" name="commission_min[]" placeholder="e.g. 1" value="<?php echo CHtml::encode($tier->min_bookings)?>">
+                        <input type="number" min="1" class="form-control" name="commission_min[]" placeholder="e.g. 1" value="<?php echo CHtml::encode($tier->min_bookings !== null ? $tier->min_bookings : '')?>">
                     </div>
                     <div class="col-lg-3">
-                        <input type="number" min="1" class="form-control" name="commission_max[]" placeholder="Empty = onwards" value="<?php echo CHtml::encode($tier->max_bookings)?>">
+                        <input type="number" min="1" class="form-control" name="commission_max[]" placeholder="Empty = onwards" value="<?php echo CHtml::encode($tier->max_bookings !== null ? $tier->max_bookings : '')?>">
                     </div>
                     <div class="col-lg-3">
-                        <input type="number" min="0" step="0.01" class="form-control" name="commission_percent[]" placeholder="e.g. 10" value="<?php echo CHtml::encode($tier->percentage)?>">
+                        <input type="number" min="0" step="0.01" class="form-control" name="commission_percent[]" placeholder="e.g. 10" value="<?php echo CHtml::encode($tier->percentage !== null ? $tier->percentage : '')?>">
                     </div>
                     <div class="col-lg-3">
                         <button type="button" class="btn btn-danger btn-sm removeCommissionTier">Remove</button>

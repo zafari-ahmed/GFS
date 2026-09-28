@@ -22,21 +22,22 @@
 <?php $userModel = Yii::app()->session->get('userModel');?>
 
 <body style="margin:0;font-family:Arial, Helvetica, sans-serif;font-size:14px;">
-    <div style="width:700px;height:842px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;">
+    <div style="width:700px;height:700px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;">
         <?php if(@$expense->reason || $expense->status === 0){?>
         <img src="<?php echo Yii::app()->baseUrl?>/images/cancelledInvoice.png" style="    position: absolute;z-index: 999;width: 70%;margin-left: 9%;margin-top: 1%;opacity: 0.5;">
         <?php }?>
-		<div style="overflow:hidden;">
-			<div style="width:10%;float:left;position: relative;left: -5%;">
-				<img src="<?php echo Yii::app()->baseUrl?>/images/GB1-B.png" style="max-width: 160%;margin-top: 15px;margin-left: 30px;">
-			</div>
-			<div style="width:70%;float:left;text-align: center;position:relative;left:15%">
-                <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B.png" style="    max-width: 100%;margin-top: 5px;margin-left: -115px;">
-			</div>
-			<div style="width:18%;float:left;position: relative;right: -22%;margin-top:1%">
-				<img src="<?php echo Yii::app()->baseUrl?>/images/SS-B.png" style="    max-width: 70%;margin-top: 5px;margin-left: -115px;">
-			</div>
-		</div>
+		<div style="overflow:hidden;margin-bottom: 5%;">
+            <div style="width:10%;float:left;position: relative;left: -5%;">
+                
+                <img src="<?php echo Yii::app()->baseUrl?>/images/seven-wonder-1.png" style="max-width: 130%;margin-top: 10px;margin-left: 50%;">
+            </div>
+            <div style="width:65%;float:left;text-align: center;position:relative;left:15%">
+                <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="    max-width: 40%;margin-top: 5px;margin-left: -115px;">
+            </div>
+            <div style="float:left;margin-top:8%">
+                
+            </div>
+        </div>
         <div style="overflow:hidden;margin:05px 0;">
             <div style="width:200px;font-family:Arial, Helvetica, sans-serif;font-size:12px;float:left;margin-right:10px;">
             	<label style="width:70px;float:left;font-weight: bold;">Voucher No. </label>

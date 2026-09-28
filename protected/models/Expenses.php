@@ -42,12 +42,12 @@ class Expenses extends CActiveRecord
 		// will receive user inputs.
 		return array(
 			array('expense_type, description, amount, user_id, status, reason, createdOn', 'required'),
-			array('account_id, user_id, status, phase_id, booking_id', 'numerical', 'integerOnly'=>true),
+			array('account_id, user_id, status, phase_id, booking_id, agent_id', 'numerical', 'integerOnly'=>true),
 			array('amount', 'numerical'),
 			array('expense_type, number, payment_mode, paid_to, bank, cnic', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, expense_type, account_id, description, amount, user_id, status, reason, number, createdOn, phase_id, booking_id, payment_mode, paid_to, bank, cnic', 'safe', 'on'=>'search'),
+			array('id, expense_type, account_id, description, amount, user_id, status, reason, number, createdOn, phase_id, booking_id, agent_id, payment_mode, paid_to, bank, cnic', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -62,6 +62,7 @@ class Expenses extends CActiveRecord
 			'user' => array(self::BELONGS_TO, 'Users', 'user_id'),
 			'account' => array(self::BELONGS_TO, 'Accounts', 'account_id'),
 			'booking' => array(self::BELONGS_TO, 'CustomerPlots', 'booking_id'),
+			'agent' => array(self::BELONGS_TO, 'Agents', 'agent_id'),
 		);
 	}
 
@@ -83,6 +84,7 @@ class Expenses extends CActiveRecord
 			'createdOn' => 'Created On',
 			'phase_id' => 'Phase',
 			'booking_id' => 'Booking',
+			'agent_id' => 'Agent',
 			'payment_mode' => 'Payment Mode',
 			'paid_to' => 'Paid To',
 			'bank' => 'Bank',
@@ -120,6 +122,7 @@ class Expenses extends CActiveRecord
 		$criteria->compare('createdOn',$this->createdOn,true);
 		$criteria->compare('phase_id',$this->phase_id);
 		$criteria->compare('booking_id',$this->booking_id);
+		$criteria->compare('agent_id',$this->agent_id);
 		$criteria->compare('payment_mode',$this->payment_mode,true);
 		$criteria->compare('paid_to',$this->paid_to,true);
 		$criteria->compare('bank',$this->bank,true);
@@ -128,6 +131,22 @@ class Expenses extends CActiveRecord
 		return new CActiveDataProvider($this, array(
 			'criteria'=>$criteria,
 		));
+	}
+
+	public static function ensureAgentIdColumn()
+	{
+		$db = Yii::app()->db;
+		$exists = $db->createCommand("
+			SELECT COUNT(*) FROM information_schema.COLUMNS
+			WHERE TABLE_SCHEMA = DATABASE()
+			  AND TABLE_NAME = 'expenses'
+			  AND COLUMN_NAME = 'agent_id'
+		")->queryScalar();
+		if (!$exists) {
+			$db->createCommand("ALTER TABLE `expenses` ADD COLUMN `agent_id` INT(11) NULL DEFAULT NULL AFTER `booking_id`")->execute();
+			Yii::app()->db->schema->getTable('expenses', true);
+			Expenses::model()->refreshMetaData();
+		}
 	}
 
 	/**

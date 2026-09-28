@@ -94,30 +94,30 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                                         
                                     </select>
                                 </div>
-                            <div class="form-group col-lg-2 hide" >
+                            <!-- <div class="form-group col-lg-2 hide" >
                                 <label>Phase ID</label>
                                 <select name="phase_id" id="phase_id" class="form-control" required>
                                     <option value="">Please select phase</option>
-                                    <?php foreach($phases as $acc):?>
+                                    <?php /*foreach($phases as $acc):?>
                                         <option value="<?php echo $acc->id?>" <?php echo ($acc->id == $phaseId)?'selected':''?>><?php echo $acc->phase?></option>
-                                    <?php endforeach;?>
-                                    <!-- <option value="charity">Charity</option>
-                                    <option value="charity">Charity</option> -->
+                                    <?php endforeach;*/?>
                                 </select>
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
-                            </div>
+                            </div> -->
                             
                             <?php if(@$_GET['booking_id']) {?>
                             <div class="form-group col-lg-3">
                                 <label>Booking Reg No</label>
                                 <input class="form-control" type="text" value="<?php echo $this->getBookingRegNo(@$booking->id)?>" disabled>
                                 <input type="hidden" name="booking_id" value="<?php echo @$booking->id?>">
+                                <?php if(!empty($commissionAgent)){ ?>
+                                <input type="hidden" name="agent_id" value="<?php echo (int)$commissionAgent->id?>">
+                                <?php } ?>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <?php }?>
                             <div class="form-group col-lg-3">
                                 <label>Amount</label>
-                                <input class="form-control" type="number" name="amount" id="amount" placeholder="Amount" required="">
+                                <input class="form-control" type="number" name="amount" id="amount" placeholder="Amount" required="" value="<?php echo isset($_GET['comm_amount']) ? CHtml::encode($_GET['comm_amount']) : ''?>">
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-4">
@@ -127,7 +127,7 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                             </div>
                             <div class="form-group col-lg-3">
                                 <label>Paid To</label>
-                                <input list="browsers" class="form-control" type="text" name="paid_to" id="paid_to" placeholder="Paid To" value=" ">
+                                <input list="browsers" class="form-control" type="text" name="paid_to" id="paid_to" placeholder="Paid To" value="<?php echo !empty($commissionAgent) ? CHtml::encode($commissionAgent->name) : ' '?>">
                                 <datalist id="browsers">
                                   <?php foreach(@$paid_to_list as $pt):?>
                                   <option value="<?php echo @$pt->paid_to?>">
@@ -146,7 +146,8 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <?php if(@$_GET['booking_id']) {
-                                $messageDesc = 'Booking agent commission for Plot *'.($booking->plot->block_number.'-'.$booking->plot->plot_type.'-'.$booking->plot->plot_number).'*';
+                                $agentLabel = !empty($commissionAgent) ? $commissionAgent->name.' ' : '';
+                                $messageDesc = 'Booking agent commission for '.$agentLabel.'Plot *'.($booking->plot->block_number.'-'.$booking->plot->plot_type.'-'.$booking->plot->plot_number).'*';
                             } else{
                                 $messageDesc = '';
                             }?>

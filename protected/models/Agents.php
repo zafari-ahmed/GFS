@@ -16,6 +16,12 @@
 class Agents extends CActiveRecord
 {
 	/**
+	 * Extra commission % for the parent dealer when a sub-agent books.
+	 * Change this value to update parent share on view booking and new bookings.
+	 */
+	public static $parentCommissionPercent = 5;
+
+	/**
 	 * @return string the associated database table name
 	 */
 	public function tableName()
@@ -79,7 +85,24 @@ class Agents extends CActiveRecord
 	}
 	
 	
+	public static function getParentCommissionPercent()
+	{
+		return (float)self::$parentCommissionPercent;
+	}
+
 	public function getCommissionPercentByBookingCount($count)
+	{
+		$tier = $this->getCommissionTierByBookingCount($count);
+		if ($tier) {
+			return (float)$tier->percentage;
+		}
+		if ($this->percentage_value !== null && $this->percentage_value !== '') {
+			return (float)$this->percentage_value;
+		}
+		return (float)$this->percentage;
+	}
+
+	public function getCommissionTierByBookingCount($count)
 	{
 		$count = (int)$count;
 		$tiers = $this->commissionTiers ? $this->commissionTiers : array();
@@ -87,10 +110,83 @@ class Agents extends CActiveRecord
 			$min = (int)$tier->min_bookings;
 			$max = ($tier->max_bookings === null || $tier->max_bookings === '') ? null : (int)$tier->max_bookings;
 			if ($count >= $min && ($max === null || $count <= $max)) {
-				return (float)$tier->percentage;
+				return $tier;
 			}
 		}
-		return (float)$this->percentage;
+		return null;
+	}
+
+	public function getBookingSequenceNumber($booking = null)
+	{
+		$criteria = new CDbCriteria();
+		$criteria->addCondition('t.agent_id = :aid');
+		$criteria->addCondition('t.status = 1');
+		$criteria->params[':aid'] = $this->id;
+
+		$belongsToThisAgent = ($booking && !empty($booking->id) && (int)$booking->agent_id === (int)$this->id);
+		if ($belongsToThisAgent) {
+			$createdOn = $booking->createdOn ? $booking->createdOn : date('Y-m-d H:i:s');
+			$criteria->addCondition('(t.createdOn < :createdOn) OR (t.createdOn = :createdOn AND t.id <= :id)');
+			$criteria->params[':createdOn'] = $createdOn;
+			$criteria->params[':id'] = $booking->id;
+			$count = (int)CustomerPlots::model()->count($criteria);
+			return max($count, 1);
+		}
+
+		$count = (int)CustomerPlots::model()->count($criteria);
+		return $count + 1;
+	}
+
+	public function getSlabPercentForBooking($booking = null)
+	{
+		$sequence = $this->getBookingSequenceNumber($booking);
+		return $this->getCommissionPercentByBookingCount($sequence);
+	}
+
+	public function getBookingCommissionBreakdown($booking, $totalAmount)
+	{
+		$totalAmount = (float)$totalAmount;
+		$sequence = $this->getBookingSequenceNumber($booking);
+		$tier = $this->getCommissionTierByBookingCount($sequence);
+		$percent = $this->getCommissionPercentByBookingCount($sequence);
+		$agentAmount = ($percent / 100) * $totalAmount;
+
+		$result = array(
+			'sequence' => $sequence,
+			'tier' => $tier,
+			'tier_label' => $this->formatCommissionTierLabel($tier, $percent),
+			'agent' => $this,
+			'agent_percent' => $percent,
+			'agent_amount' => $agentAmount,
+			'parent' => null,
+			'parent_percent' => 0,
+			'parent_amount' => 0,
+			'total_percent' => $percent,
+			'total_commission' => $agentAmount,
+			'is_sub_agent' => false,
+		);
+
+		if ((int)$this->parent_id > 0 && $this->agentParent) {
+			$parentPercent = self::getParentCommissionPercent();
+			$parentAmount = ($parentPercent / 100) * $totalAmount;
+			$result['is_sub_agent'] = true;
+			$result['parent'] = $this->agentParent;
+			$result['parent_percent'] = $parentPercent;
+			$result['parent_amount'] = $parentAmount;
+			$result['total_percent'] = $percent + $parentPercent;
+			$result['total_commission'] = $agentAmount + $parentAmount;
+		}
+
+		return $result;
+	}
+
+	public function formatCommissionTierLabel($tier, $percent)
+	{
+		if ($tier) {
+			$max = ($tier->max_bookings === null || $tier->max_bookings === '') ? 'onwards' : $tier->max_bookings;
+			return $tier->min_bookings.' - '.$max.' @ '.$percent.'%';
+		}
+		return $percent.'%';
 	}
 
 	public function getAgentPlotsActiveSum($startDate = null, $endDate = null)

@@ -12,6 +12,8 @@
 // exit;
 $det = $this->getPlotLedgerDetail($booking->id);
 $dues = $this->calculateBookingDues($booking->id);
+$plotTotalAmount = $this->plotTotal(@$booking->plot->id, false);
+$dealerCommission = ($booking->agent_id && $booking->agent) ? $booking->agent->getBookingCommissionBreakdown($booking, $plotTotalAmount) : null;
 $buttonClass = 'hide';
 if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
     $buttonClass = '';
@@ -922,33 +924,115 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <!--<h3 style="text-transform: UPPERCASE;font-weight: bold;">Dealer Information</h3>-->
-                <div class="form-group col-lg-3" style="padding-left: 0px;">
-                    <label>Dealer Name</label>
-                    <p><?php echo @$booking->agent->name?></p>
-                </div>
-                <!--<div class="form-group col-lg-3" style="padding-left: 0px;">-->
-                <!--    <label>Sub Dealer Name</label>-->
-                <!--    <p><?php //echo @$booking->agent->name?></p>-->
-                <!--</div>-->
-                <?php //if($userModel['user_type']['id'] == 1){?>
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Agent Percentage(%)</label>
-                    <p><?php echo number_format(@$booking->agent_percentage,'2','.',',').'%'?></p>
-                </div>
-                
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Total Amount(B,A,C)</label>
-                    <p><?php echo number_format(@$agentComTotal,'2','.',',')?></p>
-                </div>
-                
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Agent Commission(PKR)</label>
-                    <p><?php echo $this->Percentage(@$agentComTotal,@$booking->agent_percentage)//echo 'PKR '.number_format(@$booking->agent_percentage,'2','.',',').'/='?></p>
-                </div>
-                <?php //}?>
-                <div class="form-group col-lg-3">
-                    <a href="<?php echo Yii::app()->baseUrl?>/expenses/add?booking_id=<?php echo @$booking->id?>"><button type="button" class="btn btn-success btn-sm <?php echo @$buttonClass?>">Add Commision</button></a>
+                <?php
+                $isSubDealer = ($dealerCommission && !empty($dealerCommission['is_sub_agent']) && $dealerCommission['parent'] && (int)$dealerCommission['agent']->parent_id > 0);
+                $agentPaid = function ($agentId, $agentName) use ($expenses, $isSubDealer, $booking) {
+                    $paid = 0;
+                    if (empty($expenses)) {
+                        return 0;
+                    }
+                    foreach ($expenses as $ex) {
+                        if ((int)$ex->status !== 1) {
+                            continue;
+                        }
+                        $eid = isset($ex->agent_id) ? (int)$ex->agent_id : 0;
+                        if ($eid > 0) {
+                            if ($eid === (int)$agentId) {
+                                $paid += (float)$ex->amount;
+                            }
+                            continue;
+                        }
+                        if (!$isSubDealer) {
+                            $paid += (float)$ex->amount;
+                        } elseif ($agentName !== '' && strcasecmp(trim((string)$ex->paid_to), trim($agentName)) === 0) {
+                            $paid += (float)$ex->amount;
+                        }
+                    }
+                    return $paid;
+                };
+                $addCommissionBtn = function ($agentId, $agentName, $dueAmount) use ($booking, $buttonClass, $agentPaid) {
+                    $paid = $agentPaid($agentId, $agentName);
+                    $remaining = max(0, round((float)$dueAmount - $paid, 2));
+                    if ((float)$dueAmount > 0 && round($paid, 2) >= round((float)$dueAmount, 2)) {
+                        return '';
+                    }
+                    $url = Yii::app()->baseUrl.'/expenses/add?booking_id='.(int)$booking->id.'&agent_id='.(int)$agentId.'&comm_amount='.$remaining;
+                    return '<a href="'.CHtml::encode($url).'"><button type="button" class="btn btn-success btn-xs '.$buttonClass.'">Add Commision</button></a>';
+                };
+                $remainingAmount = function ($agentId, $agentName, $dueAmount) use ($agentPaid) {
+                    $paid = $agentPaid($agentId, $agentName);
+                    return max(0, round((float)$dueAmount - $paid, 2));
+                };
+                $paidAmount = function ($agentId, $agentName) use ($agentPaid) {
+                    return round($agentPaid($agentId, $agentName), 2);
+                };
+                ?>
+                <div class="col-lg-12" style="padding-left: 0px;">
+                    <table width="100%" class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Dealer Name</th>
+                                <th>Dealer Booking #</th>
+                                <th>Commission Slab</th>
+                                <th>%</th>
+                                <th>Total Amount</th>
+                                <th>Agent Commission (PKR)</th>
+                                <th>Paid Commission</th>
+                                <th>Remaining Commission</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php if($isSubDealer){ ?>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['parent']->name)?></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><?php echo number_format($dealerCommission['parent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['parent_amount'])?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount'])?></td>
+                            </tr>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['agent']->name)?></td>
+                                <td><?php echo (int)$dealerCommission['sequence']?></td>
+                                <td><?php echo CHtml::encode($dealerCommission['tier_label'])?></td>
+                                <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'])?></td>
+                            </tr>
+                        <?php } elseif($dealerCommission){ ?>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['agent']->name)?></td>
+                                <td><?php echo (int)$dealerCommission['sequence']?></td>
+                                <td><?php echo CHtml::encode($dealerCommission['tier_label'])?></td>
+                                <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'])?></td>
+                            </tr>
+                        <?php } else { ?>
+                            <tr>
+                                <td><?php echo @$booking->agent->name?></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><?php echo number_format(@$booking->agent_percentage, 2, '.', ',')?>%</td>
+                                <td><?php echo number_format(@$agentComTotal, 2, '.', ',')?></td>
+                                <td><?php echo $this->Percentage(@$agentComTotal, @$booking->agent_percentage)?></td>
+                                <td><?php echo $booking->agent_id ? number_format($paidAmount($booking->agent_id, @$booking->agent->name)) : '0'?></td>
+                                <td><?php echo $booking->agent_id ? number_format($remainingAmount($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0))) : '0'?></td>
+                                <td><?php echo $booking->agent_id ? $addCommissionBtn($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0)) : ''?></td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
                 </div>
                 <?php if($booking->agent_id && $expenses){?>
                 <div class="col-lg-12" style="padding-left: 0px;">
@@ -956,6 +1040,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                         <thead>
                             <tr>
                                 <th>Expense Ref No.</th>
+                                <th>Dealer</th>
                                 <th>Desc.</th>
                                 <th>Paid Amount</th>
                                 <th>Payment Mode</th>
@@ -970,6 +1055,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                             <?php $tct = 0;foreach($expenses as $expense):$btn = '';?>
                             <tr style="background-color: lightgray;">
                                 <td><?php echo $this->getExpenseRegNo($expense->id,'expense')?></td>
+                                <td><b><?php echo @$expense->agent->name ? CHtml::encode($expense->agent->name) : CHtml::encode($expense->paid_to)?></b></td>
                                 <td><b><?php echo 'Rs. '.number_format($expense->amount)?></b></td>
                                <td><b><?php echo $expense->description?></b></td>
                                 <td><b><?php echo $expense->payment_mode?></b></td>
