@@ -280,7 +280,7 @@ $soLine = trim($soDoWo.' '.$father);
                 </div>
             </div>
             <div class="col center">
-                <img src="<?php echo $base?>/images/seven_wonder.jpeg" alt="Seven Wonders City">
+                <img src="<?php echo $base?>/images/seven-wonder-1.png" alt="Seven Wonders City">
             </div>
             <div class="col right">
                 <div class="mini-box">
