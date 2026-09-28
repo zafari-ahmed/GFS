@@ -28,14 +28,12 @@
                                     </select>
                                 </div>
                                 
-                                <input type="hidden" id="plot_type" name="plot_type" value="">
-                                <!--<div class="form-group col-lg-3" >-->
-                                <!--    <label>Plot Type</label>-->
-                                <!--    <select name="plot_type" id="plot_type" class="form-control">-->
-                                <!--        <option value="">Select plot Type</option>-->
-                                <!--    </select>-->
-                                    <!-- <p class="help-block">Example block-level help text here.</p> -->
-                                <!--</div>-->
+                                <div class="form-group col-lg-3">
+                                    <label>Plot Type</label>
+                                    <select name="plot_type" id="plot_type" class="form-control">
+                                        <option value="">Select plot type</option>
+                                    </select>
+                                </div>
                                 <div class="form-group col-lg-3" >
                                     <label>Plot #</label>
                                     <select name="plot_id" id="plot_number" class="form-control select2">
@@ -98,10 +96,15 @@
                                 <div class="form-group col-lg-3" >
                                     <label>Agent</label>
                                     
-                                    <select class="form-control" name="agent_id" id="agent_id">
+                                    <select class="form-control select2" name="agent_id" id="agent_id">
                                         <option value="">Please select dealer</option>
-                                        <?php foreach($agents as $agent):?>
-                                            <option rel="<?php echo $agent->percentage_value?>" value="<?php echo $agent->id?>" <?php echo (@$booking->agent_id == $agent->id)?'selected':''?>><?php echo $agent->name?></option>
+                                        <?php foreach($agents as $agent):
+                                            $agentLabel = $agent->name;
+                                            if ($agent->parent_id && @$agent->agentParent) {
+                                                $agentLabel .= ' ('.$agent->agentParent->name.')';
+                                            }
+                                        ?>
+                                            <option rel="<?php echo $agent->percentage_value?>" value="<?php echo $agent->id?>" <?php echo (@$booking->agent_id == $agent->id)?'selected':''?>><?php echo CHtml::encode($agentLabel)?></option>
                                         <?php endforeach;?>
                                     </select>
                                     <!-- <p class="help-block">Example block-level help text here.</p> -->

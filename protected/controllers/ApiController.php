@@ -173,6 +173,49 @@ class ApiController extends Controller
 		echo json_encode(array('success'=>1,'data'=>$result));
 	}
 
+	public function actionGetplottypes()
+	{
+		$block = Yii::app()->request->getParam('block', '');
+		$result = '<option value="">Select plot type</option>';
+		if ($block !== '') {
+			$types = Yii::app()->db->createCommand()
+				->selectDistinct('plot_type')
+				->from('plots')
+				->where("block_number = :block AND status = 0 AND plot_type IS NOT NULL AND plot_type <> ''", array(':block' => $block))
+				->order('plot_type ASC')
+				->queryColumn();
+			if ($types) {
+				foreach ($types as $plotType) {
+					$result .= '<option value="'.CHtml::encode($plotType).'">'.CHtml::encode($plotType).'</option>';
+				}
+			}
+		}
+		echo CJSON::encode(array('success' => 1, 'data' => $result));
+		Yii::app()->end();
+	}
+
+	public function actionGetplotnumbers()
+	{
+		$block = Yii::app()->request->getParam('block', '');
+		$type = Yii::app()->request->getParam('type', '');
+		$result = '<option value="">Select plot #</option>';
+		if ($block !== '' && $type !== '') {
+			$plots = Yii::app()->db->createCommand()
+				->select('id, plot_number')
+				->from('plots')
+				->where('block_number = :block AND plot_type = :type AND status = 0', array(':block' => $block, ':type' => $type))
+				->order('plot_number ASC')
+				->queryAll();
+			if ($plots) {
+				foreach ($plots as $plot) {
+					$result .= '<option value="'.$plot['id'].'">'.CHtml::encode($plot['plot_number']).'</option>';
+				}
+			}
+		}
+		echo CJSON::encode(array('success' => 1, 'data' => $result));
+		Yii::app()->end();
+	}
+
 	public function actionGetplotdetail($type,$id){
 		
 		if($type == 'plot'){
@@ -209,18 +252,20 @@ class ApiController extends Controller
 		}
 
 		if($type=='plot_type'){
-			$plots = Plots::model()->findAll('block_number = :block AND status = 0',array(':block'=>$id));
 			$criteria = new CDbCriteria();
+			$criteria->select = 't.plot_type';
+			$criteria->distinct = true;
 			$criteria->addCondition("status = 0");
 			$criteria->addCondition('block_number = :block');
-			$criteria->params = array(':block' =>$id);			
-			$criteria->group = "t.plot_type";
+			$criteria->addCondition("t.plot_type IS NOT NULL AND t.plot_type <> ''");
+			$criteria->params = array(':block' => $id);
+			$criteria->order = "t.plot_type ASC";
 			$plots = Plots::model()->findAll($criteria);
 
-			$result = '<option value="">Select plot #</option>';
+			$result = '<option value="">Select plot type</option>';
 			if($plots){
 				foreach($plots as $plot){
-					$result .= '<option value="'.$plot->plot_type.'">'.$plot->plot_type.'</option>';
+					$result .= '<option value="'.CHtml::encode($plot->plot_type).'">'.CHtml::encode($plot->plot_type).'</option>';
 				}
 			}
 		}
@@ -239,18 +284,20 @@ class ApiController extends Controller
 	}
 
 	public function actionGetplotdetailUpdate($type,$block){
-		
-		$criteria = new CDbCriteria();
-		$criteria->addCondition("status = 0");
-		$criteria->addCondition('block_number = :block');
-		//$criteria->params = array(':block' =>$block,':type'=>$type);			
-		$criteria->params = array(':block' =>$block);			
-		$plots = Plots::model()->findAll($criteria);
-
 		$result = '<option value="">Select plot #</option>';
-		if($plots){
-			foreach($plots as $plot){
-				$result .= '<option value="'.$plot->id.'">'.$plot->plot_number.'</option>';
+		if($type !== '' && $type !== null && $block !== '' && $block !== null){
+			$criteria = new CDbCriteria();
+			$criteria->addCondition("status = 0");
+			$criteria->addCondition('block_number = :block');
+			$criteria->addCondition('plot_type = :type');
+			$criteria->params = array(':block' => $block, ':type' => $type);
+			$criteria->order = "t.plot_number ASC";
+			$plots = Plots::model()->findAll($criteria);
+
+			if($plots){
+				foreach($plots as $plot){
+					$result .= '<option value="'.$plot->id.'">'.CHtml::encode($plot->plot_number).'</option>';
+				}
 			}
 		}
 		

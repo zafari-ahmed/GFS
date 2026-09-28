@@ -1032,6 +1032,7 @@
         }
         
         if(controller=='transactions' && action == 'index'){
+            var txnStatus = getUrlParameter('status');
             $('#dataTables-trans').DataTable({
                 processing: true,
                 serverSide: true,
@@ -1041,7 +1042,7 @@
                     url: '<?php echo Yii::app()->baseUrl; ?>/transactions/fetchall',
                     type: 'GET',
                     data: function(d){
-                        d.status = '<?php //echo (int)$status; ?>';
+                        d.status = (txnStatus === '0' || txnStatus === 0) ? 0 : 1;
                     }
                 },
                 columnDefs: [
@@ -1078,7 +1079,69 @@
     </script>
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/dist/js/jquery.mask.min.js"></script>
     <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/dist/js/bootstrap-datepicker.min.js"></script>
-    <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/dist/js/custom.js"></script>
+    <script src="<?php echo Yii::app()->request->baseUrl; ?>/assets/dist/js/custom.js?v=<?php echo @filemtime(Yii::getPathOfAlias('webroot').'/assets/dist/js/custom.js')?>"></script>
+    <script type="text/javascript">
+        $(function () {
+            if (!(controller === 'booking' && action === 'add') && !(controller === 'agent' && action === 'edit')) {
+                return;
+            }
+            function resetPlotNumber(html) {
+                var $el = $('#plot_number');
+                if ($el.hasClass('select2-hidden-accessible')) {
+                    $el.select2('destroy');
+                }
+                $el.html(html || '<option value="">Select plot #</option>');
+                if ($el.hasClass('select2')) {
+                    $el.select2();
+                }
+            }
+            $(document).off('change', '#block_number').on('change', '#block_number', function () {
+                var block_number = $(this).val();
+                $('#plot_type').html('<option value="">Select plot type</option>');
+                resetPlotNumber();
+                $('#category_id').val('');
+                $('#size_id').val('');
+                if (!block_number) {
+                    return;
+                }
+                $.ajax({
+                    url: baseUrl + '/api/getplottypes',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { block: block_number },
+                    success: function (d) {
+                        if (typeof d === 'string') {
+                            d = JSON.parse(d);
+                        }
+                        $('#plot_type').html(d.data);
+                    }
+                });
+            });
+            $(document).off('change', '#plot_type').on('change', '#plot_type', function () {
+                var plot_type = $(this).val();
+                var block_number = $('#block_number').val();
+                resetPlotNumber();
+                $('#category_id').val('');
+                $('#size_id').val('');
+                if (!block_number || !plot_type) {
+                    return;
+                }
+                $.ajax({
+                    url: baseUrl + '/api/getplotnumbers',
+                    type: 'GET',
+                    dataType: 'json',
+                    data: { block: block_number, type: plot_type },
+                    success: function (d) {
+                        if (typeof d === 'string') {
+                            d = JSON.parse(d);
+                        }
+                        resetPlotNumber(d.data);
+                    }
+                });
+            });
+        });
+    </script>
+
     
 </body>
 

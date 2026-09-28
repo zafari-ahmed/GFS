@@ -34,7 +34,10 @@ class BookingController extends Controller
 			$data['currentPlot'] = Plots::model()->findByPk($id);
 			//$data['paymentmodes'] = PaymentModes::model()->findAll('plot_size_id = :size',array(':size'=>$data['currentPlot']->size_id));
 		}
-		$data['agents'] = Agents::model()->findAll('status = 1 AND parent_id IS NULL');
+		$data['agents'] = Agents::model()->with('agentParent')->findAll(array(
+			'condition' => 't.status = 1',
+			'order' => 't.name ASC',
+		));
 		$data['agentsub'] = Agents::model()->findAll('status = 1 AND parent_id IS NOT NULL');
 		$data['accounts'] = Accounts::model()->findAll('is_visible = 1');
 		$data['charges'] = DevelopmentCharges::model()->findAll();
