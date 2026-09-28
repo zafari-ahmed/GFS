@@ -4,12 +4,15 @@ class AgentController extends Controller
 {
 	public function actionAdd()
 	{
+		AgentCommissionTiers::ensureTable();
 		$data['parents'] = Agents::model()->findAll('parent_id IS NULL');
+		$data['commissionTiers'] = array();
 		$this->render('add',$data);
 	}
 
 	public function actionEdit($id)
 	{
+		AgentCommissionTiers::ensureTable();
 		$data['parents'] = Agents::model()->findAll('parent_id IS NULL');
 		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
 		$data['blocks'] = Plots::model()->findAll(array(
@@ -18,6 +21,11 @@ class AgentController extends Controller
             'condition'=>"phase_id=$phaseId",
         ));
 		$data['agent'] = Agents::model()->findByPk($id);
+		$data['commissionTiers'] = AgentCommissionTiers::model()->findAll(array(
+			'condition' => 'agent_id = :id',
+			'params' => array(':id' => $id),
+			'order' => 'min_bookings ASC, sort_order ASC',
+		));
 		if($data['agent']){
 			$this->render('edit',$data);	
 		} else{
@@ -29,8 +37,57 @@ class AgentController extends Controller
 
 	public function actionIndex()
 	{
-		$data['users'] = Agents::model()->findAll(array('order'=>'parent_id ASC'));
+		$agents = Agents::model()->with('agentParent')->findAll(array('order'=>'t.name ASC'));
+		$parents = array();
+		$childrenByParent = array();
+		foreach ($agents as $agent) {
+			if (empty($agent->parent_id)) {
+				$parents[] = $agent;
+			} else {
+				$childrenByParent[$agent->parent_id][] = $agent;
+			}
+		}
+		$ordered = array();
+		foreach ($parents as $parent) {
+			$ordered[] = $parent;
+			if (!empty($childrenByParent[$parent->id])) {
+				foreach ($childrenByParent[$parent->id] as $child) {
+					$ordered[] = $child;
+				}
+				unset($childrenByParent[$parent->id]);
+			}
+		}
+		foreach ($childrenByParent as $children) {
+			foreach ($children as $child) {
+				$ordered[] = $child;
+			}
+		}
+		$data['users'] = $ordered;
 		$this->render('index',$data);		
+	}
+
+	protected function saveCommissionTiers($agentId)
+	{
+		AgentCommissionTiers::ensureTable();
+		AgentCommissionTiers::model()->deleteAll('agent_id = :id', array(':id' => $agentId));
+		$mins = isset($_POST['commission_min']) ? $_POST['commission_min'] : array();
+		$maxs = isset($_POST['commission_max']) ? $_POST['commission_max'] : array();
+		$pcts = isset($_POST['commission_percent']) ? $_POST['commission_percent'] : array();
+		foreach ($mins as $i => $min) {
+			$max = isset($maxs[$i]) ? trim($maxs[$i]) : '';
+			$pct = isset($pcts[$i]) ? trim($pcts[$i]) : '';
+			if ($min === '' && $max === '' && $pct === '') {
+				continue;
+			}
+			$row = new AgentCommissionTiers;
+			$row->agent_id = $agentId;
+			$row->min_bookings = (int)$min;
+			$row->max_bookings = ($max === '') ? null : (int)$max;
+			$row->percentage = ($pct === '') ? 0 : $pct;
+			$row->sort_order = $i;
+			$row->createdOn = date('Y-m-d H:i:s');
+			$row->save(false);
+		}
 	}
 
 	public function actionSave()
@@ -39,7 +96,14 @@ class AgentController extends Controller
 			$Users = new Agents;
 			$Users->attributes = $_POST;
 			$Users->status = 1;
+			if (!isset($_POST['percentage']) || $_POST['percentage'] === '') {
+				$Users->percentage = 0;
+			}
+			if (!isset($_POST['percentage_value']) || $_POST['percentage_value'] === '') {
+				$Users->percentage_value = 0;
+			}
 			$Users->save(false);
+			$this->saveCommissionTiers($Users->id);
 			Yii::app()->user->setFlash('success','Agent add successfully.');
             $this->redirect(Yii::app()->baseUrl.'/agent');
 		}
@@ -52,7 +116,14 @@ class AgentController extends Controller
 			$Users = Agents::model()->findByPk($_POST['id']);
 			$Users->attributes = $_POST;
 			$Users->status = 1;
+			if (!isset($_POST['percentage']) || $_POST['percentage'] === '') {
+				$Users->percentage = ($Users->percentage !== '' && $Users->percentage !== null) ? $Users->percentage : 0;
+			}
+			if (!isset($_POST['percentage_value']) || $_POST['percentage_value'] === '') {
+				$Users->percentage_value = ($Users->percentage_value !== '' && $Users->percentage_value !== null) ? $Users->percentage_value : 0;
+			}
 			$Users->save(false);
+			$this->saveCommissionTiers($Users->id);
 			if($_POST['plot_number']){
 				//AgentPlots::model()->deleteAll('agent_id = :id',array(':id'=>$_POST['id']));
 				foreach($_POST['plot_number'] as $plots){

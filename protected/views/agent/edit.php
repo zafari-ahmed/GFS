@@ -42,22 +42,15 @@
                             </div>
 
                             <div class="form-group col-lg-4">
-                                <label>Number</label>
-                                <input class="form-control" name="number" id="number" placeholder="Number" required="" value="<?php echo $agent->number?>">
+                                <label>Phone Number</label>
+                                <input class="form-control" name="number" id="number" placeholder="Phone Number" required="" value="<?php echo $agent->number?>">
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
 
-                            <div class="form-group col-lg-4">
-                                <label>Percentage</label>
-                                <input class="form-control" name="percentage" id="percentage" placeholder="Percentage" required="" type="text" value="<?php echo $agent->percentage?>">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
-                            </div>
+                            <input type="hidden" name="percentage" value="<?php echo ($agent->percentage !== '' && $agent->percentage !== null) ? (int)$agent->percentage : 0 ?>">
+                            <input type="hidden" name="percentage_value" value="<?php echo ($agent->percentage_value !== '' && $agent->percentage_value !== null) ? $agent->percentage_value : 0 ?>">
 
-                            <div class="form-group col-lg-4">
-                                <label>Percentage Value</label>
-                                <input class="form-control" name="percentage_value" id="percentage" placeholder="Percentage" type="text" value="<?php echo $agent->percentage_value?>">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
-                            </div>
+                            <?php $this->renderPartial('_commission_tiers', array('tiers' => @$commissionTiers)); ?>
 
                             <div class="col-md-12" id="agentPlotBox">
                                 <h2>Plot Reserve Detail
@@ -78,7 +71,6 @@
                                         <!--<th>Total Dues</th>-->
                                         <!--<th>Installments<br/> Paid Monthly/Yearly</th>-->
                                         <th>Status</th>
-                                        <th class="btnn">Action</th>
                                         
                                         
                                     </tr>
@@ -102,10 +94,12 @@
                                     <tr>
                                         <td class="hidden"><?php echo $res->id?></td>
                                         <?php if(@$res->plot->customerPlots){?>
-                                        
-                                        <td><a href="<?php echo Yii::app()->baseUrl?>/booking/viewbooking/<?php echo @$res->plot->customerPlots[0]->id?>"><?php echo '*'.@$res->plot->block_number.'-'.$res->plot->plot_type.'-'.$res->plot->plot_number?>*</a><br/><?php echo @$res->plot->customerPlots[0]->customer->name?></td>
+                                            <td><a href="<?php echo Yii::app()->baseUrl?>/booking/viewbooking/<?php echo @$res->plot->customerPlots[0]->id?>">
+                                                <?php echo '*'.$res->plot->plot_type.'-'.$res->plot->plot_number.($res->plot->block_number?'-'.$res->plot->block_number:'').'*'?></a><br/>
+                                                <?php echo @$res->plot->customerPlots[0]->customer->name?>
+                                            </td>
                                         <?php } else {?>
-                                            <td><?php echo '*'.@$res->plot->block_number.'-'.@$res->plot->plot_type.'-'.@$res->plot->plot_number.'*'?></td>    
+                                            <td><?php echo '*'.$res->plot->plot_type.'-'.$res->plot->plot_number.($res->plot->block_number?'-'.$res->plot->block_number:'').'*'?></td>
                                         <?php }?>
                                         
                                         <!--<td><?php //echo 'PKR '.number_format(@$res->commission!=''?@$res->commission:0.00)?></td>
@@ -147,20 +141,8 @@
                                         
                                         <?php if(@$res->plot->customerPlots){?>
                                         <?php if(@$res->plot->customerPlots[0]->blocked != 1 && $res->plot->customerPlots[0]->blocked != 2){?> 
-                                            <?php if(empty(@$res->plot->customerPlots[0]->customerPlotCancelled)){?>
                                             <td><?php echo (@$res->plot->customerPlots[0]->status==1)?(($complete==0)?'<span class="aLink label label-primary">Booked '.(($trasferred==1)?'(Transferred)':'').'</span>':'<span class="aLink label label-success">Completed</span>'):'<span class="aLink label label-danger">Temporary Booked</span>'?>
-                                                
-                                                <?php if(@$res->plot->customerPlots[0]->customerPlotTransactionSum >= $this->discountedPlotCostOfLand(@$res->plot->customerPlots[0]->plot->id)) {?>
-                                            <span class="label label-warning" style="text-decoration: none;">Cost of Land Paid</span>
-                                            <?php }?>
-
-                                            <?php if(@$res->plot->customerPlots[0]->customerPlotTransactionSum >= $this->discountedPlotCostOfLandAndExtra(@$res->plot->customerPlots[0]->plot->id)) {?>
-                                            <br/><span class="label label-success" style="text-decoration: none;">Plot Total Paid</span>
-                                            <?php }?>
                                             </td>
-                                            <?php } else{ ?>
-                                                <td><span class="aLink label label-danger">Cancelled</span></td>
-                                            <?php } ?>
                                         <?php } else {?>
                                             <td><span class="aLink label label-danger">Blocked</span></td>
                                             <?php if(@$res->plot->customerPlots[0]->is_open==0){?>
@@ -172,7 +154,7 @@
                                             <td><span class="aLink label label-success">Available</span></td>
                                         <?php } ?>
 
-                                        <td class="btnn"><a href="<?php echo Yii::app()->baseUrl?>/agent/deleteagentplot/<?php echo @$res->id?>"><span class="aLink label label-danger">Delete</span></a></td>
+                                        
                                         
                                     </tr>
                                     
@@ -180,36 +162,10 @@
                             </tbody>
                             <tfoot style="font-weight: bold;">
                                 <td>Total</td>
-                                <td><?php echo 'PKR '.number_format(@$tComission)?></td>
-                                <td><?php echo 'PKR '.number_format(@$tpComission)?></td>
-                                <td><?php echo 'PKR '.number_format(@$tbComission)?></td>
-                                <td colspan="8"></td>
+                                <td colspan="2"><?php echo 'PKR '.number_format(@$tComission)?></td>
                                 
                             </tfoot>
                         </table>
-                                <div class="form-group col-lg-4">
-                                    <label>Block #</label>
-                                    <select id="block_number" class="form-control">
-                                        <option value="">Select block #</option>
-                                        <?php foreach($blocks as $block):?>
-                                            <option value="<?php echo $block->block_number?>" <?php (@$currentPlot['block_number'] == $block->block_number)?'selected':''?>><?php echo $block->block_number?></option>
-                                        <?php endforeach;?>
-                                    </select>
-                                </div>
-
-                                <div class="form-group col-lg-4" >
-                                    <label>Plot type</label>
-                                    <select id="plot_type" class="form-control">
-                                        <option value="">Select plot #</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group col-lg-4" >
-                                    <label>Plot #</label>
-                                    <select name="plot_number[]" id="plot_number" class="form-control">
-                                        <option value="">Select plot #</option>
-                                    </select>
-                                </div>
                             </div>
                             
 

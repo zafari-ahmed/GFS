@@ -57,6 +57,7 @@ class Agents extends CActiveRecord
 			'agentReserves' => array(self::HAS_MANY, 'AgentPlots', 'agent_id'),
 			'agentReservesCount' => array(self::STAT, 'AgentPlots', 'agent_id'),
 			'agentParent' => array(self::BELONGS_TO, 'Agents', 'parent_id'),
+			'commissionTiers' => array(self::HAS_MANY, 'AgentCommissionTiers', 'agent_id', 'order' => 'commissionTiers.min_bookings ASC, commissionTiers.sort_order ASC'),
 		);
 	}
 
@@ -78,6 +79,20 @@ class Agents extends CActiveRecord
 	}
 	
 	
+	public function getCommissionPercentByBookingCount($count)
+	{
+		$count = (int)$count;
+		$tiers = $this->commissionTiers ? $this->commissionTiers : array();
+		foreach ($tiers as $tier) {
+			$min = (int)$tier->min_bookings;
+			$max = ($tier->max_bookings === null || $tier->max_bookings === '') ? null : (int)$tier->max_bookings;
+			if ($count >= $min && ($max === null || $count <= $max)) {
+				return (float)$tier->percentage;
+			}
+		}
+		return (float)$this->percentage;
+	}
+
 	public function getAgentPlotsActiveSum($startDate = null, $endDate = null)
     {
         $criteria = new CDbCriteria();

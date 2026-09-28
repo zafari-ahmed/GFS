@@ -26,30 +26,20 @@
                                 </select>
                             </div>
 
-                            <div class="form-group col-lg-6" >
+                            <div class="form-group col-lg-4" >
                                 <label>Full Name</label>
                                 <input class="form-control" name="name" id="name" placeholder="Full Name" required="">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
 
                             <div class="form-group col-lg-4">
-                                <label>Number</label>
-                                <input class="form-control" name="number" id="number" placeholder="Number" required="" value="0">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
+                                <label>Phone Number</label>
+                                <input class="form-control" name="number" id="number" placeholder="Phone Number" required="" value="0">
                             </div>
 
-                            <div class="form-group col-lg-4">
-                                <label>Percentage</label>
-                                <input class="form-control" name="percentage" id="percentage" placeholder="Percentage" required="" type="number" value="0">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
-                            </div>
+                            <input type="hidden" name="percentage" value="0">
+                            <input type="hidden" name="percentage_value" value="0">
 
-                            <div class="form-group col-lg-4">
-                                <label>Percentage Value</label>
-                                <input class="form-control" name="percentage_value" id="percentage" placeholder="Percentage Value" type="text" value="0">
-                                <!-- <p class="help-block">Example block-level help text here.</p> -->
-                            </div>
-                            
+                            <?php $this->renderPartial('_commission_tiers', array('tiers' => @$commissionTiers)); ?>
 
                             <div class="col-lg-12">
                                 <button type="submit" class="btn btn-success">Submit</button>

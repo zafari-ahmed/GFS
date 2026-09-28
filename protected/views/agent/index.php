@@ -24,10 +24,10 @@
                     <thead>
                         <tr>
                             <th>Full Name</th>
-                            <!--<th>Parent Name</th>-->
+                            <th>Parent Name</th>
                             <!--<th>In-Active Bookings</th>-->
                             <th>Active Bookings</th>
-                            <th>Percentage(%)</th>
+                            <!-- <th>Percentage(%)</th> -->
                             <!--<th class="dnone">Agent Plots</th>-->
                             <th class="dnone">Status</th>
                         </tr>
@@ -35,15 +35,15 @@
                     <tbody>
                        <?php if($users){ $iab = 0;$ab = 0;$ap=0;foreach($users as $user):?>
                             <tr>
-                                <td><?php echo $user->name?></td>
-                                <!--<td><?php //echo @$user->agentParent->name?></td>-->
+                                <td><?php echo $user->parent_id ? '&nbsp;&nbsp;&nbsp;'.CHtml::encode($user->name) : '<strong>'.CHtml::encode($user->name).'</strong>'?></td>
+                                <td><?php echo @$user->agentParent->name ? CHtml::encode($user->agentParent->name) : '-'?></td>
                                 <!--<td><?php //echo @$user->agentReservesCount - @$user->agentPlots?></td>-->
                                 <?php $iab = $iab + (@$user->agentReservesCount - @$user->agentPlots)?>
                                 <td><?php echo $user->agentPlots?></td>
                                 <?php $ab = $ab + @$user->agentPlots?>
                                 <!--<td class="dnone"><?php //echo @$user->agentReservesCount?></td>-->
                                 <?php $ap = $ap + @$user->agentReservesCount?>
-                                <td><?php echo $user->percentage_value?></td>
+                                <!-- <td><?php //echo $user->percentage_value?></td> -->
                                 <td class="dnone">
                                     <?php echo ($user->status==0)?'<span class="label label-danger">In active</span>':'<span class="label label-success">Active</span>'?>&nbsp;
                                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
