@@ -101,20 +101,14 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                     
                     <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/welcome/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Welcome Letter</button></a></span>
                     
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Allocation</button></a></span>
-                    
                     <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/confirmation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Confirmation</button></a></span>
                     
                     <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm <?php echo @$buttonClass?>">Add PS</button></a></span>
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
                     <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
                     <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
-                    
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addpssoftware/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS Software</button></a></span>
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/paymentsoftware/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule(Software)</button></a></span>
-                    <span class="hide"><a id="cancelBooking" href="<?php echo Yii::app()->baseUrl?>/booking/cancel/<?php echo $booking->id?>"><button type="button"  class="btn btn-danger btn-sm <?php echo @$buttonClass?>">Cancel Booking</button></a></span>
-
-                    <span class=" "><a href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button"  class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Allocation Letter</button></a></span>
+                    <span class=""><a href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button"  class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
                     <span class=" hide "><a href="javascript:void(0)"><button data-toggle="modal" data-target="#bookingReason" type="button"  class="btn btn-info btn-sm">Block Booking</button></a></span>&nbsp;
             
                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
@@ -153,30 +147,31 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
             <?php */?>
         <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
             <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>  
-                        <span class="pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
+                        <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
                         <?php if($userModel['user_type']['id'] == 1){?>
-                    &nbsp;&nbsp;<span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/editbooking/<?php echo $booking->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Booking</button></a>&nbsp;&nbsp;
+                    &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/editbooking/<?php echo $booking->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Booking</button></a>&nbsp;&nbsp;
                         <a href="<?php echo Yii::app()->baseUrl?>/paymentschedule/customschedule/id/<?php echo $booking->id?>"><button type="button" class="hide btn btn-primary btn-sm">Custom Payment Schedule</button></a></span>&nbsp;&nbsp;</span>&nbsp;&nbsp;
                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1){?>
                     <!--<span class="pull-right" style="margin-right: 10px;"><a href="<?php //echo Yii::app()->baseUrl?>/plot/edit/<?php //echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>-->
                         <?php } }?>
             <?php } else {  ?>
-            <span class="pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
+            <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
             <?php }   ?>
         <?php } else {?>
-            <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
-            <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
-            <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
-            <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
-            <span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Allocation Letter</button></a></span>
+            <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
             <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>   
                 <?php //if($booking->blocked !=1 && $userModel['user_type']['id'] == 1) {?>
-                    <span class="pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
+                    <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
                 <?php //}  ?>
             <?php }  ?>
         <?php }  ?>
         
-        <span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm <?php echo @$buttonClass?>">Edit Plot</button></a></span>
+        <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm <?php echo @$buttonClass?>">Edit Plot</button></a></span>
         
         <?php //if($userModel['user_type']['id'] != 3){?>
         &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button" class="btn btn-warning btn-sm">Booking Ledger</button></a></span>

@@ -10,7 +10,8 @@ class CertificateController extends Controller
 			$this->renderPartial('form1',$data);
 		}
 		if($_POST['certificate']=='allo-let'){
-			$this->renderPartial('form3',$data);
+			$data['booking'] = $data['customerPlot'];
+			$this->renderPartial('//bookingpreview/allocation',$data);
 		}
 
 		if($_POST['certificate']=='confirm-2'){
