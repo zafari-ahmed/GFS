@@ -22,7 +22,7 @@
 <?php $userModel = Yii::app()->session->get('userModel');?>
 
 <body style="margin:0;font-family:Arial, Helvetica, sans-serif;font-size:14px;">
-    <div style="width:700px;height:700px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;">
+    <div style="width:700px;height:700px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;border: 1px solid;padding: 20px;">
         <?php if(@$expense->reason || $expense->status === 0){?>
         <img src="<?php echo Yii::app()->baseUrl?>/images/cancelledInvoice.png" style="    position: absolute;z-index: 999;width: 70%;margin-left: 9%;margin-top: 1%;opacity: 0.5;">
         <?php }?>

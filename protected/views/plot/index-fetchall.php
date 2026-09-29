@@ -64,10 +64,10 @@ function bookingFilterUrl($key, $value = null)
                 <br/>
                 <?php $activea = (@$_GET['status']=='active')?'success':'info'?>
                 <?php $activeb = (@$_GET['status']=='booked')?'success':'info'?>
-                <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/plot?status=active"><span class="label label-<?php echo @$activea?> btn-sm">Available</span></a></span>
+                    <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/plot?status=active"><span class="label label-<?php echo @$activea?> btn-sm">Available</span></a></span>
                     <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/plot?status=booked"><span class="label label-<?php echo @$activeb?> btn-sm">Booked</span></a></span><br/>
                 <!-- BLOCK FILTER -->
-                <?php foreach($paymentSchedules as $ps): ?>
+                <?php foreach($paymentSchedules as $ps): if(!empty($ps->block_number)){?>
 
                     <?php
                         $active = (
@@ -78,7 +78,7 @@ function bookingFilterUrl($key, $value = null)
                         $url = bookingFilterUrl('block', $ps->block_number);
                     ?>
 
-                    <span style="margin-top: -5px;">
+                    <span style="margin-top: -5px;margin-left: 2px;">
                         <a href="<?php echo $url; ?>">
                             <span class="label label-<?php echo $active; ?> btn-sm">
                                 <?php echo $ps->block_number; ?>
@@ -86,14 +86,14 @@ function bookingFilterUrl($key, $value = null)
                         </a>
                     </span>
 
-                <?php endforeach; ?>
+                <?php } endforeach; ?>
 
 
                 <br/>
 
 
                 <!-- TYPE FILTER -->
-                <?php foreach($paymentSchedulesType as $ps): ?>
+                <?php foreach($paymentSchedulesType as $ps): if(!empty($ps->plot_type)){?>
 
                     <?php
                         $active = (
@@ -104,7 +104,7 @@ function bookingFilterUrl($key, $value = null)
                         $url = bookingFilterUrl('type', $ps->plot_type);
                     ?>
 
-                    <span style="margin-top: -5px;">
+                    <span style="margin-top: -5px;margin-left: 2px;">
                         <a href="<?php echo $url; ?>">
                             <span class="label label-<?php echo $active; ?> btn-sm">
                                 <?php echo $ps->plot_type; ?>
@@ -112,7 +112,7 @@ function bookingFilterUrl($key, $value = null)
                         </a>
                     </span>
 
-                <?php endforeach; ?>
+                <?php } endforeach; ?>
                 <span class="pull-right">
                     <a href="<?php echo Yii::app()->baseUrl?>/report/exportavailableplot"><span class="label label-success">Export</span></a>
                     &nbsp;

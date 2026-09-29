@@ -475,9 +475,14 @@ class BookingController extends Controller
 			$criteria = new CDbCriteria();
 			$criteria->with = array('plot');
 			$criteria->together = true;
-			$criteria->addCondition('t.status != 3 AND t.status != 0 AND t.phase_id = :phase');
-			$criteria->addCondition('plot.block_number = :block');
-			$criteria->params = array(':phase' => $phaseId, ':block' => $block);
+			$criteria->addCondition("t.status != 3 AND t.status != 0 AND t.phase_id = $phaseId");
+			if($block!='-'){
+				$criteria->addCondition('plot.block_number = :block');
+				$criteria->params = array(':block' => $block);	
+			} else{
+				$criteria->addCondition("plot.block_number = ''");
+			}
+			
 			$criteria->order = 'plot.plot_number ASC';
 			$bookings = CustomerPlots::model()->findAll($criteria);
 			$seen = array();

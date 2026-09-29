@@ -104,6 +104,56 @@ class PaymentscheduleController extends Controller
 		$this->render('index',$data);		
 	}
 
+	public function actionExport()
+	{
+		$types = $this->getDistinctBlocks();
+		$payments = PaymentSchedules::model()->with('paymentSchedulePaymentModes')->findAll();
+
+		$header = array('Name');
+		foreach ($types as $type) {
+			$header[] = $type->block_number;
+		}
+
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=payment_schedules_'.date('Ymd_His').'.csv');
+
+		$output = fopen('php://output', 'w');
+		fputcsv($output, $header);
+
+		foreach ($payments as $payment) {
+			$paymentDetail = array();
+			foreach ($payment->paymentSchedulePaymentModes as $pspD) {
+				$paymentDetail[strtolower($pspD->mode)][strtolower($pspD->plot_type)] = $pspD->amount;
+			}
+
+			$nameRow = array($payment->name);
+			foreach ($types as $type) {
+				$nameRow[] = '';
+			}
+			fputcsv($output, $nameRow);
+
+			foreach ($this->paymentScheduleModes() as $modes) {
+				$row = array(ucfirst($modes));
+				foreach ($types as $type) {
+					$row[] = isset($paymentDetail[strtolower($modes)][strtolower($type->block_number)])
+						? $paymentDetail[strtolower($modes)][strtolower($type->block_number)]
+						: '-';
+				}
+				fputcsv($output, $row);
+			}
+
+			$totalRow = array('Total');
+			foreach ($types as $type) {
+				$totalRow[] = $this->getPaymentScheduleTotal($type->block_number, $payment->id);
+			}
+			fputcsv($output, $totalRow);
+			fputcsv($output, array());
+		}
+
+		fclose($output);
+		Yii::app()->end();
+	}
+
 	public function actionSave()
 	{
 		if($_POST['name']){

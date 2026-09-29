@@ -62,7 +62,7 @@ function bookingFilterUrl($key, $value = null)
 
 
                 <!-- BLOCK FILTER -->
-                <?php foreach($paymentSchedules as $ps): ?>
+                <?php foreach($paymentSchedules as $ps): if(!empty($ps->block_number)){?>
 
                     <?php
                         $active = (
@@ -73,7 +73,7 @@ function bookingFilterUrl($key, $value = null)
                         $url = bookingFilterUrl('block', $ps->block_number);
                     ?>
 
-                    <span style="margin-top: -5px;">
+                    <span style="margin-top: -5px;margin-left: 2px;">
                         <a href="<?php echo $url; ?>">
                             <span class="label label-<?php echo $active; ?> btn-sm">
                                 <?php echo $ps->block_number; ?>
@@ -81,14 +81,14 @@ function bookingFilterUrl($key, $value = null)
                         </a>
                     </span>
 
-                <?php endforeach; ?>
+                <?php } endforeach; ?>
 
 
                 <br/>
 
 
                 <!-- TYPE FILTER -->
-                <?php foreach($paymentSchedulesType as $ps): ?>
+                <?php foreach($paymentSchedulesType as $ps): if(!empty($ps->plot_type)){?>
 
                     <?php
                         $active = (
@@ -99,7 +99,7 @@ function bookingFilterUrl($key, $value = null)
                         $url = bookingFilterUrl('type', $ps->plot_type);
                     ?>
 
-                    <span style="margin-top: -5px;">
+                    <span style="margin-top: -5px;margin-left: 2px;">
                         <a href="<?php echo $url; ?>">
                             <span class="label label-<?php echo $active; ?> btn-sm">
                                 <?php echo $ps->plot_type; ?>
@@ -107,7 +107,7 @@ function bookingFilterUrl($key, $value = null)
                         </a>
                     </span>
 
-                <?php endforeach; ?>
+                <?php } endforeach; ?>
                 
                 <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
                 <span class="pull-right" style="margin-top: -25px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/reportall" target="_blank"><button type="button" class="btn btn-success btn-sm">Report</button></a></span>

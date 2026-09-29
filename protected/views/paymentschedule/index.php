@@ -16,7 +16,11 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 All Payment Schedule
-                <span class="pull-right"><a href="javascript:void(0)" id="report2btn"><span class="label label-success">Print</span></a></span>
+                <span class="pull-right">
+                    <a href="<?php echo Yii::app()->baseUrl?>/paymentschedule/export" target="_blank"><span class="label label-success">CSV Report</span></a>
+                    <!-- &nbsp;
+                    <a href="javascript:void(0)" id="report2btn"><span class="label label-success">Print</span></a> -->
+                </span>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">

@@ -147,7 +147,7 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                             </div>
                             <?php if(@$_GET['booking_id']) {
                                 $agentLabel = !empty($commissionAgent) ? $commissionAgent->name.' ' : '';
-                                $messageDesc = 'Booking agent commission for '.$agentLabel.'Plot *'.($booking->plot->block_number.'-'.$booking->plot->plot_type.'-'.$booking->plot->plot_number).'*';
+                                $messageDesc = 'File commission for '.$agentLabel.' on Booking *'.($booking->plot->plot_type.'-'.$booking->plot->plot_number.($booking->plot->block_number?'-'.$booking->plot->block_number:'')).'*';
                             } else{
                                 $messageDesc = '';
                             }?>

@@ -37,7 +37,35 @@ class AgentController extends Controller
 
 	public function actionIndex()
 	{
-		$agents = Agents::model()->with('agentParent')->findAll(array('order'=>'t.name ASC'));
+		$data['users'] = $this->getOrderedAgents(array('agentParent'));
+		$this->render('index',$data);		
+	}
+
+	public function actionExport()
+	{
+		$agents = $this->getOrderedAgents(array('agentParent'));
+
+		header('Content-Type: text/csv; charset=utf-8');
+		header('Content-Disposition: attachment; filename=dealers_'.date('Ymd_His').'.csv');
+
+		$output = fopen('php://output', 'w');
+		fputcsv($output, array('Full Name', 'Parent Name', 'Active Bookings'));
+
+		foreach ($agents as $agent) {
+			fputcsv($output, array(
+				$agent->name,
+				($agent->agentParent && $agent->agentParent->name) ? $agent->agentParent->name : '-',
+				(int)$agent->agentPlots,
+			));
+		}
+
+		fclose($output);
+		Yii::app()->end();
+	}
+
+	protected function getOrderedAgents($with = array('agentParent'))
+	{
+		$agents = Agents::model()->with($with)->findAll(array('order'=>'t.name ASC'));
 		$parents = array();
 		$childrenByParent = array();
 		foreach ($agents as $agent) {
@@ -62,8 +90,7 @@ class AgentController extends Controller
 				$ordered[] = $child;
 			}
 		}
-		$data['users'] = $ordered;
-		$this->render('index',$data);		
+		return $ordered;
 	}
 
 	protected function saveCommissionTiers($agentId)

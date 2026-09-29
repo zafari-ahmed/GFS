@@ -20,9 +20,10 @@
                             <label>Block Number</label>
                             <select name="block_number" id="direct_block_number" class="form-control select2">
                                 <option value="">Select block number</option>
-                                <?php foreach($blocks as $block):?>
+                                <option value="-">No Block</option>
+                                <?php foreach($blocks as $block):if(!empty($block->block_number)){?>
                                     <option value="<?php echo CHtml::encode($block->block_number)?>" <?php echo ($block_number==$block->block_number)?'selected':''?>><?php echo CHtml::encode($block->block_number)?></option>
-                                <?php endforeach;?>
+                                <?php } endforeach;?>
                             </select>
                         </div>
                         <div class="form-group col-lg-2">
