@@ -13,6 +13,7 @@
  * @property integer $user_type_id
  * @property integer $status
  * @property string $createdOn
+ * @property string $profile_image
  *
  * The followings are the available model relations:
  * @property UserTypes $userType
@@ -37,10 +38,10 @@ class Users extends CActiveRecord
 		return array(
 			array('email_address, username, first_name, last_name, password, user_type_id, status, createdOn', 'required'),
 			array('user_type_id, status', 'numerical', 'integerOnly'=>true),
-			array('email_address, username, first_name, last_name, password', 'length', 'max'=>255),
+			array('email_address, username, first_name, last_name, password, profile_image', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, email_address, username, first_name, last_name, password, user_type_id, status, createdOn', 'safe', 'on'=>'search'),
+			array('id, email_address, username, first_name, last_name, password, user_type_id, status, createdOn, profile_image', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -72,7 +73,53 @@ class Users extends CActiveRecord
 			'user_type_id' => 'User Type',
 			'status' => 'Status',
 			'createdOn' => 'Created On',
+			'profile_image' => 'Profile Image',
 		);
+	}
+
+	public static function ensureProfileImageColumn()
+	{
+		$db = Yii::app()->db;
+		$exists = $db->createCommand("
+			SELECT COUNT(*) FROM information_schema.COLUMNS
+			WHERE TABLE_SCHEMA = DATABASE()
+			  AND TABLE_NAME = 'users'
+			  AND COLUMN_NAME = 'profile_image'
+		")->queryScalar();
+		if (!$exists) {
+			$db->createCommand("ALTER TABLE `users` ADD COLUMN `profile_image` VARCHAR(255) NULL DEFAULT NULL AFTER `createdOn`")->execute();
+			Yii::app()->db->schema->getTable('users', true);
+			Users::model()->refreshMetaData();
+		}
+	}
+
+	public static function profileImageUrl($userModel)
+	{
+		if (empty($userModel)) {
+			return '';
+		}
+		$file = '';
+		if (is_array($userModel) && !empty($userModel['profile_image'])) {
+			$file = $userModel['profile_image'];
+		} elseif (is_object($userModel) && !empty($userModel->profile_image)) {
+			$file = $userModel->profile_image;
+		}
+		if ($file === '') {
+			return '';
+		}
+		$path = Yii::getPathOfAlias('webroot').'/uploads/users/'.$file;
+		if (!is_file($path)) {
+			return '';
+		}
+		return Yii::app()->baseUrl.'/uploads/users/'.$file;
+	}
+
+	public static function isSuperAdmin($userModel = null)
+	{
+		if ($userModel === null) {
+			$userModel = Yii::app()->session->get('userModel');
+		}
+		return !empty($userModel['user_type']['id']) && (int)$userModel['user_type']['id'] === 1;
 	}
 
 	/**

@@ -22,9 +22,9 @@
 <?php $userModel = Yii::app()->session->get('userModel');?>
 
 <body style="margin:0;font-family:Arial, Helvetica, sans-serif;font-size:14px;">
-    <div style="width:700px;height:700px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;border: 1px solid;padding: 20px;">
+    <div style="width:700px;height:550px;background:#fff;margin:0 auto;font-family:Arial, Helvetica, sans-serif;font-size:16px;border: 1px solid;padding: 20px;border-radius: 5px;">
         <?php if(@$expense->reason || $expense->status === 0){?>
-        <img src="<?php echo Yii::app()->baseUrl?>/images/cancelledInvoice.png" style="    position: absolute;z-index: 999;width: 70%;margin-left: 9%;margin-top: 1%;opacity: 0.5;">
+        <img src="<?php echo Yii::app()->baseUrl?>/images/cancelledInvoice.png" style="    position: absolute;z-index: 999;width: 70%;margin-left: 9%;margin-top: 1%;opacity: 0.2;">
         <?php }?>
 		<div style="overflow:hidden;margin-bottom: 5%;">
             <div style="width:10%;float:left;position: relative;left: -5%;">
@@ -155,7 +155,7 @@
         </div>
 
         <div style="margin:-05px 0 0;">
-            <div style="padding: 3px 15px;overflow: hidden;margin-top: -7%;position: absolute;z-index: 9999999999;">
+            <div style="padding: 3px 15px;overflow: hidden;margin-top: -5%;position: absolute;z-index: 9999999999;">
                 <?php if(@$expense->reason){?>
                 <div style="width:55px;float:left;font-size:12px;font-family:Arial, Helvetica, sans-serif;margin-right:10px; font-weight: bold">*Reason:&nbsp;</div>
                 <div style="width:375px;float:left;font-size:12px;font-family:Arial, Helvetica, sans-serif;margin-right:10px;font-weight: bold"><?php echo @$expense->reason?></div>

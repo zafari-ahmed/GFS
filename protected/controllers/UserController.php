@@ -30,6 +30,73 @@ class UserController extends Controller
 		$this->render('changepassword',$data);
 	}
 
+	public function actionProfile()
+	{
+		$this->checkSession();
+		Users::ensureProfileImageColumn();
+		$userModel = Yii::app()->session->get('userModel');
+		$data['user'] = Users::model()->findByPk($userModel['id']);
+		$this->render('profile', $data);
+	}
+
+	public function actionUpdateprofile()
+	{
+		$this->checkSession();
+		Users::ensureProfileImageColumn();
+		$userModel = Yii::app()->session->get('userModel');
+		$user = Users::model()->findByPk($userModel['id']);
+		if (!$user) {
+			Yii::app()->user->setFlash('danger', 'User not found.');
+			$this->redirect(Yii::app()->baseUrl.'/user/profile');
+			return;
+		}
+
+		if (!empty($_POST['first_name'])) {
+			$user->first_name = $_POST['first_name'];
+			$user->last_name = isset($_POST['last_name']) ? $_POST['last_name'] : $user->last_name;
+			$user->email_address = isset($_POST['email_address']) ? $_POST['email_address'] : $user->email_address;
+			$user->username = isset($_POST['username']) ? $_POST['username'] : $user->username;
+		}
+
+		if (!empty($_FILES['profile_image']['name']) && (int)$_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+			$ext = strtolower(pathinfo($_FILES['profile_image']['name'], PATHINFO_EXTENSION));
+			$allowed = array('jpg', 'jpeg', 'png', 'gif', 'webp');
+			if (!in_array($ext, $allowed, true)) {
+				Yii::app()->user->setFlash('danger', 'Profile image must be JPG, PNG, GIF or WEBP.');
+				$this->redirect(Yii::app()->baseUrl.'/user/profile');
+				return;
+			}
+			if ((int)$_FILES['profile_image']['size'] > 2 * 1024 * 1024) {
+				Yii::app()->user->setFlash('danger', 'Profile image must be 2MB or smaller.');
+				$this->redirect(Yii::app()->baseUrl.'/user/profile');
+				return;
+			}
+			$folder = Yii::getPathOfAlias('webroot').'/uploads/users/';
+			if (!is_dir($folder)) {
+				mkdir($folder, 0777, true);
+			}
+			$fileName = 'user_'.$user->id.'_'.time().'.'.$ext;
+			if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $folder.$fileName)) {
+				if (!empty($user->profile_image) && is_file($folder.$user->profile_image)) {
+					@unlink($folder.$user->profile_image);
+				}
+				$user->profile_image = $fileName;
+			}
+		}
+
+		$user->save(false);
+
+		$userModel['first_name'] = $user->first_name;
+		$userModel['last_name'] = $user->last_name;
+		$userModel['email_address'] = $user->email_address;
+		$userModel['username'] = $user->username;
+		$userModel['profile_image'] = $user->profile_image;
+		Yii::app()->session->add('userModel', $userModel);
+
+		Yii::app()->user->setFlash('success', 'Profile updated successfully.');
+		$this->redirect(Yii::app()->baseUrl.'/user/profile');
+	}
+
 
 	public function actionSavepassword()
 	{

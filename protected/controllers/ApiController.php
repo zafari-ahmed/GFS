@@ -8,11 +8,72 @@ class ApiController extends Controller
 	 */
 	public function actionAuthenticate()
 	{
-		// renders the view file 'protected/views/site/index.php'
-		// using the default layout 'protected/views/layouts/main.php'
-		
-		$user = Users::model()->find('(email_address = :email OR username = :email) AND password = :password AND status = 1',array(':email'=>$_POST['email'],':password'=>md5($_POST['password'])));
+		if (!Yii::app()->request->isPostRequest) {
+			echo json_encode(array('error' => 1, 'message' => 'Invalid request.'));
+			return;
+		}
+
+		$check = LoginSecurity::inspect(
+			isset($_POST['email']) ? $_POST['email'] : '',
+			isset($_POST['password']) ? $_POST['password'] : ''
+		);
+		$email = $check['email'];
+		$password = $check['password'];
+		$ip = LoginAttempts::clientIp();
+		LoginAttempts::ensureTables();
+
+		$ban = LoginAttempts::activeBan($ip);
+		if ($ban) {
+			$mins = LoginAttempts::remainingBanMinutes($ban['banned_until']);
+			ActivityLogs::write(array(
+				'user_id' => null,
+				'user_name' => $email,
+				'controller' => 'api',
+				'action' => 'authenticate',
+				'method' => 'POST',
+				'url' => Yii::app()->request->url,
+				'ip_address' => $ip,
+				'description' => 'Blocked login (IP banned)',
+				'request_data' => json_encode(array('email' => $email)),
+			));
+			echo json_encode(array(
+				'error' => 1,
+				'message' => 'Too many failed login attempts. This IP is banned for '.$mins.' more minute(s).',
+			));
+			return;
+		}
+
+		if (!$check['ok']) {
+			$result = LoginAttempts::recordFailure($ip, substr($email !== '' ? $email : 'blocked', 0, 255));
+			ActivityLogs::write(array(
+				'user_id' => null,
+				'user_name' => 'blocked',
+				'controller' => 'api',
+				'action' => 'authenticate',
+				'method' => 'POST',
+				'url' => Yii::app()->request->url,
+				'ip_address' => $ip,
+				'description' => 'Blocked login (invalid/SQL input)',
+				'request_data' => json_encode(array('blocked' => 1)),
+			));
+			if (!empty($result['banned'])) {
+				echo json_encode(array('error' => 1, 'message' => 'Invalid login details. This IP is now banned for '.$result['ban_minutes'].' minute(s).'));
+			} else {
+				echo json_encode(array('error' => 1, 'message' => $check['message']));
+			}
+			return;
+		}
+
+		Users::ensureProfileImageColumn();
+		$user = Users::model()->find(
+			'username = :email AND password = :password AND status = 1',
+			array(
+				':email' => $email,
+				':password' => md5($password),
+			)
+		);
 		if($user){
+			LoginAttempts::clearFailures($ip);
 		    $user->createdOn = date('Y-m-d H:i:s');
 		    $user->save(false);
 			$userModel = array();
@@ -20,9 +81,37 @@ class ApiController extends Controller
 			$userModel['phase_id'] = 1;
 			$userModel['user_type'] = $user->userType->attributes;
 			Yii::app()->session->add('userModel',$userModel);
+			ActivityLogs::write(array(
+				'user_id' => $user->id,
+				'user_name' => trim($user->first_name.' '.$user->last_name),
+				'controller' => 'api',
+				'action' => 'authenticate',
+				'method' => 'POST',
+				'url' => Yii::app()->request->url,
+				'ip_address' => $ip,
+				'description' => 'Logged in successfully',
+				'request_data' => json_encode(array('email' => $email)),
+			));
 			echo json_encode(array('success'=>1,'message'=>'Logged in successfully.','data'=>$userModel));
 		} else{
-			echo json_encode(array('error'=>1,'message'=>'Invalid email address or password.'));
+			$result = LoginAttempts::recordFailure($ip, $email);
+			if (!empty($result['banned'])) {
+				$message = 'Invalid email address or password. This IP is now banned for '.$result['ban_minutes'].' minute(s).';
+			} else {
+				$message = 'Invalid email address or password. '.$result['remaining'].' attempt(s) remaining.';
+			}
+			ActivityLogs::write(array(
+				'user_id' => null,
+				'user_name' => $email,
+				'controller' => 'api',
+				'action' => 'authenticate',
+				'method' => 'POST',
+				'url' => Yii::app()->request->url,
+				'ip_address' => $ip,
+				'description' => $result['banned'] ? 'Failed login — IP banned' : 'Failed login',
+				'request_data' => json_encode(array('email' => $email, 'attempts' => $result['count'])),
+			));
+			echo json_encode(array('error'=>1,'message'=>$message));
 		}
 		
 	}

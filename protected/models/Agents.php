@@ -158,8 +158,9 @@ class Agents extends CActiveRecord
 		$belongsToThisAgent = ($booking && !empty($booking->id) && (int)$booking->agent_id === (int)$this->id);
 		if ($belongsToThisAgent) {
 			$createdOn = $booking->createdOn ? $booking->createdOn : date('Y-m-d H:i:s');
-			$criteria->addCondition('(t.createdOn < :createdOn) OR (t.createdOn = :createdOn AND t.id <= :id)');
-			$criteria->params[':createdOn'] = $createdOn;
+			$criteria->addCondition('(t.createdOn < :createdOnBefore) OR (t.createdOn = :createdOnSame AND t.id <= :id)');
+			$criteria->params[':createdOnBefore'] = $createdOn;
+			$criteria->params[':createdOnSame'] = $createdOn;
 			$criteria->params[':id'] = $booking->id;
 			$count = (int)CustomerPlots::model()->count($criteria);
 			return max($count, 1);

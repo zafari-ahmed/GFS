@@ -298,13 +298,18 @@
                 </li>
                 <?php */?>
                 <!-- /.dropdown -->
-                <?php $userModel = Yii::app()->session->get('userModel');?>
+                <?php $userModel = Yii::app()->session->get('userModel'); $profilePhoto = Users::profileImageUrl($userModel); ?>
                 <li class="dropdown">
                     <a class="dropdown-toggle" data-toggle="dropdown" href="#"> 
-                        <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> <i class="fa fa-user fa-fw"></i> <i class="fa fa-caret-down"></i>
+                        <?php if($profilePhoto){ ?>
+                            <img src="<?php echo CHtml::encode($profilePhoto)?>" alt="" style="width:22px;height:22px;border-radius:50%;object-fit:cover;margin-right:6px;vertical-align:middle;">
+                        <?php } else { ?>
+                            <i class="fa fa-user fa-fw"></i>
+                        <?php } ?>
+                        <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> <i class="fa fa-caret-down"></i>
                     </a>
                     <ul class="dropdown-menu dropdown-user">
-                        <!-- <li><a href="<?php //echo Yii::app()->baseUrl.'/user/profile'?>"><i class="fa fa-user fa-fw"></i> User Profile</a></li>-->
+                        <li><a href="<?php echo Yii::app()->baseUrl.'/user/profile'?>"><i class="fa fa-user fa-fw"></i> Edit Profile</a></li>
                         <li><a href="<?php echo Yii::app()->baseUrl.'/user/changepassword'?>"><i class="fa fa-gear fa-fw"></i> Change Password</a></li>
                         <li class="divider"></li>
                         <li><a href="<?php echo Yii::app()->params['AppUrl'].'/site/logout'?>"><i class="fa fa-sign-out fa-fw"></i> Logout</a></li>
@@ -331,6 +336,11 @@
                         <li>
                             <a href="<?php echo Yii::app()->baseUrl.'/dashboard'?>"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
                         </li>
+                        <?php /*if($userModel['user_type']['id'] == 1){?>
+                        <li>
+                            <a href="<?php echo Yii::app()->baseUrl.'/activitylog'?>"><i class="fa fa-history fa-fw"></i> Activity Logs</a>
+                        </li>
+                        <?php }*/ ?>
                         <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 3 || $userModel['user_type']['id'] == 4 || $userModel['user_type']['id'] == 5 || $userModel['user_type']['id'] == 6){?>
                         <li>
                             <a href="#"><i class="fa fa-book fa-fw"></i> Bookings<span class="fa arrow"></span></a>
@@ -397,6 +407,11 @@
                                 <li>
                                     <a href="<?php echo Yii::app()->baseUrl.'/user/add'?>">Add User</a>
                                 </li>
+                                <?php if($userModel['user_type']['id'] == 1){?>
+                                <li>
+                                    <a href="<?php echo Yii::app()->baseUrl.'/activitylog'?>">Activity Logs</a>
+                                </li>
+                                <?php } ?>
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>

@@ -75,19 +75,19 @@ class ExpensesController extends Controller
 	public function actionDelete($status,$id)
 	{
 	    
-// 		if($status==1){
-// 			$expense = Expenses::model()->findByPk($id);
-// 			$expense->status = 1;
-// 			$expense->save(false);
-// 			$url  = Yii::app()->baseUrl.'/expenses/expenseinvoice/'.$id;
-// 			//Yii::app()->user->setFlash('success','Expense update successfully.');
-// 			$this->redirect($url);
-// 		}
-		//if($status != 1){
+		if($status==1){
+			$expense = Expenses::model()->findByPk($id);
+			$expense->status = 1;
+			$expense->save(false);
+			$url  = Yii::app()->baseUrl.'/expenses/expenseinvoice/'.$id;
+			//Yii::app()->user->setFlash('success','Expense update successfully.');
+			$this->redirect($url);
+		}
+		if($status != 1){
 			$data['expense'] = Expenses::model()->findByPk($id);
 			$data['status'] = 0;
 			$this->render('delete',$data);
-		//}
+		}
 	}
 	
 	public function actionDeletedirect($id)

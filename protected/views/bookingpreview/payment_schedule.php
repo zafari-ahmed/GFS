@@ -194,7 +194,7 @@ if (!function_exists('psFormatScheduleAmount')) {
     <div class="mode-grid">
       <div class="mode-date">DATE</div>
       <div class="mode-left">MODE OF PAYMENT</div>
-      <div class="mode-mid"></div>
+      <!-- <div class="mode-mid"></div> -->
       <div class="mode-right"><b>AMOUNTS (IN RS.)<?php //echo (@$booking->plot->size->size)?></b></div>
     </div>
 
@@ -251,7 +251,7 @@ if (!function_exists('psFormatScheduleAmount')) {
                 <?= ($row['heading1'] !== 'Empty Box') ? htmlspecialchars($row['heading1']) : '' ?>
               </div>
               <div class="cell subtle">
-                <?= ($row['heading2'] !== 'Empty Box') ? htmlspecialchars($row['heading2']) : '' ?>
+                <?php //($row['heading2'] !== 'Empty Box') ? htmlspecialchars($row['heading2']) : '' ?>
               </div>
               <div class="cell amount"><?= htmlspecialchars(psFormatScheduleAmount($row['value'] ?? '')) ?></div>
             <?php endforeach; ?>

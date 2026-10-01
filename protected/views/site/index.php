@@ -7,13 +7,13 @@
                     <h3 class="panel-title">SIGN IN</h3>
                 </div>
                 <div class="panel-body">
-                    <form role="form">
+                    <form role="form" method="post" action="#" autocomplete="off" onsubmit="return false;">
                         <fieldset>
                             <div class="form-group">
-                                <input class="form-control" placeholder="E-mail" name="email" type="email" id="email">
+                                <input class="form-control" placeholder="E-mail" name="email" type="text" id="email" maxlength="100" autocomplete="username" spellcheck="false">
                             </div>
                             <div class="form-group">
-                                <input class="form-control" placeholder="Password" name="password" type="password" value="" id="password">
+                                <input class="form-control" placeholder="Password" name="password" type="password" value="" id="password" maxlength="128" autocomplete="current-password">
                             </div>
                             <!-- <div class="checkbox">
                                 <label>
