@@ -26,6 +26,16 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
     .hide{
         display: none!important;
     }
+    .booking-top-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin: 0 0 24px;
+    }
+    .booking-top-buttons .btn {
+        margin: 0;
+    }
 </style>
 <div class="row">
     <div class="col-lg-12">
@@ -64,124 +74,10 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                 </tbody>
             </table>
         <?php } ?>
-        <div class="buttonsDiv <?php echo $buttonClass?>">
-        <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>
-            <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Booking Form</button></a></span>
-
-            <?php if($userModel['user_type']['id'] == 1){?>
-            <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/booking/bookingtransferletter/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Transfer Letter</button></a></span>
-            <?php }?>
-            <!--<span  class="" ><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/plot/getpaymentscheduleorig/id/<?php echo $booking->plot->id?>/booking/<?php echo $booking->id?>"><button class="btn btn-warning btn-sm">Payment Schedule</button></a></span>-->
-
-            <?php if($userModel['user_type']['id'] == 1){?>
-                
-
-                <span class=" hide "><a class="performTask" href="<?php echo Yii::app()->baseUrl?>/api/messages/type/booking/id/<?php echo $booking->id?>"><button type="button"  class="btn btn-primary btn-sm">Booking Message</button></a></span>
-
-
-                <span class=" hide "><a href="javascript:void(0)"><button data-toggle="modal" data-target="#generateCert" type="button"  class="btn btn-info btn-sm">Generate Certificate</button></a></span>&nbsp;
-                
-             <?php } ?>
-
-              <?php if($userModel['user_type']['id'] == 1){?>
-
-                    <?php if($booking->flag_status==2){?>
-                        <span class=" hide "><button type="button"  class="btn btn-success btn-sm">Received By Customer</button></span>&nbsp;
-                    <?php } else if($booking->flag_status==1){?>
-                        <span class=" hide "><a href="<?php echo Yii::app()->baseUrl?>/api/setbookingflag/view/1/flag/2/booking/<?php echo $booking->id?>"><button type="button"  class="flagLink btn btn-primary btn-sm">Rec By Customer?</button></a></span>&nbsp;
-                    <?php } else{?>
-                        <span class=" hide "><a href="<?php echo Yii::app()->baseUrl?>/api/setbookingflag/view/1/flag/1/booking/<?php echo $booking->id?>"><button type="button"  class="flagLink btn btn-danger btn-sm">File Complete?</button></a></span>&nbsp;
-                    <?php } ?>
-                    
-                
-
-                    <span class="hide"><a id="cancelBooking" href="<?php echo Yii::app()->baseUrl?>/booking/cancel/<?php echo $booking->id?>"><button type="button"  class="btn btn-danger btn-sm">Cancel Booking</button></a></span>
-                <?php } ?>    
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Application Form</button></a></span>
-                    
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicateback/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Terms & Condition</button></a></span>
-                    
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/welcome/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Welcome Letter</button></a></span>
-                    
-                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/confirmation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Confirmation</button></a></span>
-                    
-                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm <?php echo @$buttonClass?>">Add PS</button></a></span>
-                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
-                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
-                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
-                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Allocation Letter</button></a></span>
-                    <span class=""><a href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button"  class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
-                    <span class=" hide "><a href="javascript:void(0)"><button data-toggle="modal" data-target="#bookingReason" type="button"  class="btn btn-info btn-sm">Block Booking</button></a></span>&nbsp;
-            
-                    <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
-                    <span class=" hide "><a id="transferBooking" href="<?php echo Yii::app()->baseUrl?>/booking/transfer/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Transfer Booking</button></a></span>
-                    <?php }?>
-            <?php } /*?>                       
-                    <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
-                    <span><a id="transferBooking" href="<?php echo Yii::app()->baseUrl?>/booking/transferamount/id/<?php echo $booking->id?>/to/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Transfer Transactions</button></a></span>
-                    <?php }?>
-                    <?php */?>
-                    
-                    <?php /*?>
-                    <?php if($userModel['user_type']['id'] == 1){ ?>
-                                        <span><a href="javascript:void()" id="reminderLetter" ><button type="button"  class="btn btn-success btn-sm" data-toggle="modal" data-target="#myModal">Reminder Letter <?php echo ($booking->reminderLettersCount > 0)?' ('.$booking->reminderLettersCount.')':''?></button></a></span>
-                    <?php } else{ ?>
-                        <span><a href="javascript:void()" ><button type="button"  class="btn btn-success btn-sm">Reminder Letter <?php echo ($booking->reminderLettersCount > 0)?' ('.$booking->reminderLettersCount.')':''?></button></a></span>
-                    <?php }  ?>
-
-                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
-
-                    <?php if($extra > 0){ ?>
-                            <span><a href="<?php echo Yii::app()->baseUrl?>/booking/addplantransaction/<?php echo $booking->id?>" id="reminderLetter" ><button type="button"  class="btn btn-success btn-sm">Add Plot Plan Transaction</button></a></span>
-                    <?php } ?>
-                    <?php }?>
-
-                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
-
-                    <span><a href="javascript:void()" id="developmentLetterSingle" ><button type="button"  class="btn btn-success btn-sm" data-toggle="modal" data-target="#myModalLetter">Development Letter</button></a></span>
-                    
-                    <?php }?>
-
-                <?php } else{?>
-                    <span><a id="transferBooking" href="<?php echo Yii::app()->baseUrl?>/booking/transferamount/id/<?php echo $booking->id?>/to/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Transfer Transactions</button></a></span>
-                <?php }?>
-            <?php //}?>
-            <?php */?>
-        <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
-            <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>  
-                        <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
-                        <?php if($userModel['user_type']['id'] == 1){?>
-                    &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/editbooking/<?php echo $booking->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Booking</button></a>&nbsp;&nbsp;
-                        <a href="<?php echo Yii::app()->baseUrl?>/paymentschedule/customschedule/id/<?php echo $booking->id?>"><button type="button" class="hide btn btn-primary btn-sm">Custom Payment Schedule</button></a></span>&nbsp;&nbsp;</span>&nbsp;&nbsp;
-                    <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1){?>
-                    <!--<span class="pull-right" style="margin-right: 10px;"><a href="<?php //echo Yii::app()->baseUrl?>/plot/edit/<?php //echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>-->
-                        <?php } }?>
-            <?php } else {  ?>
-            <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
-            <?php }   ?>
-        <?php } else {?>
-            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
-            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
-            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
-            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
-            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Allocation Letter</button></a></span>
-            <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
-            <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>   
-                <?php //if($booking->blocked !=1 && $userModel['user_type']['id'] == 1) {?>
-                    <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
-                <?php //}  ?>
-            <?php }  ?>
-        <?php }  ?>
-        
-        <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm <?php echo @$buttonClass?>">Edit Plot</button></a></span>
-        
-        <?php //if($userModel['user_type']['id'] != 3){?>
-        &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button" class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
-        <?php /*?>
-        <!-- &nbsp;&nbsp;<span class="pull-right" style="margin-right: 10px;"><a href="<?php //echo Yii::app()->baseUrl?>/booking/chargesledger/<?php //echo $booking->id?>"><button type="button" class="btn btn-warning btn-sm">Development Ledger</button></a></span> -->
-        <?php */?>
-    <br/><br/><br/>
-    </div>
+        <?php $this->renderPartial('_view_buttons', array(
+            'booking' => $booking,
+            'userModel' => $userModel,
+        )); ?>
     <?php
         foreach(Yii::app()->user->getFlashes() as $key => $message) {
             echo '<div class="alert alert-'.$key.' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><b>'.$message.'</b></div>';
@@ -768,7 +664,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                        <tr><td colspan="3"><b>------</b></td><td colspan="9"><b>------</b></td></tr>
                        <?php */?>
                        <?php $plotTotalText = 0;?>
-                       <tr><td colspan="3"><b>Total</b></td><td colspan="9"><b><?php echo 'Rs. '.number_format($tpp)?></b></td></tr>
+                       <tr><td colspan="3"><b>Total</b></td><td colspan="10"><b><?php echo 'Rs. '.number_format($tpp)?></b></td></tr>
                        <?php $plotTotalText = $booking->plot->total;?>
                        <?php if($booking->plot->discount > 0){?>
                        <!--<tr><td colspan="3"><b>Discount</b></td><td colspan="9"><b><?php //echo 'Rs. '.number_format($booking->plot->discount)?></b></td></tr>-->
@@ -779,13 +675,13 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                        
                        
                        <?php if($booking->status==3){?>
-                        <tr><td colspan="3"><b>Paid Total</b></td><td colspan="9"><b><?php echo 'Rs. '.number_format($booking->customerPlotTransactionSumTransfer+$cpttTotal)?></b></td></tr>
-                        <tr><td colspan="3"><b>Balance</b></td><td colspan="9"><b><?php echo 'Rs. '.number_format($plotTotalText-$booking->customerPlotTransactionSumTransfer)?></b></td></tr>
+                        <tr><td colspan="3"><b>Paid Total</b></td><td colspan="10"><b><?php echo 'Rs. '.number_format($booking->customerPlotTransactionSumTransfer+$cpttTotal)?></b></td></tr>
+                        <tr><td colspan="3"><b>Balance</b></td><td colspan="10"><b><?php echo 'Rs. '.number_format($plotTotalText-$booking->customerPlotTransactionSumTransfer)?></b></td></tr>
                        <?php } else {?>
-                        <tr><td colspan="3"><b>Paid Total</b></td><td colspan="9"><b><?php echo 'Rs. '.number_format($booking->customerPlotTransactionSum+$cpttTotal)?></b></td></tr>
+                        <tr><td colspan="3"><b>Paid Total</b></td><td colspan="10"><b><?php echo 'Rs. '.number_format($booking->customerPlotTransactionSum+$cpttTotal)?></b></td></tr>
                        <?php }?>
                        
-                       <tr><td colspan="3"><b>Remaining</b></td><td colspan="9"><b><?php echo 'Rs. '.number_format($tpp-$booking->customerPlotTransactionSum-$cpttTotal)?></b></td></tr>
+                       <tr><td colspan="3"><b>Remaining</b></td><td colspan="10"><b><?php echo 'Rs. '.number_format($tpp-$booking->customerPlotTransactionSum-$cpttTotal)?></b></td></tr>
                        
                     </tbody>
                 </table>
@@ -926,6 +822,8 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
             <div class="panel-body">
                 <?php
                 $isSubDealer = ($dealerCommission && !empty($dealerCommission['is_sub_agent']) && $dealerCommission['parent'] && (int)$dealerCommission['agent']->parent_id > 0);
+                $agentPayout = ($booking->agent_id && $booking->agent) ? $booking->agent->getCommissionPayoutPlan($booking, $plotTotalAmount, 'agent') : null;
+                $parentPayout = ($isSubDealer && $booking->agent) ? $booking->agent->getCommissionPayoutPlan($booking, $plotTotalAmount, 'parent') : null;
                 $agentPaid = function ($agentId, $agentName) use ($expenses, $isSubDealer, $booking) {
                     $paid = 0;
                     if (empty($expenses)) {
@@ -950,13 +848,20 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                     }
                     return $paid;
                 };
-                $addCommissionBtn = function ($agentId, $agentName, $dueAmount) use ($booking, $buttonClass, $agentPaid) {
+                $addCommissionBtn = function ($agentId, $agentName, $dueAmount, $role = 'agent') use ($booking, $buttonClass, $agentPaid, $plotTotalAmount) {
                     $paid = $agentPaid($agentId, $agentName);
-                    $remaining = max(0, round((float)$dueAmount - $paid, 2));
                     if ((float)$dueAmount > 0 && round($paid, 2) >= round((float)$dueAmount, 2)) {
                         return '';
                     }
-                    $url = Yii::app()->baseUrl.'/expenses/add?booking_id='.(int)$booking->id.'&agent_id='.(int)$agentId.'&comm_amount='.$remaining;
+                    $next = 0;
+                    if ($booking->agent) {
+                        $next = $booking->agent->getAddCommissionButtonAmount($booking, $plotTotalAmount, $paid, $role);
+                    }
+                    if ($next <= 0) {
+                        return '';
+                    }
+                    $commHash = Agents::encodeCommissionAmount($booking->id, $agentId, $next, $role);
+                    $url = Yii::app()->baseUrl.'/expenses/add?booking_id='.(int)$booking->id.'&agent_id='.(int)$agentId.'&comm_hash='.urlencode($commHash);
                     return '<a href="'.CHtml::encode($url).'"><button type="button" class="btn btn-success btn-xs '.$buttonClass.'">Add Commision</button></a>';
                 };
                 $remainingAmount = function ($agentId, $agentName, $dueAmount) use ($agentPaid) {
@@ -966,7 +871,29 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                 $paidAmount = function ($agentId, $agentName) use ($agentPaid) {
                     return round($agentPaid($agentId, $agentName), 2);
                 };
+                $formatPayout = function ($plan) {
+                    //echo '<pre>';print_r($plan);
+                    if (!$plan) {
+                        return array('monthly' => '-', 'comm' => '-', 'months' => '-');
+                    }
+                    $monthly = (float)$plan['monthly_installment'];
+                    $comm = (float)$plan['monthly_commission'];
+                    $months = (int)$plan['months_total'];
+                    $percent = rtrim(rtrim(number_format((float)$plan['payout_percent'], 2, '.', ''), '0'), '.');
+                    return array(
+                        'monthly' => number_format($monthly),
+                        'comm' => number_format($comm).' ('.$percent.'%)',
+                        'months' => $months ? $months : '0',
+                    );
+                };
+                $agentPayoutCells = $formatPayout($agentPayout);
+                $parentPayoutCells = $formatPayout($parentPayout);
                 ?>
+                <p class="help-block" style="margin-top:0;">
+                    Commission is paid from the payment-schedule monthly installment:
+                    agent <b><?php echo (int)Agents::$agentMonthlyPayoutPercent?>%</b><?php if($isSubDealer){ ?>, parent <b><?php echo (int)Agents::$parentMonthlyPayoutPercent?>%</b><?php } ?>.
+                    Monthly installment, monthly commission and months come from the payment schedule (no monthly transaction required to display).
+                </p>
                 <div class="col-lg-12" style="padding-left: 0px;">
                     <table width="100%" class="table table-striped table-bordered table-hover">
                         <thead>
@@ -977,6 +904,9 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                 <th>%</th>
                                 <th>Total Amount</th>
                                 <th>Agent Commission (PKR)</th>
+                                <th>Monthly Inst.</th>
+                                <th>Monthly Comm.</th>
+                                <th>Months</th>
                                 <th>Paid Commission</th>
                                 <th>Remaining Commission</th>
                                 <th>Action</th>
@@ -991,9 +921,12 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                 <td><?php echo number_format($dealerCommission['parent_percent'], 2, '.', ',')?>%</td>
                                 <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
                                 <td><?php echo number_format($dealerCommission['parent_amount'])?></td>
+                                <td><?php echo $parentPayoutCells['monthly']?></td>
+                                <td><?php echo $parentPayoutCells['comm']?></td>
+                                <td><?php echo $parentPayoutCells['months']?></td>
                                 <td><?php echo number_format($paidAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name))?></td>
                                 <td><?php echo number_format($remainingAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount']))?></td>
-                                <td><?php echo $addCommissionBtn($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount'])?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount'], 'parent')?></td>
                             </tr>
                             <tr>
                                 <td><?php echo CHtml::encode($dealerCommission['agent']->name)?></td>
@@ -1002,9 +935,12 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                 <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
                                 <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
                                 <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
                                 <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
                                 <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
-                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'], 'agent')?></td>
                             </tr>
                         <?php } elseif($dealerCommission){ ?>
                             <tr>
@@ -1014,9 +950,12 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                 <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
                                 <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
                                 <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
                                 <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
                                 <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
-                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'], 'agent')?></td>
                             </tr>
                         <?php } else { ?>
                             <tr>
@@ -1026,9 +965,12 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                                 <td><?php echo number_format(@$booking->agent_percentage, 2, '.', ',')?>%</td>
                                 <td><?php echo number_format(@$agentComTotal, 2, '.', ',')?></td>
                                 <td><?php echo $this->Percentage(@$agentComTotal, @$booking->agent_percentage)?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
                                 <td><?php echo $booking->agent_id ? number_format($paidAmount($booking->agent_id, @$booking->agent->name)) : '0'?></td>
                                 <td><?php echo $booking->agent_id ? number_format($remainingAmount($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0))) : '0'?></td>
-                                <td><?php echo $booking->agent_id ? $addCommissionBtn($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0)) : ''?></td>
+                                <td><?php echo $booking->agent_id ? $addCommissionBtn($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0), 'agent') : ''?></td>
                             </tr>
                         <?php } ?>
                         </tbody>
@@ -1086,8 +1028,8 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                             </tr>
                             <?php endforeach;?>
                             <tr>
-                                <td>Total</td>
-                                <td><?php echo 'PKR '.number_format(@$tct);?></td>
+                                <td colspan="2"><b>Total</b></td>
+                                <td colspan="9"><b><?php echo 'PKR '.number_format(@$tct);?></b></td>
                             </tr>
                         </tbody>
                     </table>

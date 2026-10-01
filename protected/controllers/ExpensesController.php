@@ -22,6 +22,15 @@ class ExpensesController extends Controller
 			$data['commissionAgent'] = Agents::model()->findByPk($_GET['agent_id']);
 		}
 		$data['expenseTypes'] = Yii::app()->params['expenseTypes'];
+		$data['commissionAmount'] = '';
+		$data['commissionHash'] = '';
+		if (!empty($_GET['comm_hash']) && !empty($_GET['booking_id']) && !empty($_GET['agent_id'])) {
+			$decoded = Agents::decodeCommissionAmount($_GET['comm_hash'], $_GET['booking_id'], $_GET['agent_id']);
+			if ($decoded !== null) {
+				$data['commissionAmount'] = $decoded;
+				$data['commissionHash'] = $_GET['comm_hash'];
+			}
+		}
 		$criteria = new CDbCriteria();
 		$criteria->group = "paid_to";
 		$data['paid_to_list'] = Expenses::model()->findAll($criteria);
@@ -150,6 +159,15 @@ class ExpensesController extends Controller
 			}
 			if(!empty($_POST['agent_id'])){
 				$expense->agent_id = (int)$_POST['agent_id'];
+			}
+			if(!empty($_POST['comm_hash']) && !empty($_POST['booking_id']) && !empty($_POST['agent_id'])){
+				$decodedAmount = Agents::decodeCommissionAmount($_POST['comm_hash'], $_POST['booking_id'], $_POST['agent_id']);
+				if ($decodedAmount === null) {
+					Yii::app()->user->setFlash('error','Invalid commission amount.');
+					$this->redirect(Yii::app()->baseUrl.'/expenses/add?booking_id='.(int)$_POST['booking_id'].'&agent_id='.(int)$_POST['agent_id']);
+					return;
+				}
+				$expense->amount = $decodedAmount;
 			}
 			$expense->reason = NULL;
 			$expense->save(false);

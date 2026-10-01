@@ -98,19 +98,23 @@ class BookingpreviewController extends Controller
                 $r['heading1'] = isset($r['heading1']) ? trim($r['heading1']) : '';
                 $r['heading2'] = isset($r['heading2']) ? trim($r['heading2']) : '';
                 $r['value']    = $this->stripAmountCommas(isset($r['value']) ? trim($r['value']) : '');
+                $months        = $this->stripAmountCommas(isset($r['value_months']) ? trim($r['value_months']) : '');
                 $extra         = $this->stripAmountCommas(isset($r['value_extra']) ? trim($r['value_extra']) : '');
 
-                $isMonthlyHeading = (
-                    strcasecmp($r['heading1'], 'Monthly') === 0
-                    || strcasecmp($r['heading1'], 'Monthly Installment') === 0
-                    || strcasecmp($r['heading2'], 'Monthly') === 0
-                    || strcasecmp($r['heading2'], 'Monthly Installment') === 0
-                );
-                if ($isMonthlyHeading) {
-                    $r['value'] = $this->mergeMonthlyInstallmentValue($r['value'], $extra);
+                $isRepeatHeading = $this->isRepeatInstallmentHeading($r['heading1'], $r['heading2']);
+                if ($isRepeatHeading) {
+                    $r['installment'] = $r['value'];
+                    $r['months'] = $months;
+                    if ($extra === '' && $r['value'] !== '' && $months !== '' && is_numeric($r['value']) && is_numeric($months)) {
+                        $extra = (string)((float)$r['value'] * (float)$months);
+                    }
+                    $r['total'] = $extra;
+                    $r['value'] = $this->mergeMonthlyInstallmentValue($r['value'], $months, $extra);
+                } else {
+                    unset($r['installment'], $r['months'], $r['total']);
                 }
 
-                unset($r['value_extra']);
+                unset($r['value_extra'], $r['value_months']);
             }
             unset($r);
         
@@ -129,17 +133,41 @@ class BookingpreviewController extends Controller
 		$this->renderPartial('add_payment_schedule',$data);
 	}
 
-	private function mergeMonthlyInstallmentValue($main, $extra)
+	private function isRepeatInstallmentHeading($heading1, $heading2)
 	{
-		$main = trim((string)$main);
-		$extra = trim((string)$extra);
-		if ($main === '') {
-			return $extra;
+		$values = array(
+			strtolower(trim((string)$heading1)),
+			strtolower(trim((string)$heading2)),
+		);
+		$types = array(
+			'monthly',
+			'monthly installment',
+			'yearly',
+			'half yearly',
+			'quarterly',
+			'quarterly installment',
+		);
+		foreach ($values as $value) {
+			if (in_array($value, $types, true)) {
+				return true;
+			}
 		}
-		if ($extra === '') {
-			return $main;
+		return false;
+	}
+
+	private function mergeMonthlyInstallmentValue($installment, $months, $total)
+	{
+		$installment = trim((string)$installment);
+		$months = trim((string)$months);
+		$total = trim((string)$total);
+		if ($installment === '' && $months === '' && $total === '') {
+			return '';
 		}
-		return $main . ' = ' . $extra;
+		if ($months === '') {
+			return $total !== '' ? ($installment === '' ? $total : $installment.' = '.$total) : $installment;
+		}
+		$main = $installment.' x '.$months;
+		return $total !== '' ? $main.' = '.$total : $main;
 	}
 
 	private function stripAmountCommas($value)

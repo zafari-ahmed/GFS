@@ -11,7 +11,22 @@
 // print_r(intval($this->plotDiscount(@$booking->plot->id,false)));
 // exit;
 $det = $this->getPlotLedgerDetail($booking->id);
+$dues = $this->calculateBookingDues($booking->id);
+$plotTotalAmount = $this->plotTotal(@$booking->plot->id, false);
+$dealerCommission = ($booking->agent_id && $booking->agent) ? $booking->agent->getBookingCommissionBreakdown($booking, $plotTotalAmount) : null;
+$buttonClass = 'hide';
+if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
+    $buttonClass = '';
+}
 ?>
+<style type="text/css">
+    /*button[type="button"], input[type="button"] {
+        display: none!important;
+    }*/
+    .hide{
+        display: none!important;
+    }
+</style>
 <div class="row">
     <div class="col-lg-12">
         
@@ -21,27 +36,42 @@ $det = $this->getPlotLedgerDetail($booking->id);
             }
         ?>
         <h1 class="page-header">View Booking (<?php echo $this->getBookingRegNo($booking->id)?>)</h1><br/>
-        <?php if($booking->status!=3){?>
-            <table width="100%" class="hide table table-striped table-bordered table-hover">
+        <?php if($booking->status!=3 && !empty($dues['due_items'])){ ?>
+            <table width="100%" class="table table-striped table-bordered table-hover">
                 <thead style="color: #3c763d;background-color: #dff0d8;    text-transform: UPPERCASE;font-weight: bold;">
-                    <th>Booking Dues Summary</th>
-                    <th>Total Dues</th>
+                    <th>Payment Mode</th>
+                    <th>Due Date</th>
+                    <th>Scheduled</th>
+                    <th>Paid</th>
+                    <th>Due Months</th>
+                    <th>Due Amount</th>
                 </thead>
                 <tbody>
+                    <?php foreach ($dues['due_items'] as $dueItem): ?>
                     <tr>
-                        <td><?php echo $det['html'];?></td>
-                        <td><b><?php echo 'PKR '.number_format(@$det['amount'],2,'.',',');?></b></td>
+                        <td><b><?php echo CHtml::encode($dueItem['label']); ?></b></td>
+                        <td><?php echo !empty($dueItem['due_date']) ? date('d M, Y', strtotime($dueItem['due_date'])) : '-'; ?></td>
+                        <td><?php echo 'PKR '.number_format(@$dueItem['scheduled_amount'], 2, '.', ','); ?></td>
+                        <td><?php echo 'PKR '.number_format(@$dueItem['paid_amount'], 2, '.', ','); ?></td>
+                        <td><?php echo !empty($dueItem['is_monthly']) ? @$dueItem['due_months'] : '-'; ?></td>
+                        <td><b><?php echo 'PKR '.number_format(@$dueItem['due_amount'], 2, '.', ','); ?></b></td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <tr style="background-color: #fcf8e3; font-weight: bold;">
+                        <td colspan="5">Total Due</td>
+                        <td><?php echo 'PKR '.number_format(@$dues['due_amount'], 2, '.', ','); ?></td>
                     </tr>
                 </tbody>
             </table>
-        <?php }?>
+        <?php } ?>
+        <div class="buttonsDiv <?php echo $buttonClass?>">
         <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>
             <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Booking Form</button></a></span>
 
             <?php if($userModel['user_type']['id'] == 1){?>
             <span class=" hide "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/booking/bookingtransferletter/<?php echo $booking->id?>"><button class="btn btn-info btn-sm">Generate Transfer Letter</button></a></span>
             <?php }?>
-            <span  class="" ><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/plot/getpaymentscheduleorig/id/<?php echo $booking->plot->id?>/booking/<?php echo $booking->id?>"><button class="btn btn-warning btn-sm">Payment Schedule</button></a></span>
+            <!--<span  class="" ><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/plot/getpaymentscheduleorig/id/<?php echo $booking->plot->id?>/booking/<?php echo $booking->id?>"><button class="btn btn-warning btn-sm">Payment Schedule</button></a></span>-->
 
             <?php if($userModel['user_type']['id'] == 1){?>
                 
@@ -65,22 +95,22 @@ $det = $this->getPlotLedgerDetail($booking->id);
                     
                 
 
-                    <span class=" "><a id="cancelBooking" href="<?php echo Yii::app()->baseUrl?>/booking/cancel/<?php echo $booking->id?>"><button type="button"  class="btn btn-danger btn-sm">Cancel Booking</button></a></span>
+                    <span class="hide"><a id="cancelBooking" href="<?php echo Yii::app()->baseUrl?>/booking/cancel/<?php echo $booking->id?>"><button type="button"  class="btn btn-danger btn-sm">Cancel Booking</button></a></span>
                 <?php } ?>    
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Application Form</button></a></span>
+                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicate/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Application Form</button></a></span>
                     
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicateback/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Terms & Condition</button></a></span>
+                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/duplicateback/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Terms & Condition</button></a></span>
                     
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/welcome/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Welcome Letter</button></a></span>
+                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/welcome/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Welcome Letter</button></a></span>
                     
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Allocation</button></a></span>
+                    <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/confirmation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Confirmation</button></a></span>
                     
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/confirmation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Confirmation</button></a></span>
-                    
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
-                    <span class=" "><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
-                    <span class=" "><a id="cancelBooking" href="<?php echo Yii::app()->baseUrl?>/booking/cancel/<?php echo $booking->id?>"><button type="button"  class="btn btn-danger btn-sm">Cancel Booking</button></a></span>
-
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm <?php echo @$buttonClass?>">Add PS</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
+                    <span class=""><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Allocation Letter</button></a></span>
+                    <span class=""><a href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button"  class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
                     <span class=" hide "><a href="javascript:void(0)"><button data-toggle="modal" data-target="#bookingReason" type="button"  class="btn btn-info btn-sm">Block Booking</button></a></span>&nbsp;
             
                     <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id']==5){?>
@@ -117,24 +147,33 @@ $det = $this->getPlotLedgerDetail($booking->id);
                 <?php }?>
             <?php //}?>
             <?php */?>
-        <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5 || $userModel['user_type']['id'] == 4 || $userModel['user_type']['id'] == 3){?>
+        <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
             <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>  
-                        <span class="pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
-                        <?php if($userModel['user_type']['id'] != 4){?>
-                    &nbsp;&nbsp;<span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/editbooking/<?php echo $booking->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Booking</button></a>&nbsp;&nbsp;
+                        <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
+                        <?php if($userModel['user_type']['id'] == 1){?>
+                    &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/editbooking/<?php echo $booking->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Booking</button></a>&nbsp;&nbsp;
                         <a href="<?php echo Yii::app()->baseUrl?>/paymentschedule/customschedule/id/<?php echo $booking->id?>"><button type="button" class="hide btn btn-primary btn-sm">Custom Payment Schedule</button></a></span>&nbsp;&nbsp;</span>&nbsp;&nbsp;
-                    <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
-                    <span class="pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
+                    <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 1){?>
+                    <!--<span class="pull-right" style="margin-right: 10px;"><a href="<?php //echo Yii::app()->baseUrl?>/plot/edit/<?php //echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>-->
                         <?php } }?>
             <?php } else {  ?>
+            <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
             <?php }   ?>
-        <?php } else { ?>
+        <?php } else {?>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/addps/<?php echo $booking->id?>"><button type="button"  class="btn btn-info btn-sm">Add PS</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/payment/<?php echo $booking->id?>"><button type="button"  class="btn btn-success btn-sm">Payment Schedule</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationform/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Application Form</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/applicationterms/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Terms & Condition</button></a></span>
+            <span class="hide"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/bookingpreview/allocation/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Allocation Letter</button></a></span>
+            <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm">Edit Plot</button></a></span>
             <?php if(empty($booking->customerPlotCancelled) && $booking->status!=3){?>   
-                <?php if($booking->blocked !=1 && $userModel['user_type']['id'] != 4) {?>
-                    <span class="pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
-                <?php }  ?>
+                <?php //if($booking->blocked !=1 && $userModel['user_type']['id'] == 1) {?>
+                    <span class="hide pull-right" ><a href="<?php echo Yii::app()->baseUrl?>/booking/addtransaction/<?php echo $booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Transaction</button></a></span>
+                <?php //}  ?>
             <?php }  ?>
         <?php }  ?>
+        
+        <span class="hide pull-right" style="margin-right: 10px;"><a href="<?php echo Yii::app()->baseUrl?>/plot/edit/<?php echo $booking->plot->id?>"><button type="button" class="btn btn-primary btn-sm <?php echo @$buttonClass?>">Edit Plot</button></a></span>
         
         <?php //if($userModel['user_type']['id'] != 3){?>
         &nbsp;&nbsp;<span class="hide pull-right" style="margin-right: 10px;"><a target="_blank" href="<?php echo Yii::app()->baseUrl?>/booking/bookingledger/<?php echo $booking->id?>"><button type="button" class="btn btn-warning btn-sm">Booking Ledger</button></a></span>
@@ -142,6 +181,7 @@ $det = $this->getPlotLedgerDetail($booking->id);
         <!-- &nbsp;&nbsp;<span class="pull-right" style="margin-right: 10px;"><a href="<?php //echo Yii::app()->baseUrl?>/booking/chargesledger/<?php //echo $booking->id?>"><button type="button" class="btn btn-warning btn-sm">Development Ledger</button></a></span> -->
         <?php */?>
     <br/><br/><br/>
+    </div>
     <?php
         foreach(Yii::app()->user->getFlashes() as $key => $message) {
             echo '<div class="alert alert-'.$key.' alert-dismissable"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><b>'.$message.'</b></div>';
@@ -172,6 +212,7 @@ $det = $this->getPlotLedgerDetail($booking->id);
             
             <div class="panel-heading">
                 <b style="text-transform: UPPERCASE;font-weight: bold;">View Booking (<?php echo $booking->plot->block_number.' / '.$booking->plot->plot_number?>)</b>
+                
                 <?php if(count($booking->customerPlotCancelled) > 1){?>
                     <a href="<?php echo Yii::app()->baseUrl?>/report/cancelled"><span class="pull-right"><b><span class="label label-danger">Cancelled</span></b></span></a>
                 <?php } else{?>
@@ -230,21 +271,27 @@ $det = $this->getPlotLedgerDetail($booking->id);
                 
                 <?php //}?>
                 <div class="col-lg-12">
+                    <span class=""><b><span class="label label-info">Updated By:&nbsp;&nbsp;&nbsp;<?php echo @$booking->updatedBy?></span></b></span>
                     <h3 style="text-transform: UPPERCASE;font-weight: bold;">Plot Information</h3>
+                    
                     <div class="form-group col-lg-2" style="padding-left: 0px;">
-                        <label>Block #</label>
-                        <p><?php echo $booking->plot->block_number?></p>
+                        <label>Plot Type</label>
+                        <p><?php echo $booking->plot->plot_type?></p>
                     </div>
-
-                    <!--<div class="form-group col-lg-2" >-->
-                    <!--    <label>Plot Type</label>-->
-                    <!--    <p><?php //echo $booking->plot->plot_type?></p>-->
-                    <!--</div>-->
-
+                    
                     <div class="form-group col-lg-2" >
                         <label>Plot #</label>
                         <p><?php echo $booking->plot->plot_number?></p>
                     </div>
+                    
+                    <div class="form-group col-lg-2" style="">
+                        <label>Block #</label>
+                        <p><?php echo $booking->plot->block_number?></p>
+                    </div>
+
+                    
+
+                    
                     
                     <div class="form-group col-lg-2">
                         <label>Plot Category</label>
@@ -508,7 +555,7 @@ $det = $this->getPlotLedgerDetail($booking->id);
         <div class="panel panel-default">
             <div class="panel-heading">
                 <b style="text-transform: UPPERCASE;font-weight: bold;">View Land Transactions</b>
-                <a href="<?php echo Yii::app()->baseUrl?>/booking/getmonths/id/<?php echo $booking->id?>"><span class="pull-right"><b><span class="label label-success">Add penalty</span></b></span></a>
+                <!--<a href="<?php //echo Yii::app()->baseUrl?>/booking/getmonths/id/<?php //echo $booking->id?>"><span class="pull-right"><b><span class="label label-success">Add penalty</span></b></span></a>-->
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
@@ -523,14 +570,15 @@ $det = $this->getPlotLedgerDetail($booking->id);
                             <th>Reference Number</th>
                             <th>Comment</th>
                             <th>Date</th>
-                            <th>STATUS</th>
+                            <th>Due Months</th>
+                            <th>Status</th>
                             <th>Cr By</th>
                             <th>Up By</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody>
-                       <?php $agentComArray= ['booking','confirmation','allocation'];$agentComTotal = 0;if($booking->customerPlotTransactions){ foreach($booking->customerPlotTransactions as $cpt):?>
+                       <?php /*$agentComArray= ['booking','confirmation','allocation'];$agentComTotal = 0;if($booking->customerPlotTransactions){ foreach($booking->customerPlotTransactions as $cpt):?>
                             <tr>
                                 <td style="width: 20%;"><?php echo ucfirst(@$cpt->plotPaymentMode->mode.''.(($cpt->monthlyDate!='')?' ('.$cpt->monthlyDate.')':''))?>
                                     <br/>
@@ -590,7 +638,117 @@ $det = $this->getPlotLedgerDetail($booking->id);
                                     <?php }}?>
                                 </td>
                             </tr>
-                       <?php endforeach;?>
+                       <?php endforeach;*/?>
+                       
+                        <?php
+                            $allTransactions = [];
+                            
+                            /* keep source info */
+                            if (!empty($booking->customerPlotTransactions)) {
+                                foreach ($booking->customerPlotTransactions as $t) {
+                                    $t->_source = 'normal';
+                                    $allTransactions[] = $t;
+                                }
+                            }
+                            
+                            if (!empty($booking->customerPlotExtraTransactionCustomLogic)) {
+                                foreach ($booking->customerPlotExtraTransactionCustomLogic as $t) {
+                                    $t->_source = 'extra';
+                                    $allTransactions[] = $t;
+                                }
+                            }
+                            
+                            /* sort globally */
+                            usort($allTransactions, function ($a, $b) {
+                                return strnatcmp(
+                                    ltrim($a->transaction_number, '#0'),
+                                    ltrim($b->transaction_number, '#0')
+                                );
+                            });
+                        ?>
+                        
+                        <?php
+                            $agentComArray = ['booking','confirmation','allocation'];
+                            $agentComTotal = 0;
+                            $cpttTotal = 0;
+                            
+                            foreach ($allTransactions as $txn):
+                            ?>
+                            <tr>
+                                <td style="width: 10%;">
+                                    <?php
+                                    if ($txn->_source === 'normal') {
+                                        //echo ucfirst(@$txn->plotPaymentMode->mode.''.(($txn->monthlyDate!='')?' ('.$txn->monthlyDate.')':''));
+                                        echo ucfirst(@$txn->plotPaymentMode->mode);
+                                    } else {
+                                        echo ucfirst(@$txn->plot_payment_mode);
+                                    }
+                                    ?>
+                            
+                                    <?php /*if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='monthly'){ ?>
+                                        <br><span style="font-size:10px;">
+                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'monthly',false,$txn->id)?>
+                                        </span>
+                                    <?php } ?>
+                            
+                                    <?php if ($txn->_source === 'normal' && $txn->plotPaymentMode->mode=='yearly'){ ?>
+                                        <br><span style="font-size:10px;">
+                                            <?php echo $this->getPlotLedgerDetailSingle(@$booking->id,'yearly',false,$txn->id)?>
+                                        </span>
+                                    <?php }*/ ?>
+                                </td>
+                            
+                                <td><?php echo ($this->startsWith($txn->transaction_number, '#')) ? $txn->transaction_number : '#'.ltrim($txn->transaction_number,0) ?></td>
+                                <td><?php echo $txn->transaction_type ?></td>
+                                <td><?php echo 'Rs. '.number_format($txn->amount) ?></td>
+                            
+                                <?php
+                                if ($txn->_source === 'normal' && in_array(strtolower($txn->plotPaymentMode->mode), $agentComArray)) {
+                                    $agentComTotal += $txn->amount;
+                                }
+                            
+                                if ($txn->_source === 'extra') {
+                                    $cpttTotal += $txn->amount;
+                                }
+                                ?>
+                            
+                                <td><?php echo ($txn->bank!='') ? $txn->bank.' - '.$txn->branch : '-' ?></td>
+                                <td><?php echo $txn->reference_number ?></td>
+                                <td><?php echo $txn->comment ?></td>
+                                <td><?php echo date('d M,Y',strtotime($txn->createdOn)) ?></td>
+                                <td>
+                                    <?php
+                                    $monthlyDate = @$txn->monthlyDate;
+                                    
+                                    $beforeStar = strpos($monthlyDate, '*') !== false 
+                                        ? trim(explode('*', $monthlyDate)[0]) 
+                                        : null;
+                                    
+                                    if ($beforeStar) {
+                                        echo htmlspecialchars($beforeStar);
+                                    }
+                                    ?>
+                                </td>
+                                <td>
+                                    <?php echo ($txn->status==1)
+                                        ? '<span class="label label-success">Paid</span>'
+                                        : '<span class="label label-danger">Cancelled</span><br/>'.@$txn->reason; ?>
+                                </td>
+                                <td><?php echo $txn->createdBy ?></td>
+                                <td><?php echo $txn->updatedBy ?></td>
+                            
+                                <td>
+                                    <?php if($txn->status==1){ ?>
+                                        <a target="_blank"
+                                           href="<?php echo Yii::app()->baseUrl ?>/booking/dublicateinvoice/plot/<?php echo $booking->id ?>/transaction/<?php echo str_replace('#','',$txn->transaction_number) ?>">
+                                            <span class="label label-success">Print</span>
+                                        </a>
+                                    <?php } ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+
+
 
                        <?php /*?>
 
@@ -766,33 +924,160 @@ $det = $this->getPlotLedgerDetail($booking->id);
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <!--<h3 style="text-transform: UPPERCASE;font-weight: bold;">Dealer Information</h3>-->
-                <div class="form-group col-lg-3" style="padding-left: 0px;">
-                    <label>Dealer Name</label>
-                    <p><?php echo @$booking->agent->name?></p>
-                </div>
-                <!--<div class="form-group col-lg-3" style="padding-left: 0px;">-->
-                <!--    <label>Sub Dealer Name</label>-->
-                <!--    <p><?php //echo @$booking->agent->name?></p>-->
-                <!--</div>-->
-                <?php //if($userModel['user_type']['id'] == 1){?>
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Agent Percentage(%)</label>
-                    <p><?php echo number_format(@$booking->agent_percentage,'2','.',',').'%'?></p>
-                </div>
-                
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Total Amount(B,A,C)</label>
-                    <p><?php echo number_format(@$agentComTotal,'2','.',',')?></p>
-                </div>
-                
-                <div class="form-group col-lg-2" style="padding-left: 0px;">
-                    <label>Agent Commission(PKR)</label>
-                    <p><?php echo $this->Percentage(@$agentComTotal,@$booking->agent_percentage)//echo 'PKR '.number_format(@$booking->agent_percentage,'2','.',',').'/='?></p>
-                </div>
-                <?php //}?>
-                <div class="form-group col-lg-3">
-                    <a href="<?php echo Yii::app()->baseUrl?>/expenses/add?booking_id=<?php echo @$booking->id?>"><button type="button" class="btn btn-success btn-sm">Add Commision</button></a>
+                <?php
+                $isSubDealer = ($dealerCommission && !empty($dealerCommission['is_sub_agent']) && $dealerCommission['parent'] && (int)$dealerCommission['agent']->parent_id > 0);
+                $agentPayout = ($booking->agent_id && $booking->agent) ? $booking->agent->getCommissionPayoutPlan($booking, $plotTotalAmount, 'agent') : null;
+                $parentPayout = ($isSubDealer && $booking->agent) ? $booking->agent->getCommissionPayoutPlan($booking, $plotTotalAmount, 'parent') : null;
+                $agentPaid = function ($agentId, $agentName) use ($expenses, $isSubDealer, $booking) {
+                    $paid = 0;
+                    if (empty($expenses)) {
+                        return 0;
+                    }
+                    foreach ($expenses as $ex) {
+                        if ((int)$ex->status !== 1) {
+                            continue;
+                        }
+                        $eid = isset($ex->agent_id) ? (int)$ex->agent_id : 0;
+                        if ($eid > 0) {
+                            if ($eid === (int)$agentId) {
+                                $paid += (float)$ex->amount;
+                            }
+                            continue;
+                        }
+                        if (!$isSubDealer) {
+                            $paid += (float)$ex->amount;
+                        } elseif ($agentName !== '' && strcasecmp(trim((string)$ex->paid_to), trim($agentName)) === 0) {
+                            $paid += (float)$ex->amount;
+                        }
+                    }
+                    return $paid;
+                };
+                $addCommissionBtn = function ($agentId, $agentName, $dueAmount, $role = 'agent') use ($booking, $buttonClass, $agentPaid, $plotTotalAmount) {
+                    $paid = $agentPaid($agentId, $agentName);
+                    if ((float)$dueAmount > 0 && round($paid, 2) >= round((float)$dueAmount, 2)) {
+                        return '';
+                    }
+                    $next = 0;
+                    if ($booking->agent) {
+                        $next = $booking->agent->getNextCommissionPaymentAmount($booking, $plotTotalAmount, $paid, $role);
+                    }
+                    if ($next <= 0) {
+                        return '';
+                    }
+                    $url = Yii::app()->baseUrl.'/expenses/add?booking_id='.(int)$booking->id.'&agent_id='.(int)$agentId.'&comm_amount='.$next;
+                    return '<a href="'.CHtml::encode($url).'"><button type="button" class="btn btn-success btn-xs '.$buttonClass.'">Add Commision</button></a>';
+                };
+                $remainingAmount = function ($agentId, $agentName, $dueAmount) use ($agentPaid) {
+                    $paid = $agentPaid($agentId, $agentName);
+                    return max(0, round((float)$dueAmount - $paid, 2));
+                };
+                $paidAmount = function ($agentId, $agentName) use ($agentPaid) {
+                    return round($agentPaid($agentId, $agentName), 2);
+                };
+                $formatPayout = function ($plan) {
+                    //echo '<pre>';print_r($plan);
+                    if (!$plan) {
+                        return array('monthly' => '-', 'comm' => '-', 'months' => '-');
+                    }
+                    $monthly = (float)$plan['monthly_installment'];
+                    $comm = (float)$plan['monthly_commission'];
+                    $months = (int)$plan['months_total'];
+                    $percent = rtrim(rtrim(number_format((float)$plan['payout_percent'], 2, '.', ''), '0'), '.');
+                    return array(
+                        'monthly' => number_format($monthly),
+                        'comm' => number_format($comm).' ('.$percent.'%)',
+                        'months' => $months ? $months : '0',
+                    );
+                };
+                $agentPayoutCells = $formatPayout($agentPayout);
+                $parentPayoutCells = $formatPayout($parentPayout);
+                ?>
+                <p class="help-block" style="margin-top:0;">
+                    Commission is paid from the payment-schedule monthly installment:
+                    agent <b><?php echo (int)Agents::$agentMonthlyPayoutPercent?>%</b><?php if($isSubDealer){ ?>, parent <b><?php echo (int)Agents::$parentMonthlyPayoutPercent?>%</b><?php } ?>.
+                    Monthly installment, monthly commission and months come from the payment schedule (no monthly transaction required to display).
+                </p>
+                <div class="col-lg-12" style="padding-left: 0px;">
+                    <table width="100%" class="table table-striped table-bordered table-hover">
+                        <thead>
+                            <tr>
+                                <th>Dealer Name</th>
+                                <th>Dealer Booking #</th>
+                                <th>Commission Slab</th>
+                                <th>%</th>
+                                <th>Total Amount</th>
+                                <th>Agent Commission (PKR)</th>
+                                <th>Monthly Inst.</th>
+                                <th>Monthly Comm.</th>
+                                <th>Months</th>
+                                <th>Paid Commission</th>
+                                <th>Remaining Commission</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        <?php if($isSubDealer){ ?>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['parent']->name)?></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><?php echo number_format($dealerCommission['parent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['parent_amount'])?></td>
+                                <td><?php echo $parentPayoutCells['monthly']?></td>
+                                <td><?php echo $parentPayoutCells['comm']?></td>
+                                <td><?php echo $parentPayoutCells['months']?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['parent']->id, $dealerCommission['parent']->name, $dealerCommission['parent_amount'], 'parent')?></td>
+                            </tr>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['agent']->name)?></td>
+                                <td><?php echo (int)$dealerCommission['sequence']?></td>
+                                <td><?php echo CHtml::encode($dealerCommission['tier_label'])?></td>
+                                <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'], 'agent')?></td>
+                            </tr>
+                        <?php } elseif($dealerCommission){ ?>
+                            <tr>
+                                <td><?php echo CHtml::encode($dealerCommission['agent']->name)?></td>
+                                <td><?php echo (int)$dealerCommission['sequence']?></td>
+                                <td><?php echo CHtml::encode($dealerCommission['tier_label'])?></td>
+                                <td><?php echo number_format($dealerCommission['agent_percent'], 2, '.', ',')?>%</td>
+                                <td><?php echo number_format($plotTotalAmount, 2, '.', ',')?></td>
+                                <td><?php echo number_format($dealerCommission['agent_amount'])?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
+                                <td><?php echo number_format($paidAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name))?></td>
+                                <td><?php echo number_format($remainingAmount($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount']))?></td>
+                                <td><?php echo $addCommissionBtn($dealerCommission['agent']->id, $dealerCommission['agent']->name, $dealerCommission['agent_amount'], 'agent')?></td>
+                            </tr>
+                        <?php } else { ?>
+                            <tr>
+                                <td><?php echo @$booking->agent->name?></td>
+                                <td>-</td>
+                                <td>-</td>
+                                <td><?php echo number_format(@$booking->agent_percentage, 2, '.', ',')?>%</td>
+                                <td><?php echo number_format(@$agentComTotal, 2, '.', ',')?></td>
+                                <td><?php echo $this->Percentage(@$agentComTotal, @$booking->agent_percentage)?></td>
+                                <td><?php echo $agentPayoutCells['monthly']?></td>
+                                <td><?php echo $agentPayoutCells['comm']?></td>
+                                <td><?php echo $agentPayoutCells['months']?></td>
+                                <td><?php echo $booking->agent_id ? number_format($paidAmount($booking->agent_id, @$booking->agent->name)) : '0'?></td>
+                                <td><?php echo $booking->agent_id ? number_format($remainingAmount($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0))) : '0'?></td>
+                                <td><?php echo $booking->agent_id ? $addCommissionBtn($booking->agent_id, @$booking->agent->name, $this->Percentage(@$agentComTotal, @$booking->agent_percentage, 0), 'agent') : ''?></td>
+                            </tr>
+                        <?php } ?>
+                        </tbody>
+                    </table>
                 </div>
                 <?php if($booking->agent_id && $expenses){?>
                 <div class="col-lg-12" style="padding-left: 0px;">
@@ -800,6 +1085,7 @@ $det = $this->getPlotLedgerDetail($booking->id);
                         <thead>
                             <tr>
                                 <th>Expense Ref No.</th>
+                                <th>Dealer</th>
                                 <th>Desc.</th>
                                 <th>Paid Amount</th>
                                 <th>Payment Mode</th>
@@ -814,6 +1100,7 @@ $det = $this->getPlotLedgerDetail($booking->id);
                             <?php $tct = 0;foreach($expenses as $expense):$btn = '';?>
                             <tr style="background-color: lightgray;">
                                 <td><?php echo $this->getExpenseRegNo($expense->id,'expense')?></td>
+                                <td><b><?php echo @$expense->agent->name ? CHtml::encode($expense->agent->name) : CHtml::encode($expense->paid_to)?></b></td>
                                 <td><b><?php echo 'Rs. '.number_format($expense->amount)?></b></td>
                                <td><b><?php echo $expense->description?></b></td>
                                 <td><b><?php echo $expense->payment_mode?></b></td>
@@ -824,6 +1111,9 @@ $det = $this->getPlotLedgerDetail($booking->id);
                                     <?php
                                         if($expense->status==0){
                                             $btn ='<span class="label label-danger">Rejected</span>&nbsp;';
+                                        }
+                                        if($expense->status==2){
+                                            $btn ='<span class="label label-warning">Pending</span>&nbsp;';
                                         }
                                         if($expense->status==1){
                                             $tct = $tct + $expense->amount;

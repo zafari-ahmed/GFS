@@ -335,6 +335,38 @@ class CustomerPlots extends CActiveRecord
 	}
 	*/
 
+	public function getScheduleMonthlyInstallment()
+	{
+		if (empty($this->payment_schedule_json)) {
+			return 0;
+		}
+		$decoded = json_decode($this->payment_schedule_json, true);
+		if (!is_array($decoded) || empty($decoded['rows']) || !is_array($decoded['rows'])) {
+			return 0;
+		}
+		foreach ($decoded['rows'] as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			$heading1 = isset($row['heading1']) ? $row['heading1'] : '';
+			$heading2 = isset($row['heading2']) ? $row['heading2'] : '';
+			if (self::resolveScheduleModeKey($heading1, $heading2) !== 'monthly') {
+				continue;
+			}
+			if (isset($row['installment']) && trim((string)$row['installment']) !== '') {
+				$installment = (float)str_replace(',', '', $row['installment']);
+				if ($installment > 0) {
+					return $installment;
+				}
+			}
+			$parsed = self::parseScheduleValue(isset($row['value']) ? $row['value'] : '');
+			if ($parsed['amount'] > 0) {
+				return (float)$parsed['amount'];
+			}
+		}
+		return 0;
+	}
+
 	/**
 	 * Calculate dues from payment_schedule_json dates.
 	 *

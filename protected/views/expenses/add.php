@@ -112,12 +112,16 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                                 <?php if(!empty($commissionAgent)){ ?>
                                 <input type="hidden" name="agent_id" value="<?php echo (int)$commissionAgent->id?>">
                                 <?php } ?>
+                                <?php if(!empty($commissionHash)){ ?>
+                                <input type="hidden" name="comm_hash" value="<?php echo CHtml::encode($commissionHash)?>">
+                                <?php } ?>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <?php }?>
                             <div class="form-group col-lg-3">
                                 <label>Amount</label>
-                                <input class="form-control" type="number" name="amount" id="amount" placeholder="Amount" required="" value="<?php echo isset($_GET['comm_amount']) ? CHtml::encode($_GET['comm_amount']) : ''?>">
+                                <?php $commissionAmount = isset($commissionAmount) ? $commissionAmount : ''; ?>
+                                <input class="form-control" type="number" name="amount" id="amount" placeholder="Amount" required="" value="<?php echo $commissionAmount !== '' ? CHtml::encode($commissionAmount) : ''?>" <?php echo $commissionAmount !== '' ? 'readonly' : ''?>>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-4">

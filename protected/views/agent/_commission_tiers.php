@@ -16,7 +16,8 @@ if (!$tiers) {
             <p class="help-block" style="margin-top:0;">
                 Set commission against how many customer plots this dealer has booked (counted in booking date order).</br>
                 Leave <strong>To</strong> empty for onwards (example: 25 onwards = 25%).</br>
-                If a <strong>sub-agent</strong> books, the parent also gets <b><?php echo (int)Agents::$parentCommissionPercent?>%</b> of the booking total.
+                If a <strong>sub-agent</strong> books, the parent also gets <b><?php echo (int)Agents::$parentCommissionPercent?>%</b> of the booking total.</br>
+                Commission is paid from monthly installments: agent <b><?php echo (int)Agents::$agentMonthlyPayoutPercent?>%</b><?php if ((int)Agents::$parentMonthlyPayoutPercent > 0) { ?>, parent <b><?php echo (int)Agents::$parentMonthlyPayoutPercent?>%</b><?php } ?>.
             </p>
             <div class="row" style="font-weight:bold;margin-bottom:6px;">
                 <div class="col-lg-3">From (bookings)</div>

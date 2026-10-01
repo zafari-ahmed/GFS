@@ -22,6 +22,23 @@ class Agents extends CActiveRecord
 	public static $parentCommissionPercent = 5;
 
 	/**
+	 * Share of each monthly installment paid out as agent commission.
+	 */
+	public static $agentMonthlyPayoutPercent = 45;
+
+	/**
+	 * Share of each monthly installment paid out as parent commission.
+	 */
+	public static $parentMonthlyPayoutPercent = 5;
+
+	/**
+	 * Add Commission button only:
+	 * 0 = monthly payout (hide after that month's commission is paid)
+	 * 1 = always show while remaining commission exists (not tied to month-wise earned)
+	 */
+	public static $customPayout = 1;
+
+	/**
 	 * @return string the associated database table name
 	 */
 	public function tableName()
@@ -88,6 +105,21 @@ class Agents extends CActiveRecord
 	public static function getParentCommissionPercent()
 	{
 		return (float)self::$parentCommissionPercent;
+	}
+
+	public static function getAgentMonthlyPayoutPercent()
+	{
+		return (float)self::$agentMonthlyPayoutPercent;
+	}
+
+	public static function getParentMonthlyPayoutPercent()
+	{
+		return (float)self::$parentMonthlyPayoutPercent;
+	}
+
+	public static function isCustomPayout()
+	{
+		return (int)self::$customPayout === 1;
 	}
 
 	public function getCommissionPercentByBookingCount($count)
@@ -178,6 +210,223 @@ class Agents extends CActiveRecord
 		}
 
 		return $result;
+	}
+
+	public function getMonthlyInstallmentForBooking($booking)
+	{
+		if (!$booking) {
+			return 0;
+		}
+		if (method_exists($booking, 'getScheduleMonthlyInstallment')) {
+			$fromSchedule = (float)$booking->getScheduleMonthlyInstallment();
+			if ($fromSchedule > 0) {
+				return $fromSchedule;
+			}
+		}
+		if (!$booking->plot) {
+			return 0;
+		}
+		$months = (int)$booking->monthlyMonths;
+		if ($months <= 0) {
+			$months = 36;
+		}
+
+		$totalMonthly = 0;
+		if ($booking->customerpaymentSchedule) {
+			foreach ($booking->customerpaymentSchedule as $mode) {
+				if (strtolower($mode->mode) === 'monthly' && (float)$mode->amount > 0) {
+					$totalMonthly = (float)$mode->amount;
+					break;
+				}
+			}
+		}
+
+		if ($totalMonthly <= 0) {
+			$scheduleId = 0;
+			if (!empty($booking->is_special)) {
+				$scheduleId = $booking->is_special;
+			} elseif ($booking->paymentSchedule) {
+				$scheduleId = $booking->paymentSchedule->id;
+			}
+
+			if ($scheduleId) {
+				$plotKeys = array();
+				if ($booking->plot->block_number !== '' && $booking->plot->block_number !== null) {
+					$plotKeys[] = strtolower($booking->plot->block_number);
+				}
+				if ($booking->plot->plot_type !== '' && $booking->plot->plot_type !== null) {
+					$plotKeys[] = strtolower($booking->plot->plot_type);
+				}
+
+				$modes = PaymentSchedulePaymentModes::model()->findAll(
+					'payment_schedule_id = :id',
+					array(':id' => $scheduleId)
+				);
+				$monthlyModes = array();
+				foreach ($modes as $mode) {
+					if (strtolower($mode->mode) === 'monthly' && (float)$mode->amount > 0) {
+						$monthlyModes[] = $mode;
+					}
+				}
+				foreach ($monthlyModes as $mode) {
+					if (in_array(strtolower($mode->plot_type), $plotKeys, true)) {
+						$totalMonthly = (float)$mode->amount;
+						break;
+					}
+				}
+				if ($totalMonthly <= 0 && count($monthlyModes) === 1) {
+					$totalMonthly = (float)$monthlyModes[0]->amount;
+				}
+			}
+		}
+
+		if ($totalMonthly <= 0 || $months <= 0) {
+			return 0;
+		}
+		return $totalMonthly / $months;
+	}
+
+	public function getPaidMonthlyInstallmentCount($booking)
+	{
+		$installment = $this->getMonthlyInstallmentForBooking($booking);
+		if ($installment <= 0 || !$booking || empty($booking->id)) {
+			return 0;
+		}
+		$sum = Yii::app()->db->createCommand()
+			->select('SUM(t.amount)')
+			->from('customer_plot_transactions t')
+			->join('payment_schedule_payment_modes p', 'p.id = t.plot_payment_mode_id')
+			->where('t.status = 1 AND t.plot_id = :id AND LOWER(p.mode) = :mode', array(
+				':id' => $booking->id,
+				':mode' => 'monthly',
+			))
+			->queryScalar();
+		return (int)floor(((float)$sum) / $installment);
+	}
+
+	public function getCommissionPayoutPlan($booking, $totalAmount, $role = 'agent')
+	{
+		$breakdown = $this->getBookingCommissionBreakdown($booking, $totalAmount);
+		$installment = $this->getMonthlyInstallmentForBooking($booking);
+		if ($role === 'parent') {
+			$totalCommission = (float)$breakdown['parent_amount'];
+			$payoutPercent = self::getParentMonthlyPayoutPercent();
+		} else {
+			$totalCommission = (float)$breakdown['agent_amount'];
+			$payoutPercent = self::getAgentMonthlyPayoutPercent();
+		}
+
+		$monthlyCommission = ($payoutPercent / 100) * $installment;
+		$monthsExact = ($monthlyCommission > 0) ? ($totalCommission / $monthlyCommission) : 0;
+		$monthsTotal = ($monthsExact > 0) ? (int)ceil($monthsExact - 0.0000001) : 0;
+		$paidMonthlyCount = $this->getPaidMonthlyInstallmentCount($booking);
+		$earnedMonths = ($monthsTotal > 0) ? min($paidMonthlyCount, $monthsTotal) : 0;
+
+		if ($monthsTotal > 0 && $paidMonthlyCount >= $monthsTotal) {
+			$earnedAmount = $totalCommission;
+		} else {
+			$earnedAmount = $earnedMonths * $monthlyCommission;
+			if ($earnedAmount > $totalCommission) {
+				$earnedAmount = $totalCommission;
+			}
+		}
+
+		return array(
+			'role' => $role,
+			'monthly_installment' => $installment,
+			'payout_percent' => $payoutPercent,
+			'monthly_commission' => $monthlyCommission,
+			'months_exact' => $monthsExact,
+			'months_total' => $monthsTotal,
+			'paid_monthly_count' => $paidMonthlyCount,
+			'earned_months' => $earnedMonths,
+			'total_commission' => $totalCommission,
+			'earned_amount' => $earnedAmount,
+		);
+	}
+
+	public function getNextCommissionPaymentAmount($booking, $totalAmount, $alreadyPaid, $role = 'agent')
+	{
+		$plan = $this->getCommissionPayoutPlan($booking, $totalAmount, $role);
+		$alreadyPaid = (float)$alreadyPaid;
+		$remainingTotal = max(0, $plan['total_commission'] - $alreadyPaid);
+		$earnedRemaining = max(0, $plan['earned_amount'] - $alreadyPaid);
+		if ($remainingTotal <= 0 || $earnedRemaining <= 0 || $plan['monthly_commission'] <= 0) {
+			return 0;
+		}
+		$next = min($plan['monthly_commission'], $earnedRemaining, $remainingTotal);
+		return round($next, 2);
+	}
+
+	public function getAddCommissionButtonAmount($booking, $totalAmount, $alreadyPaid, $role = 'agent')
+	{
+		$alreadyPaid = (float)$alreadyPaid;
+		if (!self::isCustomPayout()) {
+			return $this->getNextCommissionPaymentAmount($booking, $totalAmount, $alreadyPaid, $role);
+		}
+		$plan = $this->getCommissionPayoutPlan($booking, $totalAmount, $role);
+		$remainingTotal = max(0, $plan['total_commission'] - $alreadyPaid);
+		if ($remainingTotal <= 0) {
+			return 0;
+		}
+		$monthly = (float)$plan['monthly_commission'];
+		if ($monthly <= 0) {
+			return round($remainingTotal, 2);
+		}
+		return round(min($monthly, $remainingTotal), 2);
+	}
+
+	protected static function commissionHashSecret()
+	{
+		$sm = Yii::app()->getComponent('securityManager');
+		if ($sm && !empty($sm->validationKey)) {
+			return $sm->validationKey;
+		}
+		return 'gfs-commission-amount-'.Yii::app()->getId();
+	}
+
+	public static function encodeCommissionAmount($bookingId, $agentId, $amount, $role = 'agent')
+	{
+		$payload = json_encode(array(
+			'b' => (int)$bookingId,
+			'a' => (int)$agentId,
+			'm' => round((float)$amount, 2),
+			'r' => (string)$role,
+		));
+		$body = rtrim(strtr(base64_encode($payload), '+/', '-_'), '=');
+		$sig = hash_hmac('sha256', $body, self::commissionHashSecret());
+		return $body.'.'.$sig;
+	}
+
+	public static function decodeCommissionAmount($hash, $bookingId, $agentId)
+	{
+		$hash = trim((string)$hash);
+		if ($hash === '' || strpos($hash, '.') === false) {
+			return null;
+		}
+		$parts = explode('.', $hash, 2);
+		if (count($parts) !== 2 || $parts[0] === '' || $parts[1] === '') {
+			return null;
+		}
+		list($body, $sig) = $parts;
+		$expected = hash_hmac('sha256', $body, self::commissionHashSecret());
+		$valid = function_exists('hash_equals') ? hash_equals($expected, $sig) : ($expected === $sig);
+		if (!$valid) {
+			return null;
+		}
+		$pad = strlen($body) % 4;
+		if ($pad) {
+			$body .= str_repeat('=', 4 - $pad);
+		}
+		$json = base64_decode(strtr($body, '-_', '+/'), true);
+		$payload = json_decode($json, true);
+		if (!is_array($payload) || !isset($payload['b'], $payload['a'], $payload['m'])) {
+			return null;
+		}
+		if ((int)$payload['b'] !== (int)$bookingId || (int)$payload['a'] !== (int)$agentId) {
+			return null;
+		}
+		return round((float)$payload['m'], 2);
 	}
 
 	public function formatCommissionTierLabel($tier, $percent)

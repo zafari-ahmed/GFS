@@ -64,13 +64,39 @@ function h($v) {
     return htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
 }
 
-function psIsMonthlyHeading($heading1, $heading2 = '') {
+function psRepeatType($heading1, $heading2 = '') {
     $values = array(
         strtolower(trim((string)$heading1)),
         strtolower(trim((string)$heading2)),
     );
-    return in_array('monthly', $values, true)
-        || in_array('monthly installment', $values, true);
+    foreach ($values as $value) {
+        if ($value === 'monthly' || $value === 'monthly installment') {
+            return 'monthly';
+        }
+        if ($value === 'yearly') {
+            return 'yearly';
+        }
+        if ($value === 'half yearly') {
+            return 'half_yearly';
+        }
+        if ($value === 'quarterly' || $value === 'quarterly installment') {
+            return 'quarterly';
+        }
+    }
+    return '';
+}
+
+function psRepeatLabels($type) {
+    if ($type === 'yearly') {
+        return array('Yearly installment', 'Years', 'Total');
+    }
+    if ($type === 'half_yearly') {
+        return array('Half yearly installment', 'Times', 'Total');
+    }
+    if ($type === 'quarterly') {
+        return array('Quarterly installment', 'Times', 'Total');
+    }
+    return array('Monthly installment', 'Months', 'Total');
 }
 
 function psDateInputValue($date) {
@@ -85,17 +111,26 @@ function psDateInputValue($date) {
     return $ts ? date('Y-m-d', $ts) : '';
 }
 
-function psSplitMonthlyValue($value) {
+function psSplitMonthlyParts($value, $row = array()) {
+    $installment = isset($row['installment']) ? trim((string)$row['installment']) : '';
+    $months = isset($row['months']) ? trim((string)$row['months']) : '';
+    $total = isset($row['total']) ? trim((string)$row['total']) : '';
+    if ($installment !== '' || $months !== '' || $total !== '') {
+        return array($installment, $months, $total);
+    }
+
     $main = trim((string)$value);
-    $extra = '';
     $firstLine = preg_split("/\r\n|\n/", $main);
     $main = trim($firstLine[0]);
     if (strpos($main, '=') !== false) {
         $parts = preg_split('/\s*=\s*/', $main, 2);
         $main = trim($parts[0]);
-        $extra = isset($parts[1]) ? trim($parts[1]) : '';
+        $total = isset($parts[1]) ? trim($parts[1]) : '';
     }
-    return array($main, $extra);
+    if (preg_match('/^([\d,\.]+)\s*[xX*]\s*([\d,\.]+)$/', $main, $matches)) {
+        return array($matches[1], $matches[2], $total);
+    }
+    return array($main, $months, $total);
 }
 
 function psFormatAmountValue($value) {
@@ -144,11 +179,31 @@ function psFormatAmountValue($value) {
         flex: 1;
     }
 
-    .monthly-extra-input {
+    .monthly-extra-col {
         display: none;
     }
 
-    .monthly-extra-input.is-visible {
+    .value-fields.is-monthly .monthly-extra-col {
+        display: block;
+    }
+
+    .ps-value-col {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+    }
+
+    .ps-value-label {
+        display: none;
+        font-size: 10px;
+        font-weight: bold;
+        line-height: 1.2;
+        margin-bottom: 4px;
+        color: #333;
+        white-space: nowrap;
+    }
+
+    .value-fields.is-monthly .ps-value-label {
         display: block;
     }
 
@@ -243,10 +298,13 @@ function psFormatAmountValue($value) {
                     $selH2 = 'Monthly';
                 }
                 $val   = $row['value'] ?? '';
-                $isMonthly = psIsMonthlyHeading($selH1, $selH2);
+                $repeatType = psRepeatType($selH1, $selH2);
+                $isRepeat = $repeatType !== '';
+                $repeatLabels = psRepeatLabels($repeatType);
+                $valMonths = '';
                 $valExtra = '';
-                if ($isMonthly) {
-                    list($val, $valExtra) = psSplitMonthlyValue($val);
+                if ($isRepeat) {
+                    list($val, $valMonths, $valExtra) = psSplitMonthlyParts($val, $row);
                 }
 
         ?>
@@ -302,21 +360,38 @@ function psFormatAmountValue($value) {
                 </td>
 
                 <td>
-                    <div class="value-fields">
-                        <input
-                            type="text"
-                            class="ps-amount"
-                            name="rows[<?php echo $rowKey; ?>][value]"
-                            value="<?php echo h(psFormatAmountValue($val)); ?>"
-                            placeholder="0.00"
-                            >
-                        <input
-                            type="text"
-                            class="monthly-extra-input ps-amount<?php echo $isMonthly ? ' is-visible' : ''; ?>"
-                            name="rows[<?php echo $rowKey; ?>][value_extra]"
-                            value="<?php echo h(psFormatAmountValue($valExtra)); ?>"
-                            placeholder="Total"
-                            <?php echo $isMonthly ? '' : 'disabled'; ?>>
+                    <div class="value-fields<?php echo $isRepeat ? ' is-monthly' : ''; ?>">
+                        <div class="ps-value-col">
+                            <div class="ps-value-label"><?php echo h($repeatLabels[0]); ?></div>
+                            <input
+                                type="text"
+                                class="ps-amount ps-installment"
+                                name="rows[<?php echo $rowKey; ?>][value]"
+                                value="<?php echo h(psFormatAmountValue($val)); ?>"
+                                placeholder="1000"
+                                oninput="updateMonthlyTotal(this)">
+                        </div>
+                        <div class="ps-value-col monthly-extra-col">
+                            <div class="ps-value-label"><?php echo h($repeatLabels[1]); ?></div>
+                            <input
+                                type="text"
+                                class="ps-months"
+                                name="rows[<?php echo $rowKey; ?>][value_months]"
+                                value="<?php echo h($valMonths); ?>"
+                                placeholder="2"
+                                <?php echo $isRepeat ? '' : 'disabled'; ?>
+                                oninput="updateMonthlyTotal(this)">
+                        </div>
+                        <div class="ps-value-col monthly-extra-col">
+                            <div class="ps-value-label"><?php echo h($repeatLabels[2]); ?></div>
+                            <input
+                                type="text"
+                                class="ps-amount ps-total"
+                                name="rows[<?php echo $rowKey; ?>][value_extra]"
+                                value="<?php echo h(psFormatAmountValue($valExtra)); ?>"
+                                placeholder="2000"
+                                <?php echo $isRepeat ? '' : 'disabled'; ?>>
+                        </div>
                     </div>
                 </td>
 
@@ -391,19 +466,37 @@ function psFormatAmountValue($value) {
 
                 <td>
                     <div class="value-fields">
-                        <input
-                            type="text"
-                            class="ps-amount"
-                            name="rows[<?php echo $rowKey; ?>][value]"
-                            value=""
-                            placeholder="0.00">
-                        <input
-                            type="text"
-                            class="monthly-extra-input ps-amount"
-                            name="rows[<?php echo $rowKey; ?>][value_extra]"
-                            value=""
-                            placeholder="Total"
-                            disabled>
+                        <div class="ps-value-col">
+                            <div class="ps-value-label">Monthly installment</div>
+                            <input
+                                type="text"
+                                class="ps-amount ps-installment"
+                                name="rows[<?php echo $rowKey; ?>][value]"
+                                value=""
+                                placeholder="0.00"
+                                oninput="updateMonthlyTotal(this)">
+                        </div>
+                        <div class="ps-value-col monthly-extra-col">
+                            <div class="ps-value-label">Months</div>
+                            <input
+                                type="text"
+                                class="ps-months"
+                                name="rows[<?php echo $rowKey; ?>][value_months]"
+                                value=""
+                                placeholder="2"
+                                disabled
+                                oninput="updateMonthlyTotal(this)">
+                        </div>
+                        <div class="ps-value-col monthly-extra-col">
+                            <div class="ps-value-label">Total</div>
+                            <input
+                                type="text"
+                                class="ps-amount ps-total"
+                                name="rows[<?php echo $rowKey; ?>][value_extra]"
+                                value=""
+                                placeholder="2000"
+                                disabled>
+                        </div>
                     </div>
                 </td>
 
@@ -549,20 +642,38 @@ function addRow() {
 
         <td>
             <div class="value-fields">
-                <input
-                    type="text"
-                    class="ps-amount"
-                    name="rows[${rowKey}][value]"
-                    value=""
-                    placeholder="100 * 20"
-                    required>
-                <input
-                    type="text"
-                    class="monthly-extra-input ps-amount"
-                    name="rows[${rowKey}][value_extra]"
-                    value=""
-                    placeholder="Total"
-                    disabled>
+                <div class="ps-value-col">
+                    <div class="ps-value-label">Monthly installment</div>
+                    <input
+                        type="text"
+                        class="ps-amount ps-installment"
+                        name="rows[${rowKey}][value]"
+                        value=""
+                        placeholder="1000"
+                        required
+                        oninput="updateMonthlyTotal(this)">
+                </div>
+                <div class="ps-value-col monthly-extra-col">
+                    <div class="ps-value-label">Months</div>
+                    <input
+                        type="text"
+                        class="ps-months"
+                        name="rows[${rowKey}][value_months]"
+                        value=""
+                        placeholder="2"
+                        disabled
+                        oninput="updateMonthlyTotal(this)">
+                </div>
+                <div class="ps-value-col monthly-extra-col">
+                    <div class="ps-value-label">Total</div>
+                    <input
+                        type="text"
+                        class="ps-amount ps-total"
+                        name="rows[${rowKey}][value_extra]"
+                        value=""
+                        placeholder="2000"
+                        disabled>
+                </div>
             </div>
         </td>
 
@@ -589,9 +700,34 @@ function addRow() {
 }
 
 
-function isMonthlyHeading(value) {
+function getRepeatType(value) {
     const heading = (value || '').toLowerCase();
-    return heading === 'monthly' || heading === 'monthly installment';
+    if (heading === 'monthly' || heading === 'monthly installment') {
+        return 'monthly';
+    }
+    if (heading === 'yearly') {
+        return 'yearly';
+    }
+    if (heading === 'half yearly') {
+        return 'half_yearly';
+    }
+    if (heading === 'quarterly' || heading === 'quarterly installment') {
+        return 'quarterly';
+    }
+    return '';
+}
+
+function getRepeatLabels(type) {
+    if (type === 'yearly') {
+        return ['Yearly installment', 'Years', 'Total'];
+    }
+    if (type === 'half_yearly') {
+        return ['Half yearly installment', 'Times', 'Total'];
+    }
+    if (type === 'quarterly') {
+        return ['Quarterly installment', 'Times', 'Total'];
+    }
+    return ['Monthly installment', 'Months', 'Total'];
 }
 
 function toggleMonthlyExtra(select) {
@@ -604,18 +740,60 @@ function toggleMonthlyExtra(select) {
         return;
     }
 
-    const extra = row.querySelector('.monthly-extra-input');
-    if (!extra) {
-        return;
-    }
-
+    const wrap = row.querySelector('.value-fields');
+    const extras = row.querySelectorAll('.monthly-extra-col input');
     const heading1 = row.querySelector('.heading1-select');
     const heading2 = row.querySelector('.heading2-select');
-    const isMonthly = isMonthlyHeading(heading1 ? heading1.value : '')
-        || isMonthlyHeading(heading2 ? heading2.value : '');
-    extra.classList.toggle('is-visible', isMonthly);
-    extra.disabled = !isMonthly;
-    extra.style.display = isMonthly ? 'block' : 'none';
+    const type = getRepeatType(heading1 ? heading1.value : '')
+        || getRepeatType(heading2 ? heading2.value : '');
+    const isRepeat = type !== '';
+
+    if (wrap) {
+        wrap.classList.toggle('is-monthly', isRepeat);
+        const labels = getRepeatLabels(type);
+        wrap.querySelectorAll('.ps-value-label').forEach(function(label, index) {
+            if (labels[index]) {
+                label.textContent = labels[index];
+            }
+        });
+    }
+    extras.forEach(function(extra) {
+        extra.disabled = !isRepeat;
+        if (!isRepeat) {
+            extra.value = '';
+        }
+    });
+    if (isRepeat) {
+        updateMonthlyTotal(row.querySelector('.ps-installment') || row.querySelector('.ps-months'));
+    }
+}
+
+function parsePlainNumber(value) {
+    const number = parseFloat(String(value || '').replace(/,/g, ''));
+    return isNaN(number) ? 0 : number;
+}
+
+function updateMonthlyTotal(input) {
+    if (!input) {
+        return;
+    }
+    const row = input.closest('tr');
+    if (!row) {
+        return;
+    }
+    const wrap = row.querySelector('.value-fields');
+    if (!wrap || !wrap.classList.contains('is-monthly')) {
+        return;
+    }
+    const installment = parsePlainNumber((row.querySelector('.ps-installment') || {}).value);
+    const months = parsePlainNumber((row.querySelector('.ps-months') || {}).value);
+    const totalInput = row.querySelector('.ps-total');
+    if (!totalInput) {
+        return;
+    }
+    if (installment > 0 && months > 0) {
+        totalInput.value = formatAmountValue(String(installment * months));
+    }
 }
 
 
