@@ -1,0 +1,59 @@
+[12-Jan-2026 10:24:00 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/gulshanebholari/public_html/qr/test.php:1) in /home/gulshanebholari/public_html/qr/test.php on line 7
+[12-Jan-2026 10:24:00 UTC] PHP Warning:  Cannot modify header information - headers already sent by (output started at /home/gulshanebholari/public_html/qr/test.php:1) in /home/gulshanebholari/public_html/qr/qrimage.php on line 35
+[05-Apr-2026 13:30:01 UTC] PHP Warning:  Undefined array key "id" in /home/gulshanebholari/public_html/qr/test.php on line 3
+[29-Sep-2026 12:15:05 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[30-Sep-2026 11:45:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[01-Oct-2026 06:54:44 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[01-Oct-2026 06:55:46 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[01-Oct-2026 07:20:17 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[01-Oct-2026 07:36:15 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
+[02-Oct-2026 07:00:54 UTC] PHP Fatal error:  Uncaught Error: Call to undefined function ImageCreate() in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php:74
+Stack trace:
+#0 /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php(32): QRimage::image()
+#1 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(494): QRimage::png()
+#2 /home/thetrainedmanwin/public_html/gfs/qr/qrencode.php(286): QRencode->encodePNG()
+#3 /home/thetrainedmanwin/public_html/gfs/qr/test.php(5): QRcode::png()
+#4 {main}
+  thrown in /home/thetrainedmanwin/public_html/gfs/qr/qrimage.php on line 74
