@@ -21,21 +21,88 @@ class Controller extends CController
 	 */
 	public $breadcrumbs=array();
 
+	/**
+	 * Minutes of no activity before the session expires.
+	 * Change here or in params['sessionIdleMinutes'].
+	 */
+	public static $sessionIdleMinutes = 30;
+
 	public function checkSession() {
-        if (!isset(Yii::app()->session['userModel'])) {
-            $previousUrl=Yii::app()->request->urlReferrer;
-            Yii::app()->session['urlReferer']=$previousUrl;
-            //echo "<body onLoad='artificialbody()'></body>";
-            //return false;
-            //exit();
-            Yii::app()->user->setFlash('error','Please Login the get back to the previous page');
-            $this->redirect(Yii::app()->params['AppUrl']);
-            //$this->redirect(Yii::app()->request->urlReferrer);
-        }
+		$this->enforceSession();
+	}
+
+	protected function getSessionIdleMinutes()
+	{
+		if (isset(Yii::app()->params['sessionIdleMinutes']) && Yii::app()->params['sessionIdleMinutes'] !== '') {
+			return (int)Yii::app()->params['sessionIdleMinutes'];
+		}
+		return (int)self::$sessionIdleMinutes;
+	}
+
+	protected function isPublicAction($action)
+	{
+		$controller = strtolower($this->id);
+		$actionId = strtolower($action->id);
+		$public = array(
+			'site' => array('index', 'login', 'logout', 'error', 'captcha'),
+			'api' => array('authenticate'),
+		);
+		if ($controller === 'gii') {
+			return true;
+		}
+		return isset($public[$controller]) && in_array($actionId, $public[$controller], true);
+	}
+
+	protected function loginUrl()
+	{
+		return !empty(Yii::app()->params['AppUrl']) ? Yii::app()->params['AppUrl'] : Yii::app()->baseUrl.'/';
+	}
+
+	protected function expireAndRedirectToLogin($message)
+	{
+		Yii::app()->session->remove('userModel');
+		Yii::app()->session->remove('lastActivity');
+		Yii::app()->user->logout();
+		$loginUrl = $this->loginUrl();
+		if (Yii::app()->request->isAjaxRequest) {
+			header('Content-Type: application/json');
+			echo json_encode(array(
+				'error' => 1,
+				'session_expired' => 1,
+				'message' => $message,
+				'redirect' => $loginUrl,
+			));
+			Yii::app()->end();
+		}
+		Yii::app()->user->setFlash('danger', $message);
+		$this->redirect($loginUrl);
+	}
+
+	protected function enforceSession()
+	{
+		$userModel = Yii::app()->session->get('userModel');
+		$now = time();
+		$idleMinutes = $this->getSessionIdleMinutes();
+		$lastActivity = Yii::app()->session->get('lastActivity');
+
+		if (empty($userModel)) {
+			$this->expireAndRedirectToLogin('Your session has expired. Please login again.');
+			return;
+		}
+
+		if ($idleMinutes > 0 && !empty($lastActivity) && ($now - (int)$lastActivity) > ($idleMinutes * 60)) {
+			$this->expireAndRedirectToLogin('Your session expired due to inactivity. Please login again.');
+			return;
+		}
+
+		Yii::app()->session['lastActivity'] = $now;
 	}
 
 	protected function beforeAction($action)
 	{
+		if (!$this->isPublicAction($action)) {
+			$this->enforceSession();
+		}
 		$this->logUserActivity($action);
 		return parent::beforeAction($action);
 	}

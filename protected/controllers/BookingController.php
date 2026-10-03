@@ -1894,7 +1894,7 @@ class BookingController extends Controller
             }
             $plotTotalText = $plotTotalText + $this->plotExtra($booking->plot->id,false,true,true);
 	        $list[$count][] = @$plotTotalText;
-	        $list[$count][] = @$$booking->customerPlotTransactionSum;
+	        $list[$count][] = @$booking->customerPlotTransactionSum;
 	        $list[$count][] = @$plotTotalText-$booking->customerPlotTransactionSum;
 	        $count++;
         endforeach;

@@ -81,6 +81,7 @@ class ApiController extends Controller
 			$userModel['phase_id'] = 1;
 			$userModel['user_type'] = $user->userType->attributes;
 			Yii::app()->session->add('userModel',$userModel);
+			Yii::app()->session['lastActivity'] = time();
 			ActivityLogs::write(array(
 				'user_id' => $user->id,
 				'user_name' => trim($user->first_name.' '.$user->last_name),

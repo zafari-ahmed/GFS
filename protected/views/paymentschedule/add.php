@@ -27,7 +27,7 @@
                             </div> -->
                             <div class="form-group col-lg-3" >
                                 <label>Name</label>
-                                <input class="form-control" name="name" id="name" placeholder="Name" required="" value="<?php echo 'GFS'.sprintf('%04d', $total+1)?>">
+                                <input class="form-control" name="name" id="name" placeholder="Name" required="" value="<?php echo sprintf('%04d', $total+1)?>">
                             </div>                    
                             <?php /*foreach($this->paymentScheduleModes() as $modes):?>
                                 <div class="form-group col-lg-12" >

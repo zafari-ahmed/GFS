@@ -213,6 +213,69 @@ class Agents extends CActiveRecord
 		return $result;
 	}
 
+	public function getApprovedCommissionPaid($booking, $agentId = null, $agentName = null)
+	{
+		if (!$booking || empty($booking->id)) {
+			return 0;
+		}
+		$agentId = $agentId !== null ? (int)$agentId : (int)$this->id;
+		$agentName = $agentName !== null ? trim((string)$agentName) : trim((string)$this->name);
+		Expenses::ensureAgentIdColumn();
+		$expenses = Expenses::model()->findAll('booking_id = :id AND status = 1', array(':id' => (int)$booking->id));
+		if (empty($expenses)) {
+			return 0;
+		}
+
+		$paidById = 0;
+		$paidByName = 0;
+		$paidAll = 0;
+		$hasAgentId = false;
+		foreach ($expenses as $ex) {
+			$paidAll += (float)$ex->amount;
+			$eid = isset($ex->agent_id) ? (int)$ex->agent_id : 0;
+			if ($eid > 0) {
+				$hasAgentId = true;
+				if ($eid === $agentId) {
+					$paidById += (float)$ex->amount;
+				}
+			}
+			if ($agentName !== '' && strcasecmp(trim((string)$ex->paid_to), $agentName) === 0) {
+				$paidByName += (float)$ex->amount;
+			}
+		}
+		if ($hasAgentId) {
+			return round($paidById, 2);
+		}
+		if ($paidByName > 0) {
+			return round($paidByName, 2);
+		}
+		return round($paidAll, 2);
+	}
+
+	public function getCommissionTotalsForBooking($booking, $plotTotalAmount, $forAgentId = null)
+	{
+		$empty = array('total' => 0, 'paid' => 0, 'remaining' => 0);
+		if (!$booking) {
+			return $empty;
+		}
+		$forAgentId = $forAgentId !== null ? (int)$forAgentId : (int)$this->id;
+		$breakdown = $this->getBookingCommissionBreakdown($booking, $plotTotalAmount);
+		$total = (float)$breakdown['agent_amount'];
+		$name = $this->name;
+		if (!empty($breakdown['parent']) && (int)$breakdown['parent']->id === $forAgentId) {
+			$total = (float)$breakdown['parent_amount'];
+			$name = $breakdown['parent']->name;
+		} elseif ((int)$this->id !== $forAgentId && (int)$booking->agent_id === $forAgentId) {
+			$total = (float)$breakdown['agent_amount'];
+		}
+		$paid = $this->getApprovedCommissionPaid($booking, $forAgentId, $name);
+		return array(
+			'total' => round($total, 2),
+			'paid' => round($paid, 2),
+			'remaining' => max(0, round($total - $paid, 2)),
+		);
+	}
+
 	public function getMonthlyInstallmentForBooking($booking)
 	{
 		if (!$booking) {

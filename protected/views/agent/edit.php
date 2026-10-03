@@ -61,10 +61,8 @@
                                     <tr>
                                         <th class="hide">#</th>
                                         <th>Plot #</th>
-                                        <!--<th>Agent Total Comission</th>-->
-                                        <!--<th>Agent Paid Comission</th>-->
-                                        <!--<th>Agent Balance Comission</th>-->
-                                        <th>Plot Paid Total</th>
+                                        <th>Commission<br/><small>Total / Paid / Remaining</small></th>
+                                        <th>Booking<br/><small>Total / Paid</small></th>
                                         <th>Plot Attributes</th>
                                         <!-- <th>Status</th> -->
                                         <!--<th>Dues Desciption</th>-->
@@ -101,13 +99,17 @@
                                         <?php } else {?>
                                             <td><?php echo '*'.$res->plot->plot_type.'-'.$res->plot->plot_number.($res->plot->block_number?'-'.$res->plot->block_number:'').'*'?></td>
                                         <?php }?>
-                                        
-                                        <!--<td><?php //echo 'PKR '.number_format(@$res->commission!=''?@$res->commission:0.00)?></td>
-                                        <?php //$tComission = @$tComission + (@$res->commission!=''?@$res->commission:0.00)?>
-                                        <td><?php //echo 'PKR '.number_format(@$res->plot->customerPlots[0]->agent_commision_sum)?></td>
-                                        <?php //$tpComission = $tpComission + (@$res->plot->customerPlots[0]->agent_commision_sum)?>
-                                        <td><?php //echo 'PKR '.number_format((@$res->commission!=''?$res->commission:0)-(@$res->plot->customerPlots[0]->agent_commision_sum))?></td>
-                                        <?php //$tbComission = $tbComission + ((@$res->commission!=''?$res->commission:0)-(@$res->plot->customerPlots[0]->agent_commision_sum))?>-->
+                                        <td>
+                                            <?php
+                                            $bookingRow = ($res instanceof CustomerPlots) ? $res : @$res->plot->customerPlots[0];
+                                            if ($bookingRow && $agent && !empty($plotBaseTotal['final_total'])) {
+                                                $comm = $agent->getCommissionTotalsForBooking($bookingRow, $plotBaseTotal['final_total'], $agent->id);
+                                                echo 'Rs. '.number_format($comm['total']).' / Rs. '.number_format($comm['paid']).' / Rs. '.number_format($comm['remaining']);
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
                                         <td><?php echo 'Rs. './*$this->plotTotal(@$res->plot->id)*/number_format($plotBaseTotal['final_total']).' / Rs. '.number_format($netTotal);?></td>
                                         <td>
                                             <table class="table table-responsive" style="FONT-SIZE: 12PX;">

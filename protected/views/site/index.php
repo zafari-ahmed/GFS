@@ -7,6 +7,11 @@
                     <h3 class="panel-title">SIGN IN</h3>
                 </div>
                 <div class="panel-body">
+                    <?php
+                        foreach(Yii::app()->user->getFlashes() as $key => $message) {
+                            echo '<div class="alert alert-'.$key.'">'.$message.'</div>';
+                        }
+                    ?>
                     <form role="form" method="post" action="#" autocomplete="off" onsubmit="return false;">
                         <fieldset>
                             <div class="form-group">

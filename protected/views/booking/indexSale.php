@@ -20,21 +20,10 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                All Bookings Summary<br/>
-                <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking"><span class="label label-info btn-sm">All</span></a></span>
-                <?php foreach($paymentSchedules as $ps): $active = (@$_GET['payment']==$ps->id)?'success':'info'?>
-                    <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking?payment=<?php echo $ps->id?>"><span class="label label-<?php echo $active?> btn-sm"><?php echo $ps->name?></span></a></span>
-                <?php endforeach;?>
-                <br/>
-                <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking?flag_status=1"><span class="label label-<?php echo (@$_GET['flag_status']==1)?'success':'warning'?> btn-sm">File Completed</span></a></span>
-
-                <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking?flag_status=2"><span class="label label-<?php echo (@$_GET['flag_status']==2)?'success':'warning'?> btn-sm">Received By Customer</span></a></span>
-
-                <br/>
-                <span style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking?documentFlag=1"><span class="label label-<?php echo (@$_GET['documentFlag']==1)?'success':'warning'?> btn-sm">Completed Documents</span></a></span>
-
-                
-                <span class="pull-right" style="margin-top: -5px;"><a href="<?php echo Yii::app()->baseUrl?>/booking/reportallsales" target="_blank"><button type="button" class="btn btn-success btn-sm">Report</button></a></span>
+                All Bookings Summary
+                <span class="pull-right">
+                    <a href="<?php echo Yii::app()->baseUrl?>/booking/reportallsales"><span class="label label-success">Export</span></a>
+                </span>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
