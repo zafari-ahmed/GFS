@@ -22,12 +22,12 @@
                         <!-- <div class="col-lg-12"> -->
                             <div class="form-group col-lg-2" >
                                 <label>Start Date</label>
-                                <input class="form-control calender" name="start_date" value="<?php echo isset($_POST['start_date'])?@$_POST['start_date']:date('Y-m-d');?>" autocomplete="off" required>
+                                <input type="text" class="form-control calenderr" name="start_date" value="<?php echo isset($_POST['start_date'])?@$_POST['start_date']:date('Y-m-d');?>" autocomplete="off" required>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-2">
                                 <label>End Date</label>
-                                <input class="form-control calender" name="end_date" value="<?php echo isset($_POST['end_date'])?@$_POST['end_date']:date('Y-m-d');?>" autocomplete="off"  required>
+                                <input type="text" class="form-control calenderr" name="end_date" value="<?php echo isset($_POST['end_date'])?@$_POST['end_date']:date('Y-m-d');?>" autocomplete="off"  required>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
 

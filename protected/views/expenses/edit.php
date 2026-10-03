@@ -24,16 +24,11 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                                 
                                 <select name="expense_type" id="expense_type" class="form-control" required>
                                     <option value="">Please select expense type</option>
-                                    <option value="1" <?php echo ($expense->expense_type==1)?'selected':''?>>Office Expense</option>
-                                    <option value="2" <?php echo ($expense->expense_type==2)?'selected':''?>>Site</option>
-                                    <option value="3" <?php echo ($expense->expense_type==3)?'selected':''?>>Agent Commission - Cash</option>
-                                    <option value="4" <?php echo ($expense->expense_type==4)?'selected':''?>>Agent Commission - Installment</option>
-                                    <option value="5" <?php echo ($expense->expense_type==5)?'selected':''?>>Marketing</option>
-                                    <option value="6" <?php echo ($expense->expense_type==6)?'selected':''?>>Donation</option>
-                                    <option value="7" <?php echo ($expense->expense_type==7)?'selected':''?>>Assets</option>
-                                    <option value="8" <?php echo ($expense->expense_type==8)?'selected':''?>>Loan</option>
-                                    <option value="9" <?php echo ($expense->expense_type==9)?'selected':''?>>Petty Cash Load</option>
-                                    <option value="10" <?php echo ($expense->expense_type==10)?'selected':''?>>Zakat</option>
+                                    <?php foreach ($expenseTypes as $id => $label): ?>
+                                        <option value="<?php echo $id; ?>" <?php echo ($expense->expense_type == $id) ? 'selected' : ''; ?>>
+                                            <?php echo CHtml::encode($label); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>

@@ -286,9 +286,9 @@ class Controller extends CController
 			17=>'XVII',
 		];
 		//return $pettyCashPaymentCount;
-		//return 'EXP/'.$modes[$expense->expense_type].'-'.(sprintf('%03d',$totalCount+1)).'/GB';
+		return 'EXP/'.$modes[$expense->expense_type].'-'.(sprintf('%03d',$totalCount+1)).'/SWC';
 		
-		return 'EXP/'.(sprintf('%03d',$totalCount+1));
+		//return 'EXP/'.(sprintf('%03d',$totalCount+1));
 		
 	}
 
@@ -398,43 +398,57 @@ class Controller extends CController
 // 		];
 		
 		$modes = [
-            1  => 'LAND PAYMENT',
-            2  => 'INVESTMENT RETURN',
-            3  => 'OFFICE EXPENSE',
-            4  => 'SALARY',
-            5  => 'TOWN PLANNING',
-            6  => 'OTHERS',
-            7  => 'COMMISSION',
-            8  => 'LOAN',
-            9  => 'SITE DEVELOPMENT EXPENSE',
-            10 => 'CHARITY',
-            11 => 'REFUND',
-            12 => 'INVESTMENT PROFIT RETURN',
+            1  => 'Adjustment / Merging Expense',
+            2  => 'Daily Recovery Expense',
+            3  => 'Feul Expense',
+            4  => 'Food Expense',
+            5  => 'General Expense',
+            6  => 'Generator Expense',
+            7  => 'Groceries / Stationary Expense',
+            8  => 'Head Office Expense',
+            9  => 'Incentive Expense',
+            10 => 'Land Payment Expense',
+            11 => 'Medical Expense',
+            12 => 'Mobile Bill Expense',
+            13 => 'Refund Expense',
+            14 => 'Repairing / Maintenance Expense',
+            16 => 'Salary Expense',
+            17 => 'Sale Commission Expense',
+            18 => 'Site Expense',
+            19 => 'Transportaion / Conveyance Expense',
+            20 => 'Others Expense',
         ];
 
 	
 		if($onlyModes){
 			return $modes;
 		} else{
-			return $modes[$id];	
+			return isset($modes[$id]) ? $modes[$id] : '';
 		}
 		
 	}
 
 	public function expenseTypeReverse($id){
 		$modes = [
-            1  => 'LAND PAYMENT',
-            2  => 'INVESTMENT RETURN',
-            3  => 'OFFICE EXPENSE',
-            4  => 'SALARY',
-            5  => 'TOWN PLANNING',
-            6  => 'OTHERS',
-            7  => 'COMMISSION',
-            8  => 'LOAN',
-            9  => 'SITE DEVELOPMENT EXPENSE',
-            10 => 'CHARITY',
-            11 => 'REFUND',
-            12 => 'INVESTMENT PROFIT RETURN',
+            1  => 'Adjustment / Merging Expense',
+            2  => 'Daily Recovery Expense',
+            3  => 'Feul Expense',
+            4  => 'Food Expense',
+            5  => 'General Expense',
+            6  => 'Generator Expense',
+            7  => 'Groceries / Stationary Expense',
+            8  => 'Head Office Expense',
+            9  => 'Incentive Expense',
+            10 => 'Land Payment Expense',
+            11 => 'Medical Expense',
+            12 => 'Mobile Bill Expense',
+            13 => 'Refund Expense',
+            14 => 'Repairing / Maintenance Expense',
+            16 => 'Salary Expense',
+            17 => 'Sale Commission Expense',
+            18 => 'Site Expense',
+            19 => 'Transportaion / Conveyance Expense',
+            20 => 'Others Expense',
         ];
         
         

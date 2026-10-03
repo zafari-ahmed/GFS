@@ -22,12 +22,12 @@
                         <!-- <div class="col-lg-12"> -->
                             <div class="form-group col-lg-3" >
                                 <label>Start Date</label>
-                                <input class="form-control calender" name="start_date" value="<?php echo @$_POST['start_date']?>" autocomplete="off" required>
+                                <input type="text" class="form-control calenderr" name="start_date" value="<?php echo @$_POST['start_date']?>" autocomplete="off" required>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-3">
                                 <label>End Date</label>
-                                <input class="form-control calender" name="end_date" value="<?php echo @$_POST['end_date']?>" autocomplete="off"  required>
+                                <input type="text" class="form-control calenderr" name="end_date" value="<?php echo @$_POST['end_date']?>" autocomplete="off"  required>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
 

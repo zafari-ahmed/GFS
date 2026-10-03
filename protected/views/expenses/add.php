@@ -21,7 +21,7 @@ $phaseId = Yii::app()->session->get('userModel')['phase_id'];
                             <div class="form-group col-lg-4" >
                                 <label>Head of A/c</label>
                                 <?php $type=0;$disabled='';if(@$_GET['booking_id']) {
-                                    $type = 7;
+                                    $type = 17;
                                     $disabled = 'readonly';
                                 }?>
                                 <!--<select name="expense_type" id="expense_type" class="form-control" required <?php echo $disabled?>>-->

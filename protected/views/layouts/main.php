@@ -435,7 +435,7 @@
                         </li>
                         <?php } ?>
                         
-                        <?php /*if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5 || $userModel['user_type']['id'] == 4){?>
+                        <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5 || $userModel['user_type']['id'] == 4){?>
                         <li>
                             <a href="#"><i class="fa fa-money fa-fw"></i> Expenses<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level">
@@ -466,7 +466,7 @@
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
-                        <?php }*/?>
+                        <?php }?>
                         
                         <?php if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){?>
                         <li>
