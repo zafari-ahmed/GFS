@@ -874,7 +874,38 @@ class ExpensesController extends Controller
 	}
 	
 	public function actionImport(){
-		$this->render('import');
+		$data['expenseTypes'] = Yii::app()->params['expenseTypes'];
+		$this->render('import', $data);
+	}
+
+	public function actionSample()
+	{
+		$expenseTypes = Yii::app()->params['expenseTypes'];
+		$rows = $this->expenseImportSampleRows($expenseTypes);
+
+		$fileName = 'expense-import-sample.csv';
+		header('Content-Type: text/csv');
+		header('Content-Disposition: attachment; filename="'.$fileName.'"');
+		$fp = fopen('php://output', 'w');
+		foreach ($rows as $row) {
+			fputcsv($fp, $row);
+		}
+		fclose($fp);
+		Yii::app()->end();
+	}
+
+	protected function expenseImportSampleRows($expenseTypes)
+	{
+		$today = date('d-M-y');
+		$heads = array_values($expenseTypes);
+		$examples = array(
+			array($today, 'Fuel for site visit', 'PET-001', '8500', isset($expenseTypes[3]) ? $expenseTypes[3] : $heads[0]),
+			array($today, 'Staff lunch', 'CASH', '2400', isset($expenseTypes[4]) ? $expenseTypes[4] : $heads[0]),
+			array(date('d-m-Y', strtotime('-2 days')), 'Monthly generator diesel', '', '15000', isset($expenseTypes[6]) ? $expenseTypes[6] : $heads[0]),
+			array(date('d-m-Y', strtotime('-10 days')), 'Office stationery', 'PO-112', '3200', isset($expenseTypes[7]) ? $expenseTypes[7] : $heads[0]),
+			array(date('d-M-Y', strtotime('-15 days')), 'Land token payment', 'CHQ-4401', '500000', isset($expenseTypes[10]) ? $expenseTypes[10] : $heads[0]),
+		);
+		return array_merge(array(array('DATE', 'DESCRIPTION', 'REFRENCE', 'DEBIT', 'HEAD')), $examples);
 	}
 	
 	/**
@@ -897,6 +928,10 @@ class ExpensesController extends Controller
             'd-M-Y',
             'd-m-Y', // 15-04-2024
             'd-m-y', // 15-04-25
+            'Y-m-d',
+            'j-M-y',
+            'j-M-Y',
+            'j-m-Y',
         ];
     
         foreach ($formats as $format) {
@@ -954,82 +989,136 @@ class ExpensesController extends Controller
         if (!is_dir($uploadFolder)) {
             mkdir($uploadFolder, 0777, true);
         }
-    
-        $expenseTypes = Yii::app()->params['expenseTypes']; // ID => NAME
-        $expenseTypeMap = array_flip($expenseTypes);        // NAME => ID
-    
-        $fileName = 'report.csv';
-    
+
         if (empty($_FILES['expense']['tmp_name'])) {
-            throw new CHttpException(400, 'No file uploaded');
+            Yii::app()->user->setFlash('error', 'No file uploaded.');
+            $this->redirect(Yii::app()->baseUrl.'/expenses/import');
+            return;
         }
-    
-        move_uploaded_file($_FILES['expense']['tmp_name'], $uploadFolder . $fileName);
-    
-        if (($handle = fopen($uploadFolder . $fileName, 'r')) === false) {
-            throw new CHttpException(500, 'Unable to read CSV');
+
+        $fileName = 'report.csv';
+        $dest = $uploadFolder . $fileName;
+        $moved = @move_uploaded_file($_FILES['expense']['tmp_name'], $dest);
+        if (!$moved && !@copy($_FILES['expense']['tmp_name'], $dest)) {
+            Yii::app()->user->setFlash('error', 'Unable to save uploaded CSV.');
+            $this->redirect(Yii::app()->baseUrl.'/expenses/import');
+            return;
         }
-    
+
+        $userId = !empty(Yii::app()->session['userModel']['id']) ? Yii::app()->session['userModel']['id'] : 1;
+        $phaseId = !empty(Yii::app()->session['userModel']['phase_id']) ? Yii::app()->session['userModel']['phase_id'] : 1;
+        $result = $this->importExpenseCsv($dest, $userId, $phaseId);
+
+        $message = $result['imported'].' expense(s) imported.';
+        if ($result['skipped'] > 0) {
+            $message .= ' '.$result['skipped'].' row(s) skipped.';
+        }
+        Yii::app()->user->setFlash($result['imported'] > 0 ? 'success' : 'error', $message);
+        $this->redirect(Yii::app()->baseUrl.'/expenses/import');
+    }
+
+    public function importExpenseCsv($filePath, $userId, $phaseId = 1)
+    {
+        $expenseTypes = Yii::app()->params['expenseTypes'];
+        $expenseTypeMap = array();
+        foreach ($expenseTypes as $id => $name) {
+            $expenseTypeMap[strtoupper(trim($name))] = $id;
+        }
+
+        $result = array(
+            'imported' => 0,
+            'skipped' => 0,
+            'ids' => array(),
+            'skipped_reasons' => array(),
+        );
+
+        if (($handle = fopen($filePath, 'r')) === false) {
+            $result['skipped_reasons'][] = 'Unable to read CSV';
+            return $result;
+        }
+
         $rowNo = 0;
-    
         while (($row = fgetcsv($handle, 100000, ',')) !== false) {
             $rowNo++;
-    
-            // Skip header
             if ($rowNo === 1) {
+                if (isset($row[0])) {
+                    $row[0] = preg_replace('/^\xEF\xBB\xBF/', '', $row[0]);
+                }
                 continue;
-            }
-    
-            /*
-             CSV Indexes:
-             [0] DATE
-             [1] DESCRIPTION
-             [2] REFRENCE
-             [3] DEBIT
-             [4] HEAD
-            */
-    
-            if (empty($row[0]) || empty($row[3]) || empty($row[4])) {
-                continue; // skip incomplete rows
-            }
-    
-            $date = $this->normalizeDate($row[0]);
-            if ($date === null) {
-                continue;
-            }
-    
-            $headName = trim($row[4]);
-            if (!isset($expenseTypeMap[$headName])) {
-                continue; // unknown expense head
-            }
-    
-            $model = new Expenses();
-            $description = trim($row[1]);
-            if (!empty(trim($row[2]))) {
-                $description .= ' / ' . trim($row[2]);
             }
 
-            $model->expense_type = $expenseTypeMap[$headName]; // ID
-            $model->description  = $description;
-            $model->amount       = (float) $row[3];
-            $model->status       = 1;
+            if (count($row) < 5 || $row[0] === null || $row[0] === '') {
+                if ($this->isExpenseCsvEmptyRow($row)) {
+                    continue;
+                }
+                $result['skipped']++;
+                $result['skipped_reasons'][] = 'Row '.$rowNo.': incomplete data';
+                continue;
+            }
+
+            if (empty($row[3]) || empty($row[4])) {
+                $result['skipped']++;
+                $result['skipped_reasons'][] = 'Row '.$rowNo.': missing amount or head';
+                continue;
+            }
+
+            $date = $this->normalizeDate($row[0]);
+            if ($date === null) {
+                $result['skipped']++;
+                $result['skipped_reasons'][] = 'Row '.$rowNo.': invalid date '.$row[0];
+                continue;
+            }
+
+            $headName = strtoupper(trim($row[4], " \t\n\r\0\x0B."));
+            if (!isset($expenseTypeMap[$headName])) {
+                $result['skipped']++;
+                $result['skipped_reasons'][] = 'Row '.$rowNo.': unknown head '.$row[4];
+                continue;
+            }
+
+            $model = new Expenses();
+            $description = trim($row[1]);
+            $reference = isset($row[2]) ? trim($row[2]) : '';
+            if ($reference !== '') {
+                $description .= ($description !== '' ? ' / ' : '').$reference;
+            }
+
+            $model->expense_type = $expenseTypeMap[$headName];
+            $model->description = $description;
+            $model->amount = (float) str_replace(',', '', $row[3]);
+            $model->status = 1;
             $model->account_id = 5;
-			$model->user_id = Yii::app()->session['userModel']['id'];
-            $model->createdOn    = $date;
-            $model->reason    = NULL;
-            // Optional fields (NULL-safe)
-            if (!$model->save(false)) {
-                Yii::log([
-                    'row' => $rowNo,
-                    'errors' => $model->errors,
-                    'data' => $row
-                ], CLogger::LEVEL_ERROR);
+            $model->user_id = $userId;
+            $model->phase_id = $phaseId;
+            $model->payment_mode = 'cash';
+            $model->number = $reference !== '' ? $reference : null;
+            $model->createdOn = $date.' '.date('H:i:s');
+            $model->reason = null;
+
+            if ($model->save(false)) {
+                $result['imported']++;
+                $result['ids'][] = $model->id;
+            } else {
+                $result['skipped']++;
+                $result['skipped_reasons'][] = 'Row '.$rowNo.': save failed';
             }
         }
-    
+
         fclose($handle);
-    
-        echo 'Expense CSV Imported Successfully';
+        return $result;
+    }
+
+    protected function isExpenseCsvEmptyRow($row)
+    {
+        if (!is_array($row)) {
+            return true;
+        }
+        foreach ($row as $cell) {
+            if (trim((string)$cell) !== '') {
+                return false;
+            }
+        }
+        return true;
     }
 
 	// Uncomment the following methods and override them if needed
