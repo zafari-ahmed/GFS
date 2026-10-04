@@ -177,7 +177,7 @@
     <!--</div>-->
     <div class="title">
         <div class="header">
-            <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="    position: absolute;z-index: 999;width: 80%;margin-left: -40%;margin-top: 35%;opacity: 0.1;">
+            <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="    position: absolute;z-index: 999;width: 150%;margin-left: -70%;margin-top: 35%;opacity: 0.1;">
             <div style="overflow:hidden;" class="hide">
                 <div style="    width: 10%;float: left;position: relative;left: -20%;">
                     <img src="<?php echo Yii::app()->baseUrl?>/images/SS-B-resized.png" style="max-width: 120%;margin-top: 1px;margin-left: 200%;">
@@ -195,7 +195,7 @@
     </div>
     <div class="top-grid">
       <!-- LEFT: Customer Info -->
-      <p style="    position: absolute;left: 38%;top: 10%;font-size: 30px;"><b>Customer Ledger</b></p>
+      <p style="    position: absolute;left: 50%;top: 10%;font-size: 30px;"><b>Statement</b></p>
       <table class="info-table left-table" style="display:table-row-group;line-height:20px;border: 1px solid;border-radius: 6px;padding: 10px;">
         <tr>
           <td style="font-weight: bold;width: 120px;">FILE NO:</td>
@@ -578,8 +578,5 @@
     </table>
 
   </div>
-<script type="text/javascript">
-    window.print();
-</script>
 </body>
 </html>

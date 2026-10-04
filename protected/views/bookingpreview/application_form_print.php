@@ -21,7 +21,8 @@ if (!function_exists('appFormMoney')) {
 
 $plot = @$booking->plot;
 $customer = @$booking->customer;
-$printPage = $printPage ?? 'form';
+//$printPage = $printPage ?? 'form';
+$printPage = $_GET['page'] ?? 'form';
 
 $book_by = @$booking->agent->name ?: str_replace(' ', '<br/>', @$booking->agent_name); 
 $plot_no = @$plot->plot_number;
@@ -53,7 +54,7 @@ if (!empty($booking->createdOn) && $booking->createdOn !== '0000-00-00') {
 $nominee_name = @$customer->nominee_name;
 $nominee_relation = @$customer->nominee_relation;
 $nominee_age = 15;
-$nominee_parent_name = '';
+$nominee_parent_name = @$customer->name;
 
 $cost_of_plot = @$plot->total;
 $corner_charges = (@$plot->is_corner == 1) ? $this->Percentage($plot->total, $plot->is_corner_amount, false) : '';
@@ -78,6 +79,18 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title><?php echo e($pageTitle); ?> — GB-<?php echo e(@$booking->id); ?></title>
+<?php if ($printPage === 'terms'): ?>
+<style>
+    .page {
+        width: 8.5in;
+        height: 12in!important;
+        margin: 0 auto;
+        background: transparent;
+        position: relative;
+        overflow: hidden;
+    }
+</style>
+<?php endif; ?>
 <style>
     @page { size: letter portrait; margin: 0; }
 
@@ -93,7 +106,7 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
     .page {
         width: 8.5in;
-        height: 11in;
+        height: 10in;
         margin: 0 auto;
         background: transparent;
         position: relative;
@@ -117,7 +130,7 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
     }
     .f .v {
         flex: 1 1 auto;
-        min-width: 0.8in;
+        min-width: 1in;
         min-height: 17px;
         padding: 0 4px 1px;
         font-weight: 600;
@@ -165,7 +178,7 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
     }
     .accept .row { margin: 0.74in 0 0.04in; font-size: 10.5pt; }
 
-    .office-right { grid-column: 2 / 4; display: grid; grid-template-columns: 1fr 1.7in; padding-left: 0.2in; }
+    .office-right { grid-column: 2 / 4; display: grid; grid-template-columns: 1fr 1.7in; padding-left: 0.7in; }
     .costs { padding-right: 0.25in; }
     .cost-row {
         display: grid;
@@ -248,13 +261,13 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
         <div class="spacer"></div>
 
-        <div class="row" style="margin-top:40px">
+        <div class="row" style="margin-top:50px">
             <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($applicant_name) ?></span></div>
         </div>
-        <div class="row">
+        <div class="row" style="padding-top:10px;">
             <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($cnic_no) ?></span></div>
         </div>
-        <div class="row">
+        <div class="row" style="padding-top:10px;">
             <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($father_husband_name) ?></span></div>
         </div>
         <div class="row">
@@ -263,40 +276,43 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
         <div class="spacer-sm"></div>
 
-        <div class="row" style="margin-top:-8px">
+        <div class="row" style="margin-top:-3px">
             <div class="f"><span class="v" style="margin-left:100px;"><?= e($date_of_birth) ?></span></div>
             <div class="f"><span class="v"><?= e($nationality) ?></span></div>
             <div class="f grow-2"><span class="v" style="margin-left:200px"><?= e($occupation) ?></span></div>
         </div>
-        <div class="row" style="margin-top: -15px;">
-            <div class="f" style="margin-left:120px;"><span class="v wrap"><?= e($address) ?></span></div>
+        <div class="row" style="margin-top: -5px;">
+            <div class="f" style="margin-left:65px;"><span class="v wrap"><?= e($address) ?></span></div>
         </div>
 
         <div class="spacer-sm"></div>
 
-        <div class="row" style="margin-top: -2px;">
-            <div class="f"><span class="v" style="margin-left:150px"><?= e($phone_office) ?></span></div>
-            <div class="f"><span class="v" style="margin-left:150px"><?= e($cell_no) ?></span></div>
+        <div class="row" style="margin-top: 3px;">
+            <div class="f"><span class="v" style="margin-left:110px"><?= e($phone_office) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:125px"><?= e($cell_no) ?></span></div>
             <div class="f grow-2"><span class="v" style="margin-left:200px"><?= e($residence_no) ?></span></div>
         </div>
 
         <div class="spacer-decl"></div>
 
-        <div class="row" style="margin-top: 5%;">
+        <div class="row" style="margin-top: 3%;">
             <div class="f"><span class="v" style="margin-left:100px"><?= e($application_date) ?></span></div>
             <div class="f"><span class="v"></span></div>
         </div>
 
         <div class="spacer-md"></div>
+        <div class="row" style="margin-top: -5%;">
+            <div class="f"><span class="v" style="margin-left:150px;"><?= e($nominee_name) ?></span></div>
+        </div>
 
-        <div class="row" style="margin-top: 2%;">
-            <div class="f grow-2"><span class="v" style="margin-left:250px"><?= e($nominee_name) ?></span></div>
-            <div class="f"><span class="v" style="margin-left:100px"><?= e($nominee_relation) ?></span></div>
-            <div class="f"><span class="v" style="margin-left:100px"><?= e($nominee_age) ?></span></div>
+        <div class="row" style="margin-top: 5%;">
+            <div class="f grow-2"><span class="v" style="margin-left:210px;font-size:10px"><?= e($nominee_name) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:90px;font-size:10px"><?= e($nominee_relation) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:90px;font-size:10px"><?= e($nominee_age) ?></span></div>
         </div>
 
         <div class="row">
-            <div class="f"><span class="v"><?= e($nominee_parent_name) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:150px;"><?= e($applicant_name) ?></span></div>
         </div>
 
     </div>
@@ -305,32 +321,32 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
 <?php if ($printPage === 'terms'): ?>
 <section class="page p2">
-    <div class="content" style="padding-top:0.18in">
+    <div class="content" style="padding-top:3.5in">
         <div class="office">
-            <div class="accept">
+            <div class="accept" style="margin-top:60px;margin-left:60px;">
                 <div class="row">
                     <div class="f"><span class="v"><?= e($applicant_name) ?></span></div>
                 </div>
             </div>
 
-            <div class="office-right">
+            <div class="office-right" style="margin-top:9%;margin-left:20%">
                 <div class="costs">
-                    <div class="cost-row"><span class="v"><?= e(appFormMoney($cost_of_plot)) ?></span></div>
+                    <div class="cost-row"><span class="v" style="padding-bottom:5px"><?= e(appFormMoney($cost_of_plot)) ?></span></div>
                     <div class="cost-row"><span class="v"><?= e(appFormMoney($corner_charges)) ?></span></div>
                     <div class="cost-row"><span class="v"><?= e(appFormMoney($west_open_charges)) ?></span></div>
                     <div class="cost-row"><span class="v"><?= e(appFormMoney($road_facing_charges)) ?></span></div>
                     <div class="cost-row"><span class="v"><?= e(appFormMoney($park_facing_charges)) ?></span></div>
                 </div>
 
-                <div class="totals">
+                <div class="totals" style="margin-top:20%">
                     <div class="tot-row">
                         <div class="amt"><span class="v"><?= e(appFormMoney($total_amount)) ?></span></div>
                     </div>
                     <div class="tot-row">
-                        <div class="amt"><span class="v"><?= e(appFormMoney($discount_amount)) ?></span></div>
+                        <div class="amt"><span class="v" style="margin-top:15%"><?= e(appFormMoney($discount_amount)) ?></span></div>
                     </div>
                     <div class="tot-row">
-                        <div class="amt"><span class="v"><?= e(appFormMoney($net_amount)) ?></span></div>
+                        <div class="amt"><span class="v" style="margin-top:15%"><?= e(appFormMoney($net_amount)) ?></span></div>
                     </div>
                 </div>
             </div>

@@ -317,7 +317,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
 
                                 <?php if($booking->plot->is_road_facing == 1){?>
                                 <tr>
-                                    <td>Raod Facing </td>
+                                    <td>Road Facing </td>
                                     <td><?php echo @$booking->plot->is_road_facing_amount?>% - <?php echo 'Rs. '.$this->Percentage($booking->plot->total,$booking->plot->is_road_facing_amount)?></td>
                                     <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_road_facing_amount,false)?>
                                 </tr>
@@ -367,9 +367,15 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                         <label>Occupation</label>
                         <p><?php echo $booking->customer->occupation?></p>
                     </div>
+                    <?php if($booking->agent_cnic != '' && $booking->agent_cnic != null && file_exists(Yii::app()->baseUrl.'/uploads/booking/'.$booking->agent_cnic)){?>
                     <div class="form-group col-lg-2">
                         <img style="width: 100%;" src="<?php echo Yii::app()->baseUrl?>/uploads/booking/<?php echo $booking->agent_cnic?>" alt="..." class="img-thumbnail">
                     </div>
+                    <?php } else {?>
+                        <div class="form-group col-lg-2">
+                        <img style="width: 100%;" src="<?php echo Yii::app()->baseUrl?>/images/default.jpeg" alt="..." class="img-thumbnail">
+                    </div>
+                    <?php }?>
                 </div>
                 <div class="col-lg-12">
                     <div class="form-group col-lg-3" style="padding-left: 0px;">

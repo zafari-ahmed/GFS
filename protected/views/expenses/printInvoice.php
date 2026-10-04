@@ -35,6 +35,8 @@
                 <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="    max-width: 40%;margin-top: 5px;margin-left: -115px;">
             </div>
             <div style="float:left;margin-top:8%">
+                <!--<img src="<?php //echo Yii::app()->baseUrl?>/images/SS-B.png" style="    max-width: 70%;margin-top: 5px;margin-left: -115px;">-->
+                <span style="    padding: 10px;border: 1px solid #000;margin: -15px;background: #0000005c;color: #fff;padding-left: 15px;padding-right: 15px;letter-spacing: 2px;font-size: 13px;">DEBIT VOUCHER</span>
                 
             </div>
         </div>

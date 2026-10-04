@@ -27,6 +27,7 @@ $heading1Options = [
     'Yearly',
     'Half Yearly',
     'Quarterly',
+    'Before Possession',
     'Possession',
     'Demarcation',
     'Development',

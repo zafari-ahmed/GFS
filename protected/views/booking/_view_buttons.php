@@ -52,7 +52,7 @@ $bookingTopButtons = array(
     ),
     array(
         'label' => 'Terms & Condition',
-        'url' => $baseUrl.'/bookingpreview/applicationterms/'.$bookingId,
+        'url' => $baseUrl.'/bookingpreview/applicationterms/'.$bookingId.'?page=terms',
         'class' => 'btn btn-success btn-sm',
         'target' => '_blank',
         'show' => $canManageBooking && $isActiveBooking,
