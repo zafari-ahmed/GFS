@@ -187,7 +187,7 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                             <td>
                                 <strong><div class="underlined">Mode of Payment</div></strong><br>
                                 <span style="position: absolute;left: 35%;font-size: 15px;"><h2 style="text-align: center;"><?php echo strtoupper(@$transaction[0]->transaction_type)?></h2></span>
-                                <div><?php $link = 'https://portal.gulshanebholari.com/ledger/bookingledger/'.$booking->id;?><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://thetrainedmanwins.com/gfs/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
+                                <div><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://portal.sevenwonderscity.com/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
                                 
                                 <?php
                                 $monthlyDate = @$transaction[0]->monthlyDate;
@@ -343,7 +343,7 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                             <td>
                                 <strong><div class="underlined">Mode of Payment</div></strong><br>
                                 <span style="position: absolute;left: 35%;font-size: 15px;"><h2 style="text-align: center;"><?php echo strtoupper(@$transaction[0]->transaction_type)?></h2></span>
-                                <div><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://thetrainedmanwins.com/gfs/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
+                                <div><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://portal.sevenwonderscity.com/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
                                 <?php
                                 $monthlyDate = @$transaction[0]->monthlyDate;
                                 
@@ -497,7 +497,7 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                             <td>
                                 <strong><div class="underlined">Mode of Payment</div></strong><br>
                                 <span style="position: absolute;left: 35%;font-size: 15px;"><h2 style="text-align: center;"><?php echo strtoupper(@$transaction[0]->transaction_type)?></h2></span>
-                                <div><?php $link = 'https://portal.gulshanebholari.com/ledger/bookingledger/'.$booking->id;?><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://thetrainedmanwins.com/gfs/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
+                                <div><img  id="imagePreview" style="max-width: 80px;position: absolute;left: 50%;margin-top:-10px" src="https://portal.sevenwonderscity.com/qr/test.php?id=<?php echo $booking->id?>" class="qrcode"/></div>
                                 <?php
                                 $monthlyDate = @$transaction[0]->monthlyDate;
                                 
