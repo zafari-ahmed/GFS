@@ -139,6 +139,24 @@
 
     /* Optional: prevent row breaking awkwardly */
     tr { page-break-inside: avoid; }
+
+    table.ledger-summary {
+      width: 62%;
+      margin: 8mm 0 0 auto;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 12px;
+    }
+    table.ledger-summary th,
+    table.ledger-summary td {
+      border: 1px solid #000;
+      padding: 2mm 2mm;
+      text-align: center;
+      font-weight: 700;
+    }
+    table.ledger-summary th {
+      text-transform: uppercase;
+    }
     
   </style>
 </head>
@@ -159,7 +177,7 @@
     <!--</div>-->
     <div class="title">
         <div class="header">
-            <img src="<?php echo Yii::app()->baseUrl?>/images/GB-B-resized.png" style="    position: absolute;z-index: 999;width: 50%;margin-left: -25%;margin-top: 35%;opacity: 0.1;">
+            <img src="<?php echo Yii::app()->baseUrl?>/images/gfs-invoice-back.png" style="    position: absolute;z-index: 999;width: 80%;margin-left: -40%;margin-top: 35%;opacity: 0.1;">
             <div style="overflow:hidden;" class="hide">
                 <div style="    width: 10%;float: left;position: relative;left: -20%;">
                     <img src="<?php echo Yii::app()->baseUrl?>/images/SS-B-resized.png" style="max-width: 120%;margin-top: 1px;margin-left: 200%;">
@@ -170,10 +188,14 @@
             </div>
         </div>
     </div>
-    
+    <div class="top-grid">
+      <span style="text-align:left"><img src="<?php echo Yii::app()->baseUrl?>/images/logo.png" style="width: 45%;"></span>  
+      <!-- <span style="text-align:center">Customer Ledger</span> -->
+      <span style="text-align:right"><img src="<?php echo Yii::app()->baseUrl?>/images/seven-wonder-1.png" style="width: 30%;"></span>  
+    </div>
     <div class="top-grid">
       <!-- LEFT: Customer Info -->
-      <p style="    position: absolute;top: 2%;left: 10%;"><b><?php echo $booking->plot->block_number?></b></p>
+      <p style="    position: absolute;left: 38%;top: 10%;font-size: 30px;"><b>Customer Ledger</b></p>
       <table class="info-table left-table" style="display:table-row-group;line-height:20px;border: 1px solid;border-radius: 6px;padding: 10px;">
         <tr>
           <td style="font-weight: bold;width: 120px;">FILE NO:</td>
@@ -209,7 +231,7 @@
           <td class="value normal" s><?php echo @$booking->agent->name?></td>
         </tr>
       </table>
-
+    <?php $bookingDues = $this->calculateBookingDues($booking->id);?>
     <?php $cop=0;if(@$booking->payment_schedule_json){?>
     <?php 
         // Decode JSON to PHP array
@@ -235,11 +257,11 @@
         <?php } ?>
     <?php }?>
       <!-- RIGHT: Plot / Cost Info -->
-      <p style="    position: absolute;top: 2%;right: 7%;"><b>GFS</b></p>
+      <!-- <p style=" position: absolute;"><img src="<?php echo Yii::app()->baseUrl?>/images/logo.png" style="width: 20%;"></p> -->
       <table class="info-table right-table" style="display:table-row-group;line-height:20px;margin-left:37px;border: 1px solid;border-radius: 6px;padding: 10px;width:90%">
         <tr>
           <td style="font-weight: bold;width: 110px;width: 70%;">PLOT NO.:</td>
-          <td class="value normal"><b><?php echo $booking->plot->plot_type.'-'.$booking->plot->plot_number.'-'.$booking->plot->block_number?></b></td>
+          <td class="value normal"><b><?php echo @$booking->plot->plot_type.'-'.@$booking->plot->plot_number.'-'.@$booking->plot->block_number?></b></td>
         </tr>
         <tr>
           <td style="font-weight: bold;width: 110px;width: 65%;">PLOT SIZE:</td>
@@ -277,9 +299,34 @@
           <td style="font-weight: bold;width: 110px;width: 65%;">PAID AMOUNT:</td>
           <td class="value normal" colspan="2"><b><?php echo number_format($booking->customerPlotTransactionSum + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
         </tr>
+        <?php if(!empty($bookingDues['due_amount']) && $bookingDues['due_amount'] > 0){ ?>
+        <tr>
+          <td style="font-weight: bold;width: 110px;">DUE MONTH:</td>
+          <td class="value normal" colspan="2"><b><?php echo @$bookingDues['due_months']?> Month(s)</b></td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold;width: 110px;">DUE AMOUNT:</td>
+          <td class="value normal" colspan="2"><b><?php echo number_format(@$bookingDues['due_amount'])?> PKR</b></td>
+        </tr>
+        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+        <tr>
+          <td style="font-weight: bold;width: 110px;vertical-align:top;">DUE DETAIL:</td>
+          <td class="value normal" colspan="2">
+            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+              <b><?php echo CHtml::encode($dueItem['label']); ?>:</b>
+              <?php echo number_format(@$dueItem['due_amount']); ?> PKR
+              <?php if(!empty($dueItem['is_monthly']) && @$dueItem['due_months'] > 0){ ?>
+                (<?php echo $dueItem['due_months']; ?> month(s))
+              <?php } ?>
+              <br>
+            <?php endforeach; ?>
+          </td>
+        </tr>
+        <?php }*/ ?>
+        <?php } ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">BALANCE AMOUNT:</td>
-          <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
+          <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum - @$booking->plot->discount + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
         </tr>
         
         <tr>
@@ -350,7 +397,8 @@
                                 <td style="width: 20%;">
                                     <?php
                                     if ($txn->_source === 'normal') {
-                                        echo ucfirst(@$txn->plotPaymentMode->mode);//.''.(($txn->monthlyDate!='')?' ('.$txn->monthlyDate.')':''));
+                                        //echo ucfirst(@$txn->plotPaymentMode->mode.''.(($txn->monthlyDate!='')?' ('.$txn->monthlyDate.')':''));
+                                        echo ucfirst(@$txn->plotPaymentMode->mode);
                                     } else {
                                         echo ucfirst(@$txn->plot_payment_mode);
                                     }
@@ -388,6 +436,23 @@
                                 <td><?php echo date('d M,Y',strtotime($txn->createdOn)) ?></td>
                             </tr>
                         <?php endforeach; ?>
+                        <?php /*if(!empty($bookingDues['due_items'])){ ?>
+                            <?php foreach ($bookingDues['due_items'] as $dueItem): ?>
+                            <tr>
+                                <td style="width: 20%;"><b><?php echo CHtml::encode($dueItem['label']); ?></b></td>
+                                <td>-</td>
+                                <td>Due</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$dueItem['due_amount']); ?></b></td>
+                                <td>-</td>
+                                <td><?php echo !empty($dueItem['due_date']) ? date('d M,Y', strtotime($dueItem['due_date'])) : '-'; ?></td>
+                            </tr>
+                            <?php endforeach; ?>
+                            <tr class="grand-total">
+                                <td colspan="3" class="grand-label">TOTAL DUE:</td>
+                                <td><b><?php echo 'Rs. '.number_format(@$bookingDues['due_amount']); ?></b></td>
+                                <td colspan="2"></td>
+                            </tr>
+                        <?php }*/ ?>
         <!-- Example opening row (like your sheet has POST / BOOKING...) -->
         <?php /*?>
         <tr>
@@ -490,9 +555,31 @@
       </tbody>
     </table>
 
+    <?php
+      $ledgerTotalPaid = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+      $ledgerTotalCost = (float)$tpp;
+      $ledgerBalanceAmount = $ledgerTotalCost - $ledgerTotalPaid;
+    ?>
+    <table class="ledger-summary">
+      <thead>
+        <tr>
+          <th>TOTAL PAID</th>
+          <th>BALANCE AMOUNT</th>
+          <th>TOTAL COST</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><?php echo number_format($ledgerTotalPaid); ?> PKR</td>
+          <td><?php echo number_format($ledgerBalanceAmount); ?> PKR</td>
+          <td><?php echo number_format($ledgerTotalCost); ?> PKR</td>
+        </tr>
+      </tbody>
+    </table>
+
   </div>
 <script type="text/javascript">
-    //window.print();
+    window.print();
 </script>
 </body>
 </html>
