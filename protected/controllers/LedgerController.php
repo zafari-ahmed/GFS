@@ -2,6 +2,11 @@
 
 class LedgerController extends Controller
 {
+    protected function isPublicAction($action)
+    {
+        return true;
+    }
+
     public function actionBookingLedger($id)
 	{
 		$data['booking'] = $booking = CustomerPlots::model()->findByPk($id);
