@@ -223,9 +223,9 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                 <!--<td>-->
                 <!--    <div style="position: relative;margin-top: -10px;"><?php //echo ucwords($this->getIndianCurrency($total))?></div>-->
                 <!--</td>-->
-                <td style="position: absolute;right: 25%;font-size:7px"><span>Printed By/Date:</span></td>
-                <td style="position:absolute;right: 10%;font-size:7px">
-                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i:s')?></div>
+                <td style="position: absolute;right: 25%;font-size:5px"><span>Printed By/Date:</span></td>
+                <td style="position:absolute;right: 10%;font-size:5px">
+                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i')?></div>
                 </td>
             </tr>
         </table>
@@ -378,9 +378,9 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                 <!--<td>-->
                 <!--    <div style="position: relative;margin-top: -10px;"><?php //echo ucwords($this->getIndianCurrency($total))?></div>-->
                 <!--</td>-->
-                <td style="position: absolute;right: 25%;font-size:7px"><span>Printed By/Date:</span></td>
-                <td style="position:absolute;right: 10%;font-size:7px">
-                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i:s')?></div>
+                <td style="position: absolute;right: 25%;font-size:5px"><span>Printed By/Date:</span></td>
+                <td style="position:absolute;right: 10%;font-size:5px">
+                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i')?></div>
                 </td>
             </tr>
         </table>
@@ -532,9 +532,9 @@ if (!is_file(Yii::getPathOfAlias('webroot') . '/images/cancelled.png')) {
                 <!--<td>-->
                 <!--    <div style="position: relative;margin-top: -10px;"><?php //echo ucwords($this->getIndianCurrency($total))?></div>-->
                 <!--</td>-->
-                <td style="position: absolute;right: 25%;font-size:7px"><span>Printed By/Date:</span></td>
-                <td style="position:absolute;right: 10%;font-size:7px">
-                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i:s')?></div>
+                <td style="position: absolute;right: 25%;font-size:5px"><span>Printed By/Date:</span></td>
+                <td style="position:absolute;right: 10%;font-size:5px">
+                    <div> <?php echo ucwords($userModel['first_name'].' '.$userModel['last_name'])?> / <?php echo date('Y-m-d H:i')?></div>
                 </td>
             </tr>
         </table>
