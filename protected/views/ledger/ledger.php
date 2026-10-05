@@ -264,6 +264,11 @@
             <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_west_open_amount,false)?>
         <?php } ?>
     <?php }?>
+    <?php
+      $ledgerTotalPaid = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+      $ledgerTotalCost = (float)$tpp;
+      $ledgerBalanceAmount = $ledgerTotalCost - $ledgerTotalPaid;
+    ?>
       <!-- RIGHT: Plot / Cost Info -->
       <!-- <p style=" position: absolute;"><img src="<?php echo Yii::app()->baseUrl?>/images/logo.png" style="width: 20%;"></p> -->
       <table class="info-table right-table" style="display:table-row-group;line-height:20px;margin-left:37px;border: 1px solid;border-radius: 6px;padding: 10px;width:90%">
@@ -334,7 +339,7 @@
         <?php } ?>
         <tr>
           <td style="font-weight: bold;width: 110px;">BALANCE AMOUNT:</td>
-          <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum - @$booking->plot->discount + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
+          <td class="value normal" colspan="2"><b><?php echo number_format($ledgerBalanceAmount)?> PKR</b></td>
         </tr>
         
         <tr>
@@ -563,11 +568,6 @@
       </tbody>
     </table>
 
-    <?php
-      $ledgerTotalPaid = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
-      $ledgerTotalCost = (float)$tpp;
-      $ledgerBalanceAmount = $ledgerTotalCost - $ledgerTotalPaid;
-    ?>
     <table class="ledger-summary">
       <thead>
         <tr>

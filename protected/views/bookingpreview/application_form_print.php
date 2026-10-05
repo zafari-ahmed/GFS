@@ -257,9 +257,24 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
 
         <div class="header">
             <div class="book-by f">
-    <span class="v" style="margin-left: 330px; font-size: 10px; display: inline-block; vertical-align: top;">
-        <?= $book_by ?>
-    </span>
+            <span class="v" style="margin-left: 300px; font-size: 9px; display: inline-block; vertical-align: top;">
+            <?php
+            $name = @$booking->agent->name ?: @$booking->agent_name;
+            $words = explode(' ', trim($name));
+            
+            if (count($words) > 2) {
+                // Output first 2 words
+                echo htmlspecialchars($words[0] . ' ' . $words[1]);
+                // Force the break
+                echo '<br/>';
+                // Output the rest of the name
+                echo htmlspecialchars(implode(' ', array_slice($words, 2)));
+            } else {
+                // Fallback if there are less than 2 spaces
+                echo htmlspecialchars($name);
+            }
+            ?>
+        </span>
 </div>
         </div>
 

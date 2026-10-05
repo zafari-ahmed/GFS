@@ -287,7 +287,7 @@
         </tr>
         <tr>
           <td style="font-weight: bold;width: 110px;">BALANCE AMOUNT:</td>
-          <td class="value normal" colspan="2"><b><?php echo number_format($tpp-@$booking->customerPlotTransactionSum + $booking->customerPlotExtraTransactionSum)?> PKR</b></td>
+          <td class="value normal" colspan="2"><b><?php echo number_format($tpp - intval(@$booking->customerPlotTransactionSum) - intval(@$booking->customerPlotExtraTransactionSum))?> PKR</b></td>
         </tr>
         
         <tr>

@@ -438,6 +438,10 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                         <label>Nominee's Relation</label>
                         <p><?php echo $booking->customer->nominee_relation?></p>
                     </div>
+                    <div class="form-group col-lg-12" style="padding-left: 0px;">
+                        <label>Nominee's Address</label>
+                        <p><?php echo @$booking->customer->nominee_address?></p>
+                    </div>
                 </div>
                 <div class="col-lg-12">
                     <?php if($booking->customerPlotDocuments){?>

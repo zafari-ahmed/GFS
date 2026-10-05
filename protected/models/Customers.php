@@ -21,6 +21,7 @@
  * @property string $nominee_name
  * @property string $nominee_relation
  * @property string $nominee_cnic
+ * @property string $nominee_address
  * @property string $image
  * @property integer $status
  * @property integer $phase_id
@@ -49,10 +50,10 @@ class Customers extends CActiveRecord
 		return array(
 			array('name, father_husband_name, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image, status, phase_id, createdOn', 'required'),
 			array('status, phase_id', 'numerical', 'integerOnly'=>true),
-			array('name, father_husband_name, nationality, guardian, gender, occupation, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image', 'length', 'max'=>255),
+			array('name, father_husband_name, nationality, guardian, gender, occupation, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, nominee_address, image', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, name, father_husband_name, nationality, guardian, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image, status, phase_id, createdOn', 'safe', 'on'=>'search'),
+			array('id, name, father_husband_name, nationality, guardian, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, nominee_address, image, status, phase_id, createdOn', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -92,6 +93,7 @@ class Customers extends CActiveRecord
 			'nominee_name' => 'Nominee Name',
 			'nominee_relation' => 'Nominee Relation',
 			'nominee_cnic' => 'Nominee Cnic',
+			'nominee_address' => 'Nominee Address',
 			'image' => 'Image',
 			'status' => 'Status',
 			'phase_id' => 'Phase',
@@ -134,6 +136,7 @@ class Customers extends CActiveRecord
 		$criteria->compare('nominee_name',$this->nominee_name,true);
 		$criteria->compare('nominee_relation',$this->nominee_relation,true);
 		$criteria->compare('nominee_cnic',$this->nominee_cnic,true);
+		$criteria->compare('nominee_address',$this->nominee_address,true);
 		$criteria->compare('image',$this->image,true);
 		$criteria->compare('status',$this->status);
 		$criteria->compare('phase_id',$this->phase_id);
@@ -159,8 +162,13 @@ class Customers extends CActiveRecord
 	{
 		$db = Yii::app()->db;
 		$tables = array('customers', 'customer_previews');
+		$columns = array(
+			'nationality' => 'father_husband_name',
+			'guardian' => 'father_husband_name',
+			'nominee_address' => 'nominee_cnic',
+		);
 		foreach ($tables as $table) {
-			foreach (array('nationality', 'guardian') as $column) {
+			foreach ($columns as $column => $after) {
 				$exists = $db->createCommand("
 					SELECT COUNT(*) FROM information_schema.COLUMNS
 					WHERE TABLE_SCHEMA = DATABASE()
@@ -168,7 +176,7 @@ class Customers extends CActiveRecord
 					  AND COLUMN_NAME = :column
 				")->queryScalar(array(':table' => $table, ':column' => $column));
 				if (!$exists) {
-					$db->createCommand("ALTER TABLE `{$table}` ADD COLUMN `{$column}` VARCHAR(255) NULL DEFAULT NULL AFTER `father_husband_name`")->execute();
+					$db->createCommand("ALTER TABLE `{$table}` ADD COLUMN `{$column}` VARCHAR(255) NULL DEFAULT NULL AFTER `{$after}`")->execute();
 				}
 			}
 			Yii::app()->db->schema->getTable($table, true);

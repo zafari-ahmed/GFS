@@ -354,7 +354,7 @@ $soLine = trim($soDoWo.' '.$father);
         </div>
         <div class="line">
             <div class="lbl">Nominee Address:</div>
-            <div class="val"></div>
+            <div class="val"><?php echo htmlspecialchars(@$customer->nominee_address)?></div>
         </div>
         <div class="line">
             <div class="lbl">Nominee C.N.I.C:</div>

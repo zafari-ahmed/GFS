@@ -82,6 +82,10 @@
                         <label>Nominee's Relation</label>
                         <p><?php echo $customer->nominee_relation?></p>
                     </div>
+                    <div class="form-group col-lg-12" style="padding-left: 0px;">
+                        <label>Nominee's Address</label>
+                        <p><?php echo @$customer->nominee_address?></p>
+                    </div>
                 </div>   
             </div>
             <!-- /.panel-body -->

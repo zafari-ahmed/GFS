@@ -268,6 +268,10 @@ if($userModel['user_type']['id'] == 1){
                                 <label>Nominee's CNIC</label>
                                 <input class="form-control cnic" id="nominee_cnic" name="nominee_cnic" placeholder="Nominee's cnic" value="<?php echo @$booking->customer->nominee_cnic?>">
                             </div>
+                            <div class="form-group">
+                                <label>Nominee's Address</label>
+                                <textarea class="form-control" rows="3" name="nominee_address" placeholder="Nominee's Address"><?php echo @$booking->customer->nominee_address?></textarea>
+                            </div>
                             <div class="form-group col-lg-6" style="padding-left: 0px;">
                                 <label>Booking Date</label>
                                 <input class="form-control calender"  name="createdOn" placeholder="Created Date" value="<?php echo $this->revertDateFormat(date('Y-m-d',strtotime($booking->createdOn)))?>">

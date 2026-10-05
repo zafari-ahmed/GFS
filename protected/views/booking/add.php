@@ -231,6 +231,10 @@
                                 <label>Nominee's CNIC</label>
                                 <input class="form-control cnic" id="nominee_cnic" name="nominee_cnic" placeholder="Nominee's cnic">
                             </div>
+                            <div class="form-group">
+                                <label>Nominee's Address</label>
+                                <textarea class="form-control" rows="3" name="nominee_address" placeholder="Nominee's Address"></textarea>
+                            </div>
 
                             <div class="form-group col-lg-6" style="padding-left: 0px;">
                                 <label>Booking Date</label>
