@@ -33,13 +33,13 @@ $cluster = @$plot->block_number;
 $applicant_name = @$customer->name;
 $cnic_no = @$customer->cnic;
 $father_husband_name = @$customer->father_husband_name;
-$guardian_name = '';
+$guardian_name = @$customer->guardian;
 $date_of_birth = '';
 if (!empty($customer->dob) && $customer->dob !== '0000-00-00') {
     $dobTs = strtotime($customer->dob);
     $date_of_birth = $dobTs ? date('d-m-Y', $dobTs) : $customer->dob;
 }
-$nationality = '';
+$nationality = @$customer->nationality;
 $occupation = @$customer->occupation;
 $address = @$customer->address;
 $phone_office = @$customer->office;
@@ -53,7 +53,18 @@ if (!empty($booking->createdOn) && $booking->createdOn !== '0000-00-00') {
 
 $nominee_name = @$customer->nominee_name;
 $nominee_relation = @$customer->nominee_relation;
-$nominee_age = 15;
+$nominee_age = '';
+
+if (!empty($customer->dob) && $customer->dob !== '0000-00-00') {
+    try {
+        $dob = new DateTime($customer->dob);
+        $today = new DateTime();
+
+        $nominee_age = $dob->diff($today)->y;
+    } catch (Exception $e) {
+        $nominee_age = '';
+    }
+}
 $nominee_parent_name = @$customer->name;
 
 $cost_of_plot = @$plot->total;
@@ -271,14 +282,14 @@ $pageTitle = ($printPage === 'terms') ? 'Terms & Conditions — Seven Wonders Ci
             <div class="f"><span class="v" style="position:absolute;margin-left:300px"><?= e($father_husband_name) ?></span></div>
         </div>
         <div class="row">
-            <div class="f"><span class="v"><?= e($guardian_name) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:100px"><?= e($guardian_name) ?></span></div>
         </div>
 
         <div class="spacer-sm"></div>
 
         <div class="row" style="margin-top:-3px">
             <div class="f"><span class="v" style="margin-left:100px;"><?= e($date_of_birth) ?></span></div>
-            <div class="f"><span class="v"><?= e($nationality) ?></span></div>
+            <div class="f"><span class="v" style="margin-left:150px;"><?= e($nationality) ?></span></div>
             <div class="f grow-2"><span class="v" style="margin-left:200px"><?= e($occupation) ?></span></div>
         </div>
         <div class="row" style="margin-top: -5px;">

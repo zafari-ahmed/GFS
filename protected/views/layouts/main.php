@@ -826,6 +826,40 @@
 
 
 <!-- Modal -->
+<div class="modal fade" id="searchList-expense" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog" style="    width: 50%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Search Result for Expense # <span class="blockText"></span></h4>
+            </div>
+            <div class="modal-body">
+                <div class="">
+                    <table class="table table-striped table-bordered table-hover" id="dataTabless-expense">
+                        <thead>
+                            <tr>
+                                <th>Expense #</th>
+                                <th>H.O.A</th>
+                                <th>Amount</th>
+                                <th>Paid To</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="searchListData-expense">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- /.modal -->
+
+<!-- Modal -->
 <div class="modal fade" id="searchList-transaction" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
     <div class="modal-dialog" style="    width: 50%;">
         <div class="modal-content">
@@ -945,7 +979,7 @@
             },
             cache: true
           },
-          placeholder: 'Transaction #',
+          placeholder: 'Transaction # / EXP #',
           minimumInputLength: 1,
         });
 
@@ -1017,7 +1051,7 @@
             var bookingDatatable =$('#dataTablesExpenseServer').DataTable({
                 "drawCallback": function( settings ) {
                     if(settings.iDraw == 1){
-                        $('<div class="pull-right">&nbsp;&nbsp;Search Column: &nbsp;<select class="form-control" style="height:30px!important" id="searchType"><option value="desc">Description</option><option value="hoa">H.O.A</option><option value="paid_to">Paid To</option><option value="status">Status</option><option value="ref">Ref No.</option></select></div>').appendTo(".dataTables_filter");
+                        $('<div class="pull-right">&nbsp;&nbsp;Search Column: &nbsp;<select class="form-control" style="height:30px!important" id="searchType"><option value="regNo">#</option><option value="desc">Description</option><option value="hoa">H.O.A</option><option value="paid_to">Paid To</option><option value="status">Status</option><option value="ref">Ref No.</option></select></div>').appendTo(".dataTables_filter");
                     }
                     
                 },
@@ -1034,7 +1068,9 @@
                 ajax: {
                     url: baseUrl+'/expenses/fetchAll',
                     data: function (d) {
-                        d.searchType = $('#searchType').val()??searchType;
+                        d.searchType = $('#searchType').val() || searchType;
+                        d.expense_type = $('#filterExpenseType').val() || 'all';
+                        d.status = $('#filterStatus').val() || 'all';
                     }
                 },
                 processing: true,
@@ -1042,7 +1078,10 @@
             });
 
             $('body').on('change', '#searchType', function (e) {
-                bookingDatatable.search( '' ).columns().search( '' ).draw();
+                bookingDatatable.draw();
+            });
+            $('body').on('change', '#filterExpenseType, #filterStatus', function () {
+                bookingDatatable.draw();
             });
         }
         

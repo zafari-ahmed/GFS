@@ -25,6 +25,26 @@
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
+                <div class="row" style="margin-bottom: 12px;">
+                    <div class="form-group col-lg-3">
+                        <label>Expense Head</label>
+                        <select id="filterExpenseType" class="form-control">
+                            <option value="all">All</option>
+                            <?php foreach($this->expenseType(1,true) as $id=>$mode): ?>
+                                <option value="<?php echo $id?>"><?php echo CHtml::encode($mode)?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <label>Status</label>
+                        <select id="filterStatus" class="form-control">
+                            <option value="all">All</option>
+                            <option value="1">Approved</option>
+                            <option value="2">Pending</option>
+                            <option value="0">Rejected</option>
+                        </select>
+                    </div>
+                </div>
                 <table width="100%" class="table table-striped table-bordered table-hover" id="dataTablesExpenseServer">
                     <thead>
                         <tr>

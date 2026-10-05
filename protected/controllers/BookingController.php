@@ -62,6 +62,7 @@ class BookingController extends Controller
 		if(isset($_POST['preview'])){
 			
 			$plot = Plots::model()->findByPk($_POST['plot_id']);
+			Customers::ensureNationalityGuardianColumns();
 			$customer = new CustomerPreviews;
 			$customer->attributes = $_POST;
 			$customer->monthly_start_date = $this->convertDateFormat($_POST['monthly_start_date']);;
@@ -110,6 +111,7 @@ class BookingController extends Controller
 			$CP = CustomerPlots::model()->find('plot_id = :id AND status = 1',array(':id'=>$_POST['plot_id']));
 			$plot = Plots::model()->findByPk($_POST['plot_id']);
 			if(!$CP){
+				Customers::ensureNationalityGuardianColumns();
 				$customer = new Customers;
 				$customer->attributes = $_POST;
 				$customer->image = '';
@@ -700,6 +702,7 @@ class BookingController extends Controller
 		if($_POST['plot_id']){
 			$customer_plot = CustomerPlots::model()->findByPk($_POST['id']);
 			$originalAgentId = $customer_plot->agent_id;
+			Customers::ensureNationalityGuardianColumns();
 			$customer = Customers::model()->findByPk($customer_plot->customer_id);
 			//echo $customer->createdOn;exit;
 			$customer->attributes = $_POST;
@@ -2207,6 +2210,7 @@ class BookingController extends Controller
 	public function actionTransfersubmit(){
 		$booking = CustomerPlots::model()->findByPk($_POST['booking_id']);
 		if($booking){
+			Customers::ensureNationalityGuardianColumns();
 			$customer = new Customers;
 			$customer->attributes = $_POST;
 			$customer->status = 1;

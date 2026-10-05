@@ -283,30 +283,47 @@ class ExpensesController extends Controller
 
 	public function actionReportsearch()
 	{	
-		//echo '<pre>';print_r($_POST);exit;
 		$criteria = new CDbCriteria();
-		//$criteria->addBetweenCondition('createdOn', @$_POST['start_date'], @$_POST['end_date']);
-		$criteria->addCondition('createdOn >= :startDate AND createdOn <= :endDate');
-		$criteria->addCondition("expense_type != 15");	
-		if($_POST['paid_to']!='All'){
-			$criteria->addCondition("paid_to = '{$_POST['paid_to']}'");	
+		$criteria->with = array('user');
+		$criteria->together = true;
+		$criteria->addCondition('t.createdOn >= :startDate AND t.createdOn <= :endDate');
+		$criteria->addCondition("t.expense_type != 15");
+		$params = array(
+			':startDate' => $_POST['start_date'].' 00:00:00',
+			':endDate' => $_POST['end_date'].' 23:59:59',
+		);
+
+		$paidTo = isset($_POST['paid_to']) ? trim($_POST['paid_to']) : 'All';
+		if ($paidTo !== '' && strcasecmp($paidTo, 'All') !== 0) {
+			$criteria->addCondition('t.paid_to LIKE :paid_to');
+			$params[':paid_to'] = '%'.$paidTo.'%';
 		}
 
-		if($_POST['payment_mode']!='All'){
-			$criteria->addCondition("payment_mode = '{$_POST['payment_mode']}'");	
+		$paymentMode = isset($_POST['payment_mode']) ? $_POST['payment_mode'] : 'All';
+		if ($paymentMode !== '' && $paymentMode !== 'All') {
+			$criteria->addCondition('t.payment_mode = :payment_mode');
+			$params[':payment_mode'] = $paymentMode;
 		}
-		
-		if(!empty($_POST['expense_type'])){
-			$criteria->addCondition('expense_type = :mode_id');
-			$criteria->params = array(':startDate' =>$_POST['start_date'].' 00:00:00',':endDate' =>$_POST['end_date'].' 23:59:59',':mode_id' =>$_POST['expense_type']);			
-		} else{
-			$criteria->params = array(':startDate' =>$_POST['start_date'].' 00:00:00',':endDate' =>$_POST['end_date'].' 23:59:59');			
+
+		$expenseType = isset($_POST['expense_type']) ? $_POST['expense_type'] : '0';
+		if ($expenseType !== '' && $expenseType !== '0' && $expenseType !== 'All') {
+			$criteria->addCondition('t.expense_type = :mode_id');
+			$params[':mode_id'] = $expenseType;
 		}
+
+		$status = isset($_POST['status']) ? $_POST['status'] : 'All';
+		if ($status !== '' && $status !== 'All') {
+			$criteria->addCondition('t.status = :status');
+			$params[':status'] = (int)$status;
+		}
+
+		$criteria->params = $params;
+		$criteria->order = 't.createdOn DESC';
 		
 		$data['expenses'] = Expenses::model()->findAll($criteria);
-		$criteria = new CDbCriteria();
-		$criteria->group = "paid_to";
-		$data['paid_to_list'] = Expenses::model()->findAll($criteria);
+		$paidCriteria = new CDbCriteria();
+		$paidCriteria->group = "paid_to";
+		$data['paid_to_list'] = Expenses::model()->findAll($paidCriteria);
 		$this->render('report2',$data);
 	}
 
@@ -717,82 +734,91 @@ class ExpensesController extends Controller
 
 	public function actionFetchall(){
 		$userModel = Yii::app()->session->get('userModel');
-		$result_array = [];
+		$phaseId = !empty($userModel['phase_id']) ? $userModel['phase_id'] : 1;
+		$draw = isset($_GET['draw']) ? (int)$_GET['draw'] : 1;
+		$start = isset($_GET['start']) ? (int)$_GET['start'] : 0;
+		$length = isset($_GET['length']) ? (int)$_GET['length'] : 50;
+		$searchValue = isset($_GET['search']['value']) ? trim($_GET['search']['value']) : '';
+		$searchType = isset($_GET['searchType']) ? $_GET['searchType'] : 'desc';
+		$filterType = isset($_GET['expense_type']) ? $_GET['expense_type'] : '';
+		$filterStatus = isset($_GET['status']) ? $_GET['status'] : '';
+		$orderDir = (isset($_GET['order'][0]['dir']) && strtolower($_GET['order'][0]['dir']) === 'asc') ? 'ASC' : 'DESC';
+
 		$criteria = new CDbCriteria();
-        parse_str($_SERVER['REQUEST_URI'], $result_array);
-		$phaseId = Yii::app()->session->get('userModel')['phase_id'];
-		switch (@$result_array['order'][0]['column']) {
-			case '0':
-				@$result_array['order'][0]['column'] = 't.id';
-				break;
-			default:
-				@$result_array['order'][0]['column'] = 't.id';
-				break;
+		$criteria->with = array('user');
+		$criteria->together = true;
+		$criteria->addCondition('t.phase_id = :phaseId');
+		$criteria->params[':phaseId'] = $phaseId;
+		$criteria->addCondition("t.expense_type != 'development'");
+
+		if ($filterType !== '' && $filterType !== 'all') {
+			$criteria->addCondition('t.expense_type = :filterType');
+			$criteria->params[':filterType'] = $filterType;
 		}
-		$sort = @$result_array['order'][0]['column'];
-		$order = @$result_array['order'][0]['dir'];
-		
-		$searchType = @$result_array['searchType'];
-		
-		$criteria->limit = @$result_array['length'];
-		$criteria->offset = @$result_array['start'];
-		$criteria->order = $sort.' '.$order;
-		
-
-		if(!empty(@$result_array['search']['value'])){
-			
-			if($searchType == 'paid_to'){
-				$query = $result_array['search']['value'];
-				$criteria->addCondition('paid_to LIKE :paid');
-				$params[':paid'] = '%'.@$query.'%';
-				$criteria->params = $params;
-			}
-
-			if($searchType == 'hoa'){
-				$hoa = $this->expenseTypeReverse($result_array['search']['value']);
-				if($hoa != -1){
-					$query = $hoa;
-					$criteria->addCondition('expense_type = :hoa');
-					$params[':hoa'] = $hoa;
-					$criteria->params = $params;	
-				}
-				
-			}
-
-			if($searchType == 'status'){
-				$st = $this->expenseTypeReverse($result_array['search']['value']);
-				if($st != -1){
-					$query = $st;
-					$criteria->addCondition('status = :st');
-					$params[':st'] = $st;
-					$criteria->params = $params;	
-				}
-			}
-
-			if($searchType == 'ref'){
-				$query = $result_array['search']['value'];
-				$criteria->addCondition('number LIKE :paid');
-				$params[':paid'] = '%'.@$query.'%';
-				$criteria->params = $params;
-			}
-
-			if($searchType == 'desc'){
-				$query = $result_array['search']['value'];
-				$criteria->addCondition('description LIKE :desc');
-				$params[':desc'] = '%'.@$query.'%';
-				$criteria->params = $params;
-			}
-			
+		if ($filterStatus !== '' && $filterStatus !== 'all') {
+			$criteria->addCondition('t.status = :filterStatus');
+			$criteria->params[':filterStatus'] = (int)$filterStatus;
 		}
-		
+
+		if ($searchValue !== '') {
+			if ($searchType == 'regNo' || $searchType == '#' || $this->looksLikeExpenseRegNo($searchValue)) {
+				$regIds = $this->expenseIdsMatchingRegSearch($searchValue, $phaseId);
+				if ($regIds) {
+					$criteria->addInCondition('t.id', $regIds);
+				} else {
+					$criteria->addCondition('1=0');
+				}
+			} elseif ($searchType == 'paid_to') {
+				$criteria->addCondition('t.paid_to LIKE :paid');
+				$criteria->params[':paid'] = '%'.$searchValue.'%';
+			} elseif ($searchType == 'hoa') {
+				$hoaIds = $this->expenseTypeSearchIds($searchValue);
+				if ($hoaIds) {
+					$criteria->addInCondition('t.expense_type', $hoaIds);
+				} else {
+					$criteria->addCondition('1=0');
+				}
+			} elseif ($searchType == 'status') {
+				$st = $this->expenseStatusSearch($searchValue);
+				if ($st != -1) {
+					$criteria->addCondition('t.status = :st');
+					$criteria->params[':st'] = $st;
+				} else {
+					$criteria->addCondition('1=0');
+				}
+			} elseif ($searchType == 'ref') {
+				$criteria->addCondition('t.number LIKE :ref');
+				$criteria->params[':ref'] = '%'.str_replace('*', '', $searchValue).'%';
+			} else {
+				$criteria->addCondition('t.description LIKE :desc');
+				$criteria->params[':desc'] = '%'.$searchValue.'%';
+			}
+		}
+
+		$countCriteria = clone $criteria;
+		$countCriteria->limit = -1;
+		$countCriteria->offset = -1;
+		$countFiltered = Expenses::model()->count($countCriteria);
+
+		$totalCriteria = new CDbCriteria();
+		$totalCriteria->addCondition('t.phase_id = :phaseId');
+		$totalCriteria->params[':phaseId'] = $phaseId;
+		$totalCriteria->addCondition("t.expense_type != 'development'");
+		$countTotal = Expenses::model()->count($totalCriteria);
+
+		if ($length > 0) {
+			$criteria->limit = $length;
+			$criteria->offset = $start;
+		}
+		$criteria->order = 't.id '.$orderDir;
+
 		$model = Expenses::model()->findAll($criteria);
 		
 		$result = array();
 		$i=0;
-		$countTotal = Expenses::model()->count($criteria);
-		$result['draw'] = @$result_array['draw'];
+		$result['draw'] = $draw;
 		$result['recordsTotal'] = $countTotal;
-		$result['recordsFiltered'] = $countTotal;
+		$result['recordsFiltered'] = $countFiltered;
 		$result['data'] = [];
 		$list = true;
 

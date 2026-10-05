@@ -391,6 +391,14 @@ $det = $this->getPlotLedgerDetailCustom($booking->id);
                         <p><?php echo $booking->customer->father_husband_name?></p>
                     </div>
                     <div class="form-group col-lg-2">
+                        <label>Guardian</label>
+                        <p><?php echo @$booking->customer->guardian?></p>
+                    </div>
+                    <div class="form-group col-lg-2">
+                        <label>Nationality</label>
+                        <p><?php echo @$booking->customer->nationality?></p>
+                    </div>
+                    <div class="form-group col-lg-2">
                         <label>Occupation</label>
                         <p><?php echo $booking->customer->occupation?></p>
                     </div>

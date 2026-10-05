@@ -28,6 +28,14 @@
                         <p><?php echo $customer->father_husband_name?></p>
                     </div>
                     <div class="form-group col-lg-3">
+                        <label>Guardian</label>
+                        <p><?php echo @$customer->guardian?></p>
+                    </div>
+                    <div class="form-group col-lg-3">
+                        <label>Nationality</label>
+                        <p><?php echo @$customer->nationality?></p>
+                    </div>
+                    <div class="form-group col-lg-3">
                         <label>Occupation</label>
                         <p><?php echo $customer->occupation?></p>
                     </div>

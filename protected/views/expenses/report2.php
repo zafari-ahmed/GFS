@@ -33,11 +33,11 @@
 
                             <div class="form-group col-lg-3">
                                 <label>Expense Type</label>
-                                <select name="expense_type" id="expense_type" class="form-control" required>
-                                    <option value="">Please select expense type</option>
-                                    <option value="0" selected>All</option>
+                                <?php $selectedType = isset($_POST['expense_type']) ? (string)$_POST['expense_type'] : '0'; ?>
+                                <select name="expense_type" id="expense_type" class="form-control">
+                                    <option value="0" <?php echo ($selectedType==='0' || $selectedType==='')?'selected':''?>>All</option>
                                     <?php foreach($this->expenseType(1,true) as $id=>$mode):?>
-                                        <option value="<?php echo $id?>" <?php echo (@$_POST['expense_type']==$id)?'selected':''?>><?php echo @$mode?></option>
+                                        <option value="<?php echo $id?>" <?php echo ((string)$selectedType===(string)$id)?'selected':''?>><?php echo @$mode?></option>
                                     <?php endforeach;?>
                                     <!-- <option value="1" <?php //echo (@$_POST['expense_type']==1)?'selected':''?>>Survayour</option>
                                     <option value="2" <?php //echo (@$_POST['expense_type']==2)?'selected':''?>>Site</option>
@@ -56,27 +56,38 @@
                             </div>
                             <div class="form-group col-lg-2">
                                 <label>Paid To</label>
-                                <input list="browsers" class="form-control" type="text" name="paid_to" id="paid_to" placeholder="Paid To" required>
+                                <input list="browsers" class="form-control" type="text" name="paid_to" id="paid_to" placeholder="Paid To" value="<?php echo CHtml::encode(isset($_POST['paid_to']) ? $_POST['paid_to'] : 'All')?>">
                                 <datalist id="browsers">
-                                    <option value="All" selected>
+                                    <option value="All">
                                   <?php foreach(@$paid_to_list as $pt):?>
-                                  <option value="<?php echo @$pt->paid_to?>">
+                                  <option value="<?php echo CHtml::encode(@$pt->paid_to)?>">
                                   <?php endforeach;?>
                                 </datalist>
                             </div>
 
                             <div class="form-group col-lg-2" >
                                 <label>Payment Mode</label>
-                                <select name="payment_mode" id="payment_mode" class="form-control" required>
-                                    <option value="">Please select payment mode</option>
-                                    <option value="All" selected>All</option>
-                                    <option value="cash" <?php echo (@$_POST['payment_mode']=='cash')?'selected':''?>>Cash</option>
-                                    <option value="cheque" <?php echo (@$_POST['payment_mode']=='cheque')?'selected':''?>>Cheque</option>
-                                    <option value="payorder" <?php echo (@$_POST['payment_mode']=='payorder')?'selected':''?>>PayOrder</option>
-                                    <option value="debit voucher" <?php echo (@$_POST['payment_mode']=='debit voucher')?'selected':''?>>Debit Voucher</option>
-                                    <option value="adjustment" <?php echo (@$_POST['payment_mode']=='adjustment')?'selected':''?>>Adjustment</option>
+                                <?php $selectedMode = isset($_POST['payment_mode']) ? $_POST['payment_mode'] : 'All'; ?>
+                                <select name="payment_mode" id="payment_mode" class="form-control">
+                                    <option value="All" <?php echo ($selectedMode=='All' || $selectedMode=='')?'selected':''?>>All</option>
+                                    <option value="cash" <?php echo ($selectedMode=='cash')?'selected':''?>>Cash</option>
+                                    <option value="cheque" <?php echo ($selectedMode=='cheque')?'selected':''?>>Cheque</option>
+                                    <option value="payorder" <?php echo ($selectedMode=='payorder')?'selected':''?>>PayOrder</option>
+                                    <option value="debit voucher" <?php echo ($selectedMode=='debit voucher')?'selected':''?>>Debit Voucher</option>
+                                    <option value="adjustment" <?php echo ($selectedMode=='adjustment')?'selected':''?>>Adjustment</option>
                                 </select>
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
+                            </div>
+
+                            <div class="form-group col-lg-2">
+                                <label>Status</label>
+                                <?php $selectedStatus = isset($_POST['status']) ? (string)$_POST['status'] : 'All'; ?>
+                                <select name="status" id="status" class="form-control">
+                                    <option value="All" <?php echo ($selectedStatus==='All' || $selectedStatus==='')?'selected':''?>>All</option>
+                                    <option value="1" <?php echo ($selectedStatus==='1')?'selected':''?>>Approved</option>
+                                    <option value="2" <?php echo ($selectedStatus==='2')?'selected':''?>>Pending</option>
+                                    <option value="0" <?php echo ($selectedStatus==='0')?'selected':''?>>Rejected</option>
+                                </select>
                             </div>
 
                             <div class="form-group col-lg-2">

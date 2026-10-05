@@ -73,6 +73,24 @@ class DashboardController extends Controller
 			array_push($data, $d);
 		}
 
+		if ($this->looksLikeExpenseRegNo($term)) {
+			$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+			$expenseIds = $this->expenseIdsMatchingRegSearch($term, $phaseId);
+			if ($expenseIds) {
+				$expenseCriteria = new CDbCriteria();
+				$expenseCriteria->addInCondition('id', $expenseIds);
+				$expenseCriteria->order = 'id ASC';
+				$expenseCriteria->limit = 20;
+				$expenses = Expenses::model()->findAll($expenseCriteria);
+				foreach ($expenses as $expense) {
+					$regNo = $this->getExpenseRegNo($expense->id, 'expense');
+					$d = array();
+					$d['id'] = $regNo;
+					$d['text'] = $regNo.( $expense->description ? ' - '.substr($expense->description, 0, 40) : '');
+					array_push($data, $d);
+				}
+			}
+		}
 
 		echo json_encode($data);
 

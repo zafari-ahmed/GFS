@@ -119,7 +119,7 @@ class BookingpreviewController extends Controller
             unset($r);
         
             // Wrap as required
-            $payload = ['rows' => $rows,'cop'=>$this->stripAmountCommas(@$_POST['cost_of_plot'])];
+            $payload = ['rows' => $rows,'cop'=>$this->sumPaymentScheduleCop($rows)];
             //print_r($payload);exit;
             // Pretty JSON
             $jsonOut = json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -173,6 +173,22 @@ class BookingpreviewController extends Controller
 	private function stripAmountCommas($value)
 	{
 		return str_replace(',', '', (string)$value);
+	}
+
+	private function sumPaymentScheduleCop($rows)
+	{
+		$total = 0;
+		foreach ($rows as $row) {
+			if (!is_array($row)) {
+				continue;
+			}
+			if (isset($row['total']) && $row['total'] !== '' && is_numeric($row['total'])) {
+				$total += (float)$row['total'];
+			} elseif (isset($row['value']) && $row['value'] !== '' && is_numeric($row['value'])) {
+				$total += (float)$row['value'];
+			}
+		}
+		return (string)$total;
 	}
 	
 	public function actionAddpssoftware($id)

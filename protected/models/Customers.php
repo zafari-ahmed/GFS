@@ -7,6 +7,8 @@
  * @property integer $id
  * @property string $name
  * @property string $father_husband_name
+ * @property string $nationality
+ * @property string $guardian
  * @property string $gender
  * @property string $occupation
  * @property string $dob
@@ -47,10 +49,10 @@ class Customers extends CActiveRecord
 		return array(
 			array('name, father_husband_name, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image, status, phase_id, createdOn', 'required'),
 			array('status, phase_id', 'numerical', 'integerOnly'=>true),
-			array('name, father_husband_name, gender, occupation, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image', 'length', 'max'=>255),
+			array('name, father_husband_name, nationality, guardian, gender, occupation, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image', 'length', 'max'=>255),
 			// The following rule is used by search().
 			// @todo Please remove those attributes that should not be searched.
-			array('id, name, father_husband_name, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image, status, phase_id, createdOn', 'safe', 'on'=>'search'),
+			array('id, name, father_husband_name, nationality, guardian, gender, occupation, dob, cnic, address, phone, office, mobile, email, nominee_name, nominee_relation, nominee_cnic, image, status, phase_id, createdOn', 'safe', 'on'=>'search'),
 		);
 	}
 
@@ -76,6 +78,8 @@ class Customers extends CActiveRecord
 			'id' => 'ID',
 			'name' => 'Name',
 			'father_husband_name' => 'Father Husband Name',
+			'nationality' => 'Nationality',
+			'guardian' => 'Guardian',
 			'gender' => 'Gender',
 			'occupation' => 'Occupation',
 			'dob' => 'Dob',
@@ -116,6 +120,8 @@ class Customers extends CActiveRecord
 		$criteria->compare('id',$this->id);
 		$criteria->compare('name',$this->name,true);
 		$criteria->compare('father_husband_name',$this->father_husband_name,true);
+		$criteria->compare('nationality',$this->nationality,true);
+		$criteria->compare('guardian',$this->guardian,true);
 		$criteria->compare('gender',$this->gender,true);
 		$criteria->compare('occupation',$this->occupation,true);
 		$criteria->compare('dob',$this->dob,true);
@@ -147,5 +153,35 @@ class Customers extends CActiveRecord
 	public static function model($className=__CLASS__)
 	{
 		return parent::model($className);
+	}
+
+	public static function ensureNationalityGuardianColumns()
+	{
+		$db = Yii::app()->db;
+		$tables = array('customers', 'customer_previews');
+		foreach ($tables as $table) {
+			foreach (array('nationality', 'guardian') as $column) {
+				$exists = $db->createCommand("
+					SELECT COUNT(*) FROM information_schema.COLUMNS
+					WHERE TABLE_SCHEMA = DATABASE()
+					  AND TABLE_NAME = :table
+					  AND COLUMN_NAME = :column
+				")->queryScalar(array(':table' => $table, ':column' => $column));
+				if (!$exists) {
+					$db->createCommand("ALTER TABLE `{$table}` ADD COLUMN `{$column}` VARCHAR(255) NULL DEFAULT NULL AFTER `father_husband_name`")->execute();
+				}
+			}
+			Yii::app()->db->schema->getTable($table, true);
+		}
+		Customers::model()->refreshMetaData();
+		if (class_exists('CustomerPreviews')) {
+			CustomerPreviews::model()->refreshMetaData();
+		}
+	}
+
+	protected function beforeSave()
+	{
+		self::ensureNationalityGuardianColumns();
+		return parent::beforeSave();
 	}
 }

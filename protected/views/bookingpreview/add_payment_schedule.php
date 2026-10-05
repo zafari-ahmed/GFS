@@ -253,6 +253,11 @@ function psFormatAmountValue($value) {
     .btn-submit {
         background: #007bff;
     }
+
+    #costOfPlot {
+        background: #f7f7f7;
+        font-weight: bold;
+    }
 </style>
 </head>
 
@@ -391,7 +396,8 @@ function psFormatAmountValue($value) {
                                 name="rows[<?php echo $rowKey; ?>][value_extra]"
                                 value="<?php echo h(psFormatAmountValue($valExtra)); ?>"
                                 placeholder="2000"
-                                <?php echo $isRepeat ? '' : 'disabled'; ?>>
+                                <?php echo $isRepeat ? '' : 'disabled'; ?>
+                                oninput="updateCostOfPlot()">
                         </div>
                     </div>
                 </td>
@@ -496,7 +502,8 @@ function psFormatAmountValue($value) {
                                 name="rows[<?php echo $rowKey; ?>][value_extra]"
                                 value=""
                                 placeholder="2000"
-                                disabled>
+                                disabled
+                                oninput="updateCostOfPlot()">
                         </div>
                     </div>
                 </td>
@@ -537,8 +544,10 @@ function psFormatAmountValue($value) {
         <input
             type="text"
             class="ps-amount"
+            id="costOfPlot"
             name="cost_of_plot"
             value="<?php echo h(psFormatAmountValue($cop)); ?>"
+            readonly
             required>
 
     </div>
@@ -673,7 +682,8 @@ function addRow() {
                         name="rows[${rowKey}][value_extra]"
                         value=""
                         placeholder="2000"
-                        disabled>
+                        disabled
+                        oninput="updateCostOfPlot()">
                 </div>
             </div>
         </td>
@@ -698,6 +708,7 @@ function addRow() {
     tbody.appendChild(row);
     toggleMonthlyExtra(row.querySelector('.heading1-select') || row.querySelector('.heading2-select'));
     rowCounter++;
+    updateCostOfPlot();
 }
 
 
@@ -766,6 +777,8 @@ function toggleMonthlyExtra(select) {
     });
     if (isRepeat) {
         updateMonthlyTotal(row.querySelector('.ps-installment') || row.querySelector('.ps-months'));
+    } else {
+        updateCostOfPlot();
     }
 }
 
@@ -775,25 +788,36 @@ function parsePlainNumber(value) {
 }
 
 function updateMonthlyTotal(input) {
-    if (!input) {
-        return;
+    if (input) {
+        const row = input.closest('tr');
+        if (row) {
+            const wrap = row.querySelector('.value-fields');
+            if (wrap && wrap.classList.contains('is-monthly')) {
+                const installment = parsePlainNumber((row.querySelector('.ps-installment') || {}).value);
+                const months = parsePlainNumber((row.querySelector('.ps-months') || {}).value);
+                const totalInput = row.querySelector('.ps-total');
+                if (totalInput && installment > 0 && months > 0) {
+                    totalInput.value = formatAmountValue(String(installment * months));
+                }
+            }
+        }
     }
-    const row = input.closest('tr');
-    if (!row) {
-        return;
-    }
-    const wrap = row.querySelector('.value-fields');
-    if (!wrap || !wrap.classList.contains('is-monthly')) {
-        return;
-    }
-    const installment = parsePlainNumber((row.querySelector('.ps-installment') || {}).value);
-    const months = parsePlainNumber((row.querySelector('.ps-months') || {}).value);
-    const totalInput = row.querySelector('.ps-total');
-    if (!totalInput) {
-        return;
-    }
-    if (installment > 0 && months > 0) {
-        totalInput.value = formatAmountValue(String(installment * months));
+    updateCostOfPlot();
+}
+
+function updateCostOfPlot() {
+    let total = 0;
+    document.querySelectorAll('#paymentScheduleBody tr').forEach(function(row) {
+        const wrap = row.querySelector('.value-fields');
+        if (wrap && wrap.classList.contains('is-monthly')) {
+            total += parsePlainNumber((row.querySelector('.ps-total') || {}).value);
+        } else {
+            total += parsePlainNumber((row.querySelector('.ps-installment') || {}).value);
+        }
+    });
+    const copInput = document.getElementById('costOfPlot');
+    if (copInput) {
+        copInput.value = formatAmountValue(String(total));
     }
 }
 
@@ -801,6 +825,7 @@ function updateMonthlyTotal(input) {
 document.querySelectorAll('.heading1-select, .heading2-select').forEach(function(select) {
     toggleMonthlyExtra(select);
 });
+updateCostOfPlot();
 
 
 // Remove row
@@ -811,6 +836,7 @@ function removeRow(button) {
     if (row) {
         row.remove();
     }
+    updateCostOfPlot();
 
 }
 

@@ -363,6 +363,7 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                         <label><?php echo $booking->agent_name?></label>
                         <p><?php echo $booking->customer->father_husband_name?></p>
                     </div>
+                    
                     <div class="form-group col-lg-2">
                         <label>Occupation</label>
                         <p><?php echo $booking->customer->occupation?></p>
@@ -377,7 +378,16 @@ if($userModel['user_type']['id'] == 1 || $userModel['user_type']['id'] == 5){
                     </div>
                     <?php }?>
                 </div>
-                <div class="col-lg-12">
+
+                <div class="col-lg-12" style="padding-left: 0px;">
+                    <div class="form-group col-lg-2">
+                        <label>Guardian</label>
+                        <p><?php echo @$booking->customer->guardian?></p>
+                    </div>
+                    <div class="form-group col-lg-2">
+                        <label>Nationality</label>
+                        <p><?php echo @$booking->customer->nationality?></p>
+                    </div>
                     <div class="form-group col-lg-3" style="padding-left: 0px;">
                         <label>CNIC</label>
                         <p><?php echo $booking->customer->cnic?></p>

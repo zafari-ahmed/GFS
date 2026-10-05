@@ -5,8 +5,8 @@ if (!isset($booking) && isset($customerPlot)) {
 $base = Yii::app()->baseUrl;
 $plot = @$booking->plot;
 $customer = @$booking->customer;
-$letterNo = method_exists($this, 'getBookingRegNo') ? $this->getBookingRegNo($booking->id) : ('GB-'.@$booking->id);
-$receiptNo = ltrim((string)@$booking->id, '0');
+$letterNo = method_exists($this, 'getBookingRegNo') ? $this->getBookingRegNo($booking->id) : ('SWC-'.@$booking->id);
+$receiptNo = ltrim((string)@$booking->customerPlotTransactionslast[0]->transaction_number, '0');
 $created = '';
 if (!empty($booking->createdOn) && $booking->createdOn !== '0000-00-00') {
     $createdTs = strtotime($booking->createdOn);

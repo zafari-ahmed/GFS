@@ -191,6 +191,14 @@ if($userModel['user_type']['id'] == 1){
                                 <!-- <p class="help-block">Example block-level help text here.</p> -->
                             </div>
                             <div class="form-group col-lg-6" style="padding-left: 0px;">
+                                <label>Guardian</label>
+                                <input class="form-control" id="guardian" name="guardian" placeholder="Guardian" value="<?php echo @$booking->customer->guardian?>">
+                            </div>
+                            <div class="form-group col-lg-6" style="padding-right: 0px;">
+                                <label>Nationality</label>
+                                <input class="form-control" id="nationality" name="nationality" placeholder="Nationality" value="<?php echo @$booking->customer->nationality?>">
+                            </div>
+                            <div class="form-group col-lg-6" style="padding-left: 0px;">
                                 <label>Occupation</label>
                                 <input class="form-control" id="occupation" name="occupation" placeholder="Occupation" value="<?php echo @$booking->customer->occupation?>">
                             </div>

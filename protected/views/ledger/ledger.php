@@ -210,6 +210,14 @@
           <td class="value normal"><?php echo @$booking->customer->father_husband_name?></td>
         </tr>
         <tr>
+          <td style="font-weight: bold;width: 110px;">GUARDIAN:</td>
+          <td class="value normal"><?php echo @$booking->customer->guardian?></td>
+        </tr>
+        <tr>
+          <td style="font-weight: bold;width: 110px;">NATIONALITY:</td>
+          <td class="value normal"><?php echo @$booking->customer->nationality?></td>
+        </tr>
+        <tr>
           <td style="font-weight: bold;width: 110px;">CNIC #.:</td>
           <td class="value normal"><?php echo @$booking->customer->cnic?></td>
         </tr>

@@ -81,8 +81,8 @@ if (!function_exists('psFormatScheduleAmount')) {
   .box-title { font-weight:700; text-transform:uppercase; font-size:12.5px; text-decoration: underline; margin-bottom:3mm; }
   .note { font-size:12.5px; line-height: 1.55; }
   .charges { font-size:12.5px; font-weight:bold;}
-  .charges .item { display:grid; grid-template-columns: 1fr 16mm; padding:1.5mm 0; }
-  .charges .item .pct { text-align:right; }
+  .charges .item { display:grid; grid-template-columns: 1fr auto; padding:1.5mm 0; column-gap: 6mm; }
+  .charges .item .pct { text-align:right; white-space:nowrap; }
 
   /* Bottom details */
   .details {
@@ -263,7 +263,37 @@ if (!function_exists('psFormatScheduleAmount')) {
 
 
 
-<?php $sEx = 0;$tpEx = $booking->plot->total;$tpp = $booking->plot->total-$booking->plot->discount;?>
+<?php
+$sEx = 0;
+$plotTotal = (float)$booking->plot->total;
+$tpEx = $plotTotal;
+$tpp = $plotTotal - (float)$booking->plot->discount;
+$extraItems = array();
+if ($booking->plot->is_corner == 1) {
+    $extraAmt = (float)$this->Percentage($plotTotal, $booking->plot->is_corner_amount, false);
+    $tpp += $extraAmt;
+    $tpEx += $extraAmt;
+    $extraItems[] = array('label' => 'Corner', 'pct' => $booking->plot->is_corner_amount, 'amount' => $extraAmt);
+}
+if ($booking->plot->is_road_facing == 1) {
+    $extraAmt = (float)$this->Percentage($plotTotal, $booking->plot->is_road_facing_amount, false);
+    $tpp += $extraAmt;
+    $tpEx += $extraAmt;
+    $extraItems[] = array('label' => 'Road Facing', 'pct' => $booking->plot->is_road_facing_amount, 'amount' => $extraAmt);
+}
+if ($booking->plot->is_park_facing == 1) {
+    $extraAmt = (float)$this->Percentage($plotTotal, $booking->plot->is_park_facing_amount, false);
+    $tpp += $extraAmt;
+    $tpEx += $extraAmt;
+    $extraItems[] = array('label' => 'Park Facing', 'pct' => $booking->plot->is_park_facing_amount, 'amount' => $extraAmt);
+}
+if ($booking->plot->is_west_open == 1) {
+    $extraAmt = (float)$this->Percentage($plotTotal, $booking->plot->is_west_open_amount, false);
+    $tpp += $extraAmt;
+    $tpEx += $extraAmt;
+    $extraItems[] = array('label' => 'West Open', 'pct' => $booking->plot->is_west_open_amount, 'amount' => $extraAmt);
+}
+?>
     <!-- Notes and Extra Charges -->
     <div class="two-col">
       <div>
@@ -277,31 +307,12 @@ if (!function_exists('psFormatScheduleAmount')) {
       <div>
         <div class="box-title">Extra Charges</div>
         <div class="charges">
-          <!--<div class="item"><div>Main Boulevard</div><div class="pct">10%</div></div>-->
-          <!--<div class="item"><div>Park Facing</div><div class="pct">10%</div></div>-->
-          <!--<div class="item"><div>Corner</div><div class="pct">10%</div></div>-->
-          <!--<div class="item"><div>West Open</div><div class="pct">10%</div></div>-->
-          
-          <?php if($booking->plot->is_corner == 1){?>
-                <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_corner_amount,false)?>
-                <?php $tpEx += $this->Percentage($booking->plot->total,$booking->plot->is_corner_amount,false)?>
-                <div class="item"><div>Corner</div><div class="pct"><?php echo @$booking->plot->is_corner_amount?>%</div></div>
-            <?php } ?>
-            <?php if($booking->plot->is_road_facing == 1){?>
-                <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_road_facing_amount,false)?>
-                <?php $tpEx += $this->Percentage($booking->plot->total,$booking->plot->is_road_facing_amount,false)?>
-                <div class="item"><div>Road Facing</div><div class="pct"><?php echo @$booking->plot->is_road_facing_amount?>%</div></div>
-            <?php } ?>
-            <?php if($booking->plot->is_park_facing == 1){?>
-                <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_park_facing_amount,false)?>
-                <?php $tpEx += $this->Percentage($booking->plot->total,$booking->plot->is_park_facing_amount,false)?>
-                <div class="item"><div>Park Facing</div><div class="pct"><?php echo @$booking->plot->is_park_facing_amount?>%</div></div>
-            <?php } ?>
-            <?php if($booking->plot->is_west_open == 1){?>
-                <?php $tpp += $this->Percentage($booking->plot->total,$booking->plot->is_west_open_amount,false)?>
-                <?php $tpEx += $this->Percentage($booking->plot->total,$booking->plot->is_west_open_amount,false)?>
-                <div class="item"><div>West Open</div><div class="pct"><?php echo @$booking->plot->is_west_open_amount?>%</div></div>
-            <?php } ?>
+          <?php foreach ($extraItems as $extra): ?>
+            <div class="item">
+              <div><?php echo htmlspecialchars($extra['label'].' '.$extra['pct'].'%'); ?></div>
+              <div class="pct"><?php echo 'Rs. '.number_format($extra['amount']); ?></div>
+            </div>
+          <?php endforeach; ?>
         </div>
         <div class="item" style="position:absolute;width:17%;display:flex">
             <div>Discount</div>

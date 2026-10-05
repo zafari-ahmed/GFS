@@ -18,6 +18,8 @@
                         <tr>
                             <th>Name</th>
                             <th>Father/Husband Name</th>
+                            <th>Guardian</th>
+                            <th>Nationality</th>
                             <th>CNIC</th>
                             <th>Mobile Number</th>
                             <th>Plots</th>
@@ -29,6 +31,8 @@
                        		<tr>
 	                            <td><a href="<?php echo Yii::app()->baseUrl?>/customer/view/<?php echo $customer->id?>"><?php echo $customer->name?></a></td>
 	                            <td><?php echo $customer->father_husband_name?></td>
+	                            <td><?php echo @$customer->guardian?></td>
+	                            <td><?php echo @$customer->nationality?></td>
 	                            <td><?php echo $customer->cnic?></td>
 	                            <td><?php echo $customer->mobile?></td>
                                 <td><?php echo ($customer->customerPlots)?'<a href="'.Yii::app()->baseUrl.'/customer/view/'.$customer->id.'"><span class="aLink label label-info">View</span></a>':'-'?></td>

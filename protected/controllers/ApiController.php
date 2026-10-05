@@ -233,6 +233,35 @@ class ApiController extends Controller
 // 			$result['table'] = $tableData;
 // 			$result['type'] = 'plots';
 // 		} 
+		if($this->looksLikeExpenseRegNo(@$_POST['keyword'])){
+			$phaseId = Yii::app()->session->get('userModel')['phase_id'];
+			$expenseIds = $this->expenseIdsMatchingRegSearch($_POST['keyword'], $phaseId);
+			if($expenseIds){
+				$expenseCriteria = new CDbCriteria();
+				$expenseCriteria->addInCondition('id', $expenseIds);
+				$expenseCriteria->order = 'id ASC';
+				$expenses = Expenses::model()->findAll($expenseCriteria);
+				foreach($expenses as $expense){
+					$regNo = $this->getExpenseRegNo($expense->id, 'expense');
+					$tableData .= '<tr>';
+					$tableData .= '<td>'.CHtml::encode($regNo).'</td>';
+					$tableData .= '<td>'.CHtml::encode($this->expenseType($expense->expense_type)).'</td>';
+					$tableData .= '<td>Rs. '.number_format($expense->amount).'</td>';
+					$tableData .= '<td>'.CHtml::encode($expense->paid_to).'</td>';
+					$tableData .= '<td>'.date('d M,Y', strtotime($expense->createdOn)).'</td>';
+					$tableData .= '<td><a href="'.Yii::app()->baseUrl.'/expenses/edit/'.$expense->id.'"><span class="aLink label label-warning">Edit</span></a>&nbsp;';
+					if($expense->status != 2){
+						$tableData .= '<a target="_blank" href="'.Yii::app()->baseUrl.'/expenses/expenseinvoice/'.$expense->id.'"><span class="aLink label label-success">Print</span></a>';
+					}
+					$tableData .= '</td></tr>';
+				}
+				$result['table'] = $tableData;
+				$result['type'] = 'expense';
+				echo json_encode(array('success'=>1,'data'=>$result));
+				return;
+			}
+		}
+
 		if($transactions){
 			//foreach($transactions as $index => $transaction){
 			$trans = $transactions->transaction_number;

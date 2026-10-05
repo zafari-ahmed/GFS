@@ -266,27 +266,9 @@ class Controller extends CController
 		$totalCount = $expensePaymentCount + $pettyCashPaymentCount;
 		
 		
-		$modes = [
-			1=>'I',
-			2=>'II',
-			3=>'III',
-			4=>'IV',
-			5=>'V',
-			6=>'VI',
-			7=>'VII',
-			8=>'VIII',
-			9=>'IX',
-			10=>'X',
-			11=>'XI',
-			12=>'XII',
-			13=>'XIII',
-			14=>'XIV',
-			15=>'XV',
-			16=>'XVI',
-			17=>'XVII',
-		];
-		//return $pettyCashPaymentCount;
-		return 'EXP/'.$modes[$expense->expense_type].'-'.(sprintf('%03d',$totalCount+1)).'/SWC';
+		$modes = $this->expenseRomanMap();
+		$roman = isset($modes[$expense->expense_type]) ? $modes[$expense->expense_type] : $expense->expense_type;
+		return 'EXP/'.$roman.'-'.(sprintf('%03d',$totalCount+1)).'/SWC';
 		
 		//return 'EXP/'.(sprintf('%03d',$totalCount+1));
 		
@@ -429,38 +411,138 @@ class Controller extends CController
 	}
 
 	public function expenseTypeReverse($id){
-		$modes = [
-            1  => 'Adjustment / Merging Expense',
-            2  => 'Daily Recovery Expense',
-            3  => 'Feul Expense',
-            4  => 'Food Expense',
-            5  => 'General Expense',
-            6  => 'Generator Expense',
-            7  => 'Groceries / Stationary Expense',
-            8  => 'Head Office Expense',
-            9  => 'Incentive Expense',
-            10 => 'Land Payment Expense',
-            11 => 'Medical Expense',
-            12 => 'Mobile Bill Expense',
-            13 => 'Refund Expense',
-            14 => 'Repairing / Maintenance Expense',
-            16 => 'Salary Expense',
-            17 => 'Sale Commission Expense',
-            18 => 'Site Expense',
-            19 => 'Transportaion / Conveyance Expense',
-            20 => 'Others Expense',
-        ];
-        
-        
-        $modes = array_flip($modes);
-
-		if(array_key_exists($id, $modes)){
-			return $modes[$id];	
-		} else{
-			return -1;
+		$needle = trim((string)$id);
+		foreach ($this->expenseType(1, true) as $modeId => $name) {
+			if (strcasecmp(trim($name), $needle) === 0) {
+				return $modeId;
+			}
 		}
-			
-		
+		return -1;
+	}
+
+	public function expenseTypeSearchIds($query){
+		$ids = array();
+		$q = strtolower(trim((string)$query));
+		if ($q === '') {
+			return $ids;
+		}
+		foreach ($this->expenseType(1, true) as $modeId => $name) {
+			if (strpos(strtolower($name), $q) !== false) {
+				$ids[] = $modeId;
+			}
+		}
+		return $ids;
+	}
+
+	public function expenseStatusSearch($value){
+		$v = strtolower(trim((string)$value));
+		$map = array(
+			'rejected' => 0,
+			'reject' => 0,
+			'0' => 0,
+			'approved' => 1,
+			'approve' => 1,
+			'1' => 1,
+			'pending' => 2,
+			'2' => 2,
+		);
+		return array_key_exists($v, $map) ? $map[$v] : -1;
+	}
+
+	public function expenseRomanMap($flip = false){
+		$modes = array(
+			1 => 'I',
+			2 => 'II',
+			3 => 'III',
+			4 => 'IV',
+			5 => 'V',
+			6 => 'VI',
+			7 => 'VII',
+			8 => 'VIII',
+			9 => 'IX',
+			10 => 'X',
+			11 => 'XI',
+			12 => 'XII',
+			13 => 'XIII',
+			14 => 'XIV',
+			15 => 'XV',
+			16 => 'XVI',
+			17 => 'XVII',
+			18 => 'XVIII',
+			19 => 'XIX',
+			20 => 'XX',
+		);
+		return $flip ? array_flip($modes) : $modes;
+	}
+
+	public function looksLikeExpenseRegNo($query){
+		$q = strtoupper(trim((string)$query));
+		if ($q === '') {
+			return false;
+		}
+		if (strpos($q, 'EXP') !== false) {
+			return true;
+		}
+		return (bool)preg_match('/^[IVXLCDM]{2,}-\d+/', $q);
+	}
+
+	public function parseExpenseRegSearch($query){
+		$q = strtoupper(preg_replace('/\s+/', '', (string)$query));
+		if ($q === '') {
+			return null;
+		}
+		$m = array();
+		if (!preg_match('/EXP\/([IVXLCDM]+)(?:-(\d+))?(?:\/[A-Z]+)?/', $q, $m)) {
+			if (!preg_match('/^([IVXLCDM]+)(?:-(\d+))?(?:\/[A-Z]+)?$/', $q, $m)) {
+				return null;
+			}
+		}
+		$roman = $m[1];
+		$map = $this->expenseRomanMap(true);
+		if (!isset($map[$roman])) {
+			return null;
+		}
+		return array(
+			'typeId' => $map[$roman],
+			'seq' => isset($m[2]) ? $m[2] : null,
+			'roman' => $roman,
+			'needle' => $q,
+		);
+	}
+
+	public function expenseIdsMatchingRegSearch($query, $phaseId = null){
+		$parsed = $this->parseExpenseRegSearch($query);
+		if (!$parsed) {
+			return array();
+		}
+		$criteria = new CDbCriteria();
+		$criteria->addCondition('expense_type = :type');
+		$criteria->params[':type'] = $parsed['typeId'];
+		if ($phaseId) {
+			$criteria->addCondition('phase_id = :phase');
+			$criteria->params[':phase'] = $phaseId;
+		}
+		$criteria->order = 'id ASC';
+		$expenses = Expenses::model()->findAll($criteria);
+		$needle = $parsed['needle'];
+		$roman = $parsed['roman'];
+		$ids = array();
+		foreach ($expenses as $expense) {
+			$regNo = strtoupper($this->getExpenseRegNo($expense->id, 'expense'));
+			if ($this->expenseRegNoMatches($regNo, $needle, $roman)) {
+				$ids[] = $expense->id;
+			}
+		}
+		return $ids;
+	}
+
+	protected function expenseRegNoMatches($regNo, $needle, $roman){
+		$regNo = strtoupper($regNo);
+		$needle = strtoupper($needle);
+		if ($needle === $roman || $needle === 'EXP/'.$roman) {
+			return (bool)preg_match('/EXP\/'.preg_quote($roman, '/').'(?:-|\/|$)/', $regNo);
+		}
+		return strpos($regNo, $needle) !== false;
 	}
 
 	public function discountedPlotCostOfLand($id){
