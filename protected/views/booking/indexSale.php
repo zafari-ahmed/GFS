@@ -57,15 +57,33 @@
                         }
                         
                         if($list){
-                        $trasferred = 0;
-                        if($booking->plot->customerPlotTransfers){
-                            $trasferred = 1;
+                        $costOfLand = (float)$booking->plot->total;
+                        $discount = (float)$booking->plot->discount;
+                        $totalCostOfLand = $costOfLand - $discount;
+                        $extraCharges = 0;
+                        if ($booking->plot->is_corner == 1) {
+                            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_corner_amount, false);
                         }
-                        $netTotal = intval(@$booking->customerPlotTransactionSum);
-                        $complete = ($this->plotTotal($booking->plot->id) == number_format($netTotal))?1:0;
+                        if ($booking->plot->is_road_facing == 1) {
+                            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_road_facing_amount, false);
+                        }
+                        if ($booking->plot->is_park_facing == 1) {
+                            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_park_facing_amount, false);
+                        }
+                        if ($booking->plot->is_west_open == 1) {
+                            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_west_open_amount, false);
+                        }
+                        $plotTotalText = $totalCostOfLand + $extraCharges;
+                        $paidTotal = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+                        $balanceAmount = $plotTotalText - $paidTotal;
 
-                        
-
+                        $col += $costOfLand;
+                        $dis += $discount;
+                        $tcol += $totalCostOfLand;
+                        $ext += $extraCharges;
+                        $plt += $plotTotalText;
+                        $pt += $paidTotal;
+                        $bal += $balanceAmount;
                         ?>
                        		<tr>
                                 <td class="hidden"><?php echo $booking->id?></td>
@@ -73,35 +91,13 @@
                                 <td><a href="<?php echo Yii::app()->baseUrl?>/booking/viewbooking/<?php echo $booking->id?>"><?php echo '*'.$booking->plot->block_number.'-'.$booking->plot->plot_type.'-'.$booking->plot->plot_number?>*</a></td>
                                 <td><?php echo $booking->customer->name?></td>
                                 <td><?php echo $this->getBookingRegNo($booking->id)?></td>
-                                <td><?php echo 'Rs. '. $booking->plot->total//'Rs. '.number_format($booking->plot->total)?></td>
-                                <?php $col = $col + $booking->plot->total;?>
-
-                                <td><?php echo 'Rs. '. number_format($booking->plot->discount)?></td>
-                                <?php $dis = $dis + $booking->plot->discount; ?>
-
-                                <?php if($booking->plot->discount){
-                                    $plotTotalText = $booking->plot->total-$booking->plot->discount;
-                                } else {
-                                    $plotTotalText = $booking->plot->total;
-                                } ?>
-                                <td><?php echo 'Rs. '.number_format($booking->plot->total-$booking->plot->discount)?></td>
-                                <?php $tcol = $tcol + ($booking->plot->total-$booking->plot->discount)?>
-
-
-                                <td><?php echo 'Rs. '.number_format($this->plotExtra($booking->plot->id,false,true,true))?></td>
-                                <?php $ext = $ext + $this->plotExtra($booking->plot->id,false,true,true); ?>
-
-                                <?php $plotTotalText = $plotTotalText + $this->plotExtra($booking->plot->id,false,true,true);?>
-
-
+                                <td><?php echo 'Rs. '.number_format($costOfLand)?></td>
+                                <td><?php echo 'Rs. '.number_format($discount)?></td>
+                                <td><?php echo 'Rs. '.number_format($totalCostOfLand)?></td>
+                                <td><?php echo 'Rs. '.number_format($extraCharges)?></td>
                                 <td><?php echo 'Rs. '.number_format($plotTotalText)?></td>
-                                <?php $plt = $plt + $plotTotalText; ?>
-
-                                <td><?php echo 'Rs. '.number_format($booking->customerPlotTransactionSum)?></td>
-                                <?php $pt = $pt + $booking->customerPlotTransactionSum; ?>
-                                
-                                <td><?php echo 'Rs. '.number_format($plotTotalText-$booking->customerPlotTransactionSum)?></td>
-                                <?php $bal = $bal + ($plotTotalText-$booking->customerPlotTransactionSum); ?>
+                                <td><?php echo 'Rs. '.number_format($paidTotal)?></td>
+                                <td><?php echo 'Rs. '.number_format($balanceAmount)?></td>
 	                        </tr>
                             <?php }?>
                        <?php endforeach;}?>
@@ -110,8 +106,7 @@
                 <table width="100%" class="table table-striped table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th class="hide">#</th>
-                            <th colspan="2">Total</th>
+                            <th colspan="3">Total</th>
                             <th>Cost of Land</th>
                             <th>Discount</th>
                             <th>Total Cost of Land</th>
@@ -123,7 +118,7 @@
                     </thead>
                     <tbody>
                         <tr style="font-weight: bold;">
-                            <td colspan="2">Total</td>
+                            <td colspan="3">Total</td>
                             <td><?php echo 'PKR '.number_format($col)?></td>
                             <td><?php echo 'PKR '.number_format($dis)?></td>
                             <td><?php echo 'PKR '.number_format($tcol)?></td>

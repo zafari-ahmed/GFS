@@ -1886,19 +1886,31 @@ class BookingController extends Controller
         	$list[$count][] = @$booking->plot->block_number.'-'.@$booking->plot->plot_type.'-'.@$booking->plot->plot_number;
 	        $list[$count][] = @$booking->customer->name;
 	        $list[$count][] = @$this->getBookingRegNo($booking->id);
-	        $list[$count][] = @$booking->plot->total;
-	        $list[$count][] = @$booking->plot->discount;
-	        $list[$count][] = @$booking->plot->total-$booking->plot->discount;
-	        $list[$count][] = @$this->plotExtra($booking->plot->id,false,true,true);
-	        if($booking->plot->discount){
-                $plotTotalText = $booking->plot->total-$booking->plot->discount;
-            } else {
-                $plotTotalText = $booking->plot->total;
-            }
-            $plotTotalText = $plotTotalText + $this->plotExtra($booking->plot->id,false,true,true);
-	        $list[$count][] = @$plotTotalText;
-	        $list[$count][] = @$booking->customerPlotTransactionSum;
-	        $list[$count][] = @$plotTotalText-$booking->customerPlotTransactionSum;
+	        $costOfLand = (float)@$booking->plot->total;
+	        $discount = (float)@$booking->plot->discount;
+	        $totalCostOfLand = $costOfLand - $discount;
+	        $extraCharges = 0;
+	        if (@$booking->plot->is_corner == 1) {
+	            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_corner_amount, false);
+	        }
+	        if (@$booking->plot->is_road_facing == 1) {
+	            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_road_facing_amount, false);
+	        }
+	        if (@$booking->plot->is_park_facing == 1) {
+	            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_park_facing_amount, false);
+	        }
+	        if (@$booking->plot->is_west_open == 1) {
+	            $extraCharges += (float)$this->Percentage($costOfLand, $booking->plot->is_west_open_amount, false);
+	        }
+	        $plotTotalText = $totalCostOfLand + $extraCharges;
+	        $paidTotal = intval(@$booking->customerPlotTransactionSum) + intval(@$booking->customerPlotExtraTransactionSum);
+	        $list[$count][] = $costOfLand;
+	        $list[$count][] = $discount;
+	        $list[$count][] = $totalCostOfLand;
+	        $list[$count][] = $extraCharges;
+	        $list[$count][] = $plotTotalText;
+	        $list[$count][] = $paidTotal;
+	        $list[$count][] = $plotTotalText - $paidTotal;
 	        $count++;
         endforeach;
         //echo '<pre>';print_r($list);exit;
